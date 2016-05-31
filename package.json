@@ -24,13 +24,11 @@
   "homepage": "https://github.com/breachofmind/express-mvc#readme",
   "dependencies": {
     "body-parser": "^1.15.0",
-    "chalk": "^1.1.1",
     "connect-mongo": "^1.1.0",
     "csurf": "^1.8.3",
     "csvtojson": "^0.5.12",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
-    "handlebars": "^4.0.5",
     "mongoose": "^4.4.4",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",

@@ -7,10 +7,8 @@ html
     head
         title=template.title
 
-        meta(name="csrf-token", content=request.csrfToken())
+        meta(charset="UTF-8")
         != template.head()
-
-        script !{"const USER = "+JSON.stringify(template.user ? template.user.toJSON() : null)+";"}
 
 
     body(class=template.bodyClass)

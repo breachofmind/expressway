@@ -44,7 +44,7 @@ module.exports = {
      * Enable livereload.
      * @var boolean
      */
-    livereload: true,
+    livereload: "http://localhost:35729/livereload.js",
 
     /**
      * Enable debug mode.

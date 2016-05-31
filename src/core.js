@@ -107,6 +107,14 @@ module.exports = function Core (request,response)
     };
 
     response.on('finish', function() {
-        logger.info('%s %d "%s" %s %j', request.method, response.statusCode, response.phrase(), request.url, request.controller);
+        logger.info('[%s] %s %d "%s" %s@%s %s',
+            request.connection.remoteAddress,
+            request.method,
+            response.statusCode,
+            response.phrase(),
+            request.controller[0],
+            request.controller[1],
+            request.url
+        );
     });
 };

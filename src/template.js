@@ -1,6 +1,6 @@
 "use strict";
 
-var hbs = require('handlebars');
+var pug = require('pug');
 var fs = require('fs');
 
 var app,config;
@@ -30,11 +30,10 @@ class Template
         this.styles         = [];
         this.metas          = [];
 
-        this.metas.push("<meta charset='UTF-8'/>");
         this.meta('viewport','width=device-width');
 
-        if (app.environment === "development") {
-            this.script("livereload", "http://localhost:35729/livereload.js");
+        if (app.environment === "local" && config.livereload) {
+            this.script("livereload", config.livereload);
         }
     }
 
@@ -101,12 +100,10 @@ class Template
     }
 }
 
-
-
 var _fileTemplate = {
-    link:   hbs.compile('<link href="{{attributes.src}}" rel="stylesheet" type="text/css"/>'),
-    script: hbs.compile('<script src="{{attributes.src}}" type="text/javascript"></script>'),
-    meta:   hbs.compile('<meta name="{{name}}" content="{{attributes.value}}"/>'),
+    link: pug.compile('link(rel="stylesheet", type="text/css", href=attributes.src)'),
+    script: pug.compile('script(src=attributes.src, type="text/javascript")'),
+    meta: pug.compile('meta(name=name, content=attributes.value)')
 };
 
 var _jsonProperties = ['name','element','attributes'];
@@ -124,7 +121,7 @@ class TemplateFile
         this.attributes = typeof attr == "string" ? {src:attr} :  attr;
 
         if (this.exists) {
-            this.attributes.src += "?m="+fs.statSync(config.publicPath(this.attributes.src)).mtime.getTime();
+            this.attributes.src += "?m="+fs.statSync(this.attributes.src).mtime.getTime();
         }
 
     }
@@ -135,7 +132,7 @@ class TemplateFile
      */
     get exists()
     {
-        return this.attributes.src && fs.existsSync(config.publicPath(this.attributes.src));
+        return this.attributes.src && fs.existsSync(this.attributes.src);
     }
 
     /**

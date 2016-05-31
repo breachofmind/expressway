@@ -71,6 +71,7 @@ class View
     render(request,response)
     {
         this.template.setUser(request.user);
+        this.template.meta('csrf-token',request.csrfToken());
         this.data.request = request;
         this.data.template = this.template;
 
