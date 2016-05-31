@@ -1,0 +1,20 @@
+mixin lnr(name,label)
+    i(class="lnr-" + name)
+    span=label
+
+doctype html
+html
+    head
+        title=template.title
+
+        meta(name="csrf-token", content=request.csrfToken())
+        != template.head()
+
+        script !{"const USER = "+JSON.stringify(template.user ? template.user.toJSON() : null)+";"}
+
+
+    body(class=template.bodyClass)
+
+        block content
+
+        footer#Footer

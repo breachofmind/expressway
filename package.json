@@ -1,0 +1,40 @@
+{
+  "name": "express-mvc",
+  "version": "1.0.0",
+  "description": "An MVC stack for Express.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breachofmind/express-mvc.git"
+  },
+  "keywords": [
+    "mvc",
+    "express",
+    "node",
+    "server"
+  ],
+  "author": "Mike Adamczyk <mike@bom.us>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/breachofmind/express-mvc/issues"
+  },
+  "homepage": "https://github.com/breachofmind/express-mvc#readme",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "chalk": "^1.1.1",
+    "connect-mongo": "^1.1.0",
+    "csurf": "^1.8.3",
+    "csvtojson": "^0.5.12",
+    "express": "^4.13.4",
+    "express-session": "^1.13.0",
+    "handlebars": "^4.0.5",
+    "mongoose": "^4.4.4",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "pug": "^2.0.0-alpha6",
+    "winston": "^2.2.0"
+  }
+}
