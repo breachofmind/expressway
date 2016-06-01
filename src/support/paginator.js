@@ -60,7 +60,7 @@ class Paginator
 
         }, function(err) {
 
-            return self.response.api(err,400);
+            return self.response.api({error:err},400);
         })
     }
 
@@ -81,7 +81,7 @@ class Paginator
 
         }, function(err) {
 
-            return self.response.api(err,400);
+            return self.response.api({error:err},400);
         })
     }
 

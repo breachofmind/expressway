@@ -3,7 +3,6 @@
  * @author Mike Adamczyk <mike@bom.us>
  */
 
-
 /**
  * Compact an objects properties to the given array.
  * @param object
@@ -19,6 +18,14 @@ function compact(object,properties)
     return out;
 }
 
+function url(uri)
+{
+    var config = require('../application').instance.config;
+    if (!uri) uri = "";
+    return `${config.url}:${config.port}/${uri}`;
+}
+
 module.exports = {
-    compact: compact
+    compact: compact,
+    url: url
 };

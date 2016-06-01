@@ -1,6 +1,6 @@
 "use strict";
 
-var app,db;
+var app,db,utils;
 
 var models = {};
 
@@ -19,6 +19,7 @@ class ModelFactory
         if (!app) {
             app = require('./application').instance;
             db = app.db;
+            utils = require('./support/utils');
             ModelFactory.types = db.Schema.Types;
         }
     }
@@ -32,6 +33,17 @@ class ModelFactory
 
         // Model structure.
         this.fields(schema);
+
+        // Basic toJSON method.
+        this.schema.methods.toJSON = function()
+        {
+            var out = {};
+            for(let column in schema) {
+                out[column] = this[column];
+            }
+            out['_url'] = utils.url(`api/v1/${name.toLowerCase()}/${this.id}`);
+            return out;
+        };
 
         // Expose to API?
         this.expose = true;

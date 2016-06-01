@@ -116,6 +116,7 @@ Application.rootPath = function(filepath)
     return path.normalize(Application.root+"/"+filepath);
 };
 
+
 /**
  * The Application singleton object.
  * @type {Application}

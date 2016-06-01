@@ -11,6 +11,7 @@ var codes = require('./support/status');
 module.exports = function Core (request,response)
 {
     var app = require('./application').instance;
+    var utils = require('./support/utils');
     var logger = app.logger;
 
     request.controller = {name:null,method:null};
@@ -33,7 +34,7 @@ module.exports = function Core (request,response)
         // Does not exist.
         if (! value || value === null)
         {
-            return handle(request.view('error/404'), 404);
+            return handle(response.view('error/404'), 404);
         }
 
         // Send a promise through the handler again.
@@ -60,6 +61,14 @@ module.exports = function Core (request,response)
         return response.send(value);
     };
 
+    /**
+     * Return the absolute url of the request.
+     * @returns {string}
+     */
+    request.absUrl = function()
+    {
+        return `${request.protocol}://${request.get('host')}${request.originalUrl}`;
+    };
 
     /**
      * Alias to create a view.
@@ -67,17 +76,17 @@ module.exports = function Core (request,response)
      * @param data object|null optional
      * @returns {View}
      */
-    request.view = function(file,data)
+    response.view = function(file,data)
     {
         return View.create(file,data);
     };
 
     /**
-     * Turn around the request into a response.
-     * @param value mixed from controller
-     * @param status Number code
+     * Handle the response smartly.
+     * @param value
+     * @param status
      */
-    request.send = function(value,status)
+    response.smart = function(value,status)
     {
         handle(value,status);
     };
@@ -104,21 +113,26 @@ module.exports = function Core (request,response)
             statusCode: response.statusCode,
             message: response.phrase(),
             method: request.method,
-            url: request.url,
+            url: request.absUrl(),
             user: request.user,
             pagination: request.pagination||null,
             data: data
         };
-        request.send(res,status);
+        response.smart(res,status);
     };
 
     /**
      * Log a message for each request.
      */
-    response.on('finish', function() {
-        logger.info('[%s] %s %s %d "%s" %s@%s %s',
+    response.on('finish', function()
+    {
+        var type = 'info';
+        if (response.statusCode >= 400) type = 'warn';
+        if (response.statusCode >= 500) type = 'error';
+
+        logger[type]('[%s] %s %s %d "%s" %s@%s %s',
             new Date(),
-            request.connection.remoteAddress,
+            request.ip,
             request.method,
             response.statusCode,
             response.phrase(),

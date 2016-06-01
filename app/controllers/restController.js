@@ -5,6 +5,8 @@ var Controller  = ExpressMVC.Controller;
 var Model       = ExpressMVC.Model;
 var Paginator   = ExpressMVC.Paginator;
 
+
+
 Controller.create('restController', function(controller)
 {
     var Class,Object,blueprint;
@@ -12,12 +14,16 @@ Controller.create('restController', function(controller)
     /**
      * Resolve the model parameter with the model class.
      */
-    controller.bind('model', function(parameter,request,response)
+    controller.bind('model', function(value,request,response)
     {
-        blueprint = Model.get(parameter.toLowerCase());
+        blueprint = Model.get(value.toLowerCase());
 
-        if (! blueprint || blueprint.expose == false) {
-            return response.api({error:"Model does not exist."}, 404);
+        if (! blueprint) {
+            return response.api({error:`Model "${value}" doesn't exist.`}, 404);
+        }
+
+        if (blueprint.expose == false && ! request.user) {
+            return response.api({error:`You must be logged in to view "${value}" models.`}, 401);
         }
 
         return Class = blueprint.model;
@@ -26,10 +32,10 @@ Controller.create('restController', function(controller)
     /**
      * Resolve the id of the model with the object.
      */
-    controller.bind('id', function(parameter,request)
+    controller.bind('id', function(value,request)
     {
-        if (Class && parameter) {
-            return Object = Class.findOne({_id: parameter}).exec();
+        if (Class && value) {
+            return Object = Class.findOne({_id: value}).exec();
         }
     });
 
@@ -60,7 +66,7 @@ Controller.create('restController', function(controller)
 
             }, function(err) {
 
-                return response.api(err,400);
+                return response.api({error:err},400);
             })
         },
 
@@ -73,5 +79,87 @@ Controller.create('restController', function(controller)
         {
             return Paginator.make(blueprint,request,response).execute();
         },
+
+        /**
+         * Update a model.
+         *
+         * PUT /api/{model}/{id}
+         */
+        update: function(request,response)
+        {
+            if (request.body._id) delete request.body._id; // Mongoose has problems with this.
+
+            if (! request.user) {
+
+                return response.api({error:`You are not authorized to perform this operation.`}, 401);
+            }
+
+            request.body.modified_at = Date.now();
+
+            return Class
+                .findByIdAndUpdate(request.params.id, request.body, {new:true})
+                .populate(params.model.population)
+                .exec()
+                .then(function(data) {
+
+                    return response.api(data,200);
+
+                }, function(err){
+
+                    return response.api({error:err},400);
+                });
+        },
+
+        /**
+         * Create a new model.
+         *
+         * POST /api/{model}
+         */
+        create: function(request,response)
+        {
+            if (! request.user) {
+
+                return response.api({error:`You are not authorized to perform this operation.`}, 401);
+            }
+
+            var model = new Class (request.body);
+
+            return model.save().then(function(data)
+            {
+                return response.api(data,200);
+
+            }, function(err) {
+
+                return response.api({error:err},400);
+
+            });
+        },
+
+        /**
+         * Deletes an object by ID.
+         *
+         * DELETE /api/{model}/{id}
+         */
+        trash: function(request,response)
+        {
+            if (! request.user) {
+
+                return response.api({error:`You are not authorized to perform this operation.`}, 401);
+            }
+
+            return params.Model.remove({_id:params.id}).then(function(results) {
+                var data = {
+                    results: results,
+                    objectId : params.id
+                };
+                return response.api(data,200);
+
+            }, function(err) {
+
+                return response.api({error:err},400);
+
+            });
+        }
+
     }
 });

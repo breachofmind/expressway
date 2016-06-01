@@ -13,7 +13,7 @@ Controller.create('indexController', function(controller)
     return {
         index: function(request,response)
         {
-            return request.view('index').and(globals);
+            return response.view('index').and(globals);
         }
     }
 });

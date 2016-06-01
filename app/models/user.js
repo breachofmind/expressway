@@ -34,7 +34,9 @@ var User = Model.create('User', {
      */
     toJSON: function()
     {
-        return utils.compact(this, ['_id','first_name','last_name','email','created_at','modified_at']);
+        var out = utils.compact(this, ['_id','first_name','last_name','email','created_at','modified_at']);
+        out['_url'] = utils.url(`api/v1/user/${this.id}`);
+        return out;
     },
 
     /**

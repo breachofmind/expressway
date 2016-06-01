@@ -149,7 +149,7 @@ class ControllerFactory
             if (response.headersSent) {
                 return null;
             }
-            return request.send( action(request,response,next) );
+            return response.smart( action(request,response,next) );
         }
     }
 }

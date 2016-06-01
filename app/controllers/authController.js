@@ -7,7 +7,7 @@ Controller.create('authController', function(controller)
     return {
         login: function(request,response)
         {
-            return request.view('login').set('title',"Login");
+            return response.view('login').set('title',"Login");
         },
 
         logout: function(request,response)
