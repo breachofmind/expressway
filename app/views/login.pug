@@ -18,6 +18,8 @@ block content
                         +Input("email", "username", "Username")
                         +Input("password", "password", "Password")
 
+                        input(type="hidden" name="_csrf" value=request.csrfToken())
+
                         div.text-right.row
                             div.col.sm12
                                 button(type="submit" class="button") Submit

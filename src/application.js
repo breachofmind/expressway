@@ -197,10 +197,10 @@ Application.middleware = [
         app.express.use(csrf());
 
         return function (err, request, response, next) {
-            if (err.code !== 'EBADCSRFTOKEN' || app.environment !== "production") {
+            if (err.code !== 'EBADCSRFTOKEN') {
                 return next();
             }
-            // TODO return JSON response error
+            return response.smart(response.view('error/403'), 403);
         };
     },
 
