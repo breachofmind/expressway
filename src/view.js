@@ -57,7 +57,7 @@ class View
         if (! data) return this;
         for (let prop in data)
         {
-            this.data[prop] = data;
+            this.data[prop] = data[prop];
         }
         return this;
     }

@@ -6,16 +6,17 @@ var path = require('path');
 var EventEmitter = require('events');
 var Converter = require("csvtojson").Converter;
 
-var app,db,ObjectId;
+var app,db,ObjectId,logger;
 
 class Seeder
 {
     static boot(factory)
     {
         if (!app) {
-            app = require('../application').instance;
+            app = Application.create();
+            logger = app.logger;
             db = app.db;
-            ObjectId = db.schema.Types.ObjectId;
+            ObjectId = db.Types.ObjectId;
         }
     }
     /**
@@ -35,7 +36,7 @@ class Seeder
         this._events = new EventEmitter();
 
         this.on('finished', function(){
-            console.log('Finished seeding.');
+            logger.info('Finished seeding.');
             process.exit();
         })
     }
@@ -82,6 +83,8 @@ class Seeder
      */
     createModels(callback)
     {
+        logger.info('Creating models...');
+
         var queue = this.count;
 
         var done = function(seed,objects)
@@ -183,14 +186,14 @@ class Seed
      */
     seed()
     {
-        console.log(`Seeding ${this.path} -> ${this.name}`);
+        logger.info(`Seeding ${this.path} -> ${this.name}`);
 
         if (! this.file) {
             return this.isDone([]);
         }
         this.converter.fromFile(this.path, function(err,results) {
             if (err) {
-                console.error(`Error with file: ${this.file}`);
+                logger.error(`Error with file: ${this.file}`);
                 this.isDone([]);
                 return;
             }
@@ -216,13 +219,18 @@ class Seed
     {
         var self = this;
 
-        if (! this.model || ! this.csv.length) return done(this,null);
+        if (! this.model || ! this.csv.length) {
+            logger.warn (`No model "${this.name}" or empty CSV, skipping...`);
+            return done(this,null);
+        }
 
         var create = function()
         {
             return self.model.create(self.csv).then(function(response) {
                 return done(self,response);
             }, function(err) {
+                logger.error(`Error creating models "${self.name}", ${err.name} - ${err.message}`);
+                console.log(self.csv);
                 return done(self,err);
             })
         };
@@ -231,6 +239,7 @@ class Seed
             return this.model.remove().then(function(){
                 return create();
             }, function(err) {
+                logger.error(`Error creating models "${self.name}" after reset, ${err.name} - ${err.message}`);
                 return done(self,err);
             });
         } else {

@@ -52,12 +52,10 @@ class ModelFactory
      */
     methods(object)
     {
-
         for(let method in object)
         {
             this.schema.methods[method] = object[method];
         }
-        this.build();
 
         return this;
     }
@@ -66,7 +64,6 @@ class ModelFactory
     {
         if (schema) {
             this.schema = new db.Schema(schema);
-            this.build();
         }
         return this;
     }
@@ -119,6 +116,9 @@ class ModelFactory
         items.forEach(function(file) {
             require('../app/models/'+file);
         });
+        for(let model in models) {
+            models[model].build();
+        }
 
         return models;
     }

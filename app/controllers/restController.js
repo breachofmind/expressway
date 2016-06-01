@@ -1,9 +1,9 @@
 "use strict";
 var ExpressMVC = require('../../index');
 
-var Controller = ExpressMVC.Controller;
-var Model = ExpressMVC.Model;
-var Paginator = ExpressMVC.Paginator;
+var Controller  = ExpressMVC.Controller;
+var Model       = ExpressMVC.Model;
+var Paginator   = ExpressMVC.Paginator;
 
 Controller.create('restController', function(controller)
 {
@@ -36,6 +36,12 @@ Controller.create('restController', function(controller)
 
 
     return {
+
+        /**
+         * Say Hello.
+         *
+         * GET /api/v1/
+         */
         index: function(request,response)
         {
             return "Express MVC API v1";
@@ -44,7 +50,7 @@ Controller.create('restController', function(controller)
         /**
          * Fetches an object by ID.
          *
-         * GET /api/{model}/{id}
+         * GET /api/v1/{model}/{id}
          */
         fetchOne: function(request,response)
         {
@@ -61,7 +67,7 @@ Controller.create('restController', function(controller)
         /**
          * Fetches an array of objects, with pagination.
          *
-         * GET /api/{model}s
+         * GET /api/v1/{model}s
          */
         fetchAll: function(request,response)
         {

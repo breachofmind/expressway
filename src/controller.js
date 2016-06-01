@@ -140,7 +140,8 @@ class ControllerFactory
          */
         return function(request,response,next)
         {
-            request.controller = [name,method];
+            request.controller.name = name;
+            request.controller.method = method;
 
             // Do the deed.
             controller.applyBindings(request,response);

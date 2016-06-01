@@ -13,6 +13,8 @@ module.exports = function Core (request,response)
     var app = require('./application').instance;
     var logger = app.logger;
 
+    request.controller = {name:null,method:null};
+
     /**
      * The response handler.
      * @param value mixed from controller
@@ -80,6 +82,10 @@ module.exports = function Core (request,response)
         handle(value,status);
     };
 
+    /**
+     * Determine the phrase to use for the status code.
+     * @returns {string}
+     */
     response.phrase = function()
     {
         return codes[response.statusCode].phrase;
@@ -106,14 +112,18 @@ module.exports = function Core (request,response)
         request.send(res,status);
     };
 
+    /**
+     * Log a message for each request.
+     */
     response.on('finish', function() {
-        logger.info('[%s] %s %d "%s" %s@%s %s',
+        logger.info('[%s] %s %s %d "%s" %s@%s %s',
+            new Date(),
             request.connection.remoteAddress,
             request.method,
             response.statusCode,
             response.phrase(),
-            request.controller[0],
-            request.controller[1],
+            request.controller.name,
+            request.controller.method,
             request.url
         );
     });

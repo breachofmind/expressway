@@ -39,17 +39,21 @@ Controllers help organize your routes and join data with your views. To make a c
 
 ```javascript
 
+// /app/controllers/index.js
+
 var Controller = require('express-mvc').Controller;
 
 Controller.create('indexController', function(controller){
 
     // Your controller setup happens here, where parameter bindings can occur or globals set.
+    
     controller.bind('id', function(value,request,response) {
         // For the url pattern /model/:id, value will be the :id parameter value.
     }
     
     var globalVar = 5;
     
+    // The return object contains your controller methods.
     return {
         index: function(request,response,next) {
         

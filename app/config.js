@@ -38,7 +38,7 @@ module.exports = {
      * Mongo database.
      * @var string
      */
-    db: "mongodb://localhost/App",
+    db: "mongodb://localhost/expressmvc",
 
     /**
      * Enable livereload.

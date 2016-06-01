@@ -43,6 +43,9 @@ class Application
         this.db = mongoose;
 
         this.db.connect(config.db);
+
+        this._models = Model.load(config.files.models);
+        this._controllers = Controller.load(config.files.controllers);
     }
 
     /**
@@ -51,9 +54,6 @@ class Application
      */
     bootstrap()
     {
-        this._models = Model.load(config.files.models);
-        this._controllers = Controller.load(config.files.controllers);
-
         this.express = express();
 
         this.express.set('view engine', 'pug');
@@ -108,12 +108,12 @@ Application.root = path.normalize(path.dirname(__dirname) + "/app/");
 
 /**
  * Return a path relative to the root path.
- * @param path string
+ * @param filepath string
  * @returns {string}
  */
-Application.rootPath = function(path)
+Application.rootPath = function(filepath)
 {
-    return path.normalize(Application.root+"/"+path);
+    return path.normalize(Application.root+"/"+filepath);
 };
 
 /**

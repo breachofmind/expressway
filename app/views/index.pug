@@ -3,3 +3,8 @@ extends layouts/default
 block content
     main#Body
         h1 Welcome
+
+        p=message
+
+        if request.user
+            p=request.user.fullName()
