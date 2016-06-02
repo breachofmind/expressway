@@ -125,8 +125,9 @@ class ModelFactory
      */
     static load(items)
     {
+        var pathTo = require('./application').rootPath;
         items.forEach(function(file) {
-            require('../app/models/'+file);
+            require(pathTo('models/'+file));
         });
         for(let model in models) {
             models[model].build();

@@ -35,7 +35,6 @@ class Application
 
         Application.instance = this;
 
-        this._middlewares = [];
         this.logger = winston;
 
         this.environment = config.environment;
@@ -44,6 +43,7 @@ class Application
 
         this.db.connect(config.db);
 
+        this._middlewares = [];
         this._models = Model.load(config.files.models);
         this._controllers = Controller.load(config.files.controllers);
     }
@@ -54,6 +54,8 @@ class Application
      */
     bootstrap()
     {
+
+
         this.express = express();
 
         this.express.set('view engine', 'pug');
@@ -100,6 +102,16 @@ class Application
         }
         return new Application();
     }
+
+    /**
+     * Return a path relative to the root path.
+     * @param filepath string
+     * @returns {string}
+     */
+    static rootPath(filepath)
+    {
+        return path.normalize(Application.root+"/"+filepath);
+    }
 }
 
 /**
@@ -109,15 +121,6 @@ class Application
  */
 Application.root = path.normalize(path.dirname(__dirname) + "/app/");
 
-/**
- * Return a path relative to the root path.
- * @param filepath string
- * @returns {string}
- */
-Application.rootPath = function(filepath)
-{
-    return path.normalize(Application.root+"/"+filepath);
-};
 
 
 /**

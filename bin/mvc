@@ -12,10 +12,7 @@ var cli = ExpressMVC.CLI.init();
 cli.actions({
     server: function() {
         cli.exec('mongod');
-        ExpressMVC.Application
-            .create()
-            .bootstrap()
-            .server();
+        require('../server');
     },
 
     mongo: function() {

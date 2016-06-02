@@ -1,7 +1,5 @@
 "use strict";
 
-var Application = require('./application');
-
 var app;
 var controllers = {};
 
@@ -14,7 +12,7 @@ class ControllerFactory
     static boot(factory)
     {
         if (!app) {
-            app = Application.instance;
+            app = require('./application').instance;
         }
     }
     /**
@@ -87,8 +85,9 @@ class ControllerFactory
      */
     static load(items)
     {
+        var pathTo = require('./application').rootPath;
         items.forEach(function(file) {
-            require('../app/controllers/'+file);
+            require(pathTo('controllers/'+file));
         });
 
         return controllers;
