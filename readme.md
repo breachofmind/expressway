@@ -11,6 +11,7 @@ This is just a handy little starter framework. Includes:
 - User authentication and session storage
 - Pug templates
 - CSV to JSON database seeding
+- CLI utility for custom actions
 
 ## Usage
 
@@ -65,3 +66,7 @@ Controller.create('indexController', function(controller){
 });
 
 ```
+
+### CLI Utility
+
+`/bin/mvc` is a sample utility that shows how to add custom actions to the application. 

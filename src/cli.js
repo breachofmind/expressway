@@ -2,7 +2,6 @@
 
 var program = require('commander');
 var cp = require('child_process');
-var Application = require('./application');
 
 class CLI
 {
