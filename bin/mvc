@@ -1,0 +1,30 @@
+#!/usr/local/bin/node
+/**
+ * This is an example of a CLI utility for express-mvc.
+ * @author Mike Adamczyk <mike@bom.us>
+ */
+var ExpressMVC = require('../index');
+var cli = ExpressMVC.CLI.init();
+
+cli.actions({
+    server: function() {
+        cli.exec('mongod');
+        ExpressMVC.Application
+            .create()
+            .bootstrap()
+            .server();
+    },
+
+    mongo: function() {
+        cli.log('Starting MongoDB Server...');
+        cli.exec('mongod');
+    },
+
+    seed: function() {
+        cli.log('Seeding...');
+        require('../app/seeder');
+    }
+});
+
+
+cli.run();

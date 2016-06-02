@@ -95,6 +95,9 @@ class Application
      */
     static create()
     {
+        if (Application.instance) {
+            return Application.instance;
+        }
         return new Application();
     }
 }

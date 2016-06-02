@@ -9,6 +9,7 @@ module.exports = {
     Model: require('./src/model'),
     Controller: require('./src/controller'),
     Paginator: require('./src/support/paginator'),
+    CLI: require('./src/cli'),
     utils: require('./src/support/utils')
 };
 
