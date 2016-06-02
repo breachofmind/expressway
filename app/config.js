@@ -58,14 +58,6 @@ module.exports = {
      */
     limit: 10,
 
-    /**
-     * Default template configuration.
-     * @param template
-     */
-    template: function(template)
-    {
-
-    },
 
     /**
      * Files to require.

@@ -35,5 +35,11 @@
     "passport-local": "^1.0.0",
     "pug": "^2.0.0-alpha6",
     "winston": "^2.2.0"
+  },
+  "devDependencies": {
+    "assert": "^1.4.1",
+    "should": "^9.0.0",
+    "supertest": "^1.2.0",
+    "unit.js": "^2.0.0"
   }
 }

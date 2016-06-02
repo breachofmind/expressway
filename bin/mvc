@@ -6,6 +6,9 @@
 var ExpressMVC = require('../index');
 var cli = ExpressMVC.CLI.init();
 
+/**
+ * Your actions are set up in an object.
+ */
 cli.actions({
     server: function() {
         cli.exec('mongod');
@@ -23,6 +26,11 @@ cli.actions({
     seed: function() {
         cli.log('Seeding...');
         require('../app/seeder');
+    },
+
+    test: function() {
+        cli.log('Testing...');
+        cli.exec('mocha', ['test']);
     }
 });
 

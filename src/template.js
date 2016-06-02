@@ -35,6 +35,8 @@ class Template
         if (app.environment === "local" && config.livereload) {
             this.script("livereload", config.livereload);
         }
+
+        Template.defaults(this);
     }
 
     setUser(user)
@@ -99,6 +101,17 @@ class Template
         return new Template(title);
     }
 }
+
+/**
+ * Apply any defaults to the template.
+ * @param template
+ * @returns {*}
+ */
+Template.defaults = function(template)
+{
+    return template;
+};
+
 
 var _fileTemplate = {
     link: pug.compile('link(rel="stylesheet", type="text/css", href=attributes.src)'),

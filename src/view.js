@@ -31,8 +31,6 @@ class View
         this.data = data||{};
 
         this.template = Template.create();
-
-        config.template(this.template);
     }
 
     /**
