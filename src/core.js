@@ -136,8 +136,8 @@ module.exports = function Core (request,response)
             request.method,
             response.statusCode,
             response.phrase(),
-            request.controller.name,
-            request.controller.method,
+            request.controller.name || "-",
+            request.controller.method || "-",
             request.url
         );
     });
