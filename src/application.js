@@ -58,7 +58,7 @@ class Application
 
         this.express = express();
 
-        this.express.set('view engine', 'pug');
+        this.express.set('view engine', config.view_engine || 'pug');
         this.express.set('views', config.views || 'app/views');
 
         Application.middleware.forEach(function(func)
