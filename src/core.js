@@ -70,6 +70,11 @@ module.exports = function Core (request,response)
         return `${request.protocol}://${request.get('host')}${request.originalUrl}`;
     };
 
+    request.controllerToString = function()
+    {
+        return request.controller.name + "@" + request.controller.method;
+    };
+
     /**
      * Alias to create a view.
      * @param file string
@@ -130,14 +135,13 @@ module.exports = function Core (request,response)
         if (response.statusCode >= 400) type = 'warn';
         if (response.statusCode >= 500) type = 'error';
 
-        logger[type]('[%s] %s %s %d "%s" %s@%s %s',
+        logger[type]('[%s] %s %s %d "%s" %s %s',
             new Date(),
             request.ip,
             request.method,
             response.statusCode,
             response.phrase(),
-            request.controller.name || "-",
-            request.controller.method || "-",
+            request.controller.name ? request.controllerToString() : 'static',
             request.url
         );
     });
