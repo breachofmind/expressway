@@ -135,13 +135,18 @@ module.exports = function Core (request,response)
         if (response.statusCode >= 400) type = 'warn';
         if (response.statusCode >= 500) type = 'error';
 
+        var controller = request.controller.name ? request.controllerToString() : 'static';
+
+        // Not Modified, who cares
+        if (response.statusCode == 304) return;
+
         logger[type]('[%s] %s %s %d "%s" %s %s',
             new Date(),
             request.ip,
             request.method,
             response.statusCode,
             response.phrase(),
-            request.controller.name ? request.controllerToString() : 'static',
+            controller,
             request.url
         );
     });
