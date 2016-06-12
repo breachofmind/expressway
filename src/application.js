@@ -120,7 +120,7 @@ class Application
      */
     static publicPath(filepath)
     {
-        return Application.rootPath('/'+config.static_uri+'/'+filepath);
+        return Application.rootPath(config.static_uri+'/'+filepath);
     }
 }
 
