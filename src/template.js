@@ -11,7 +11,7 @@ class Template
     static boot()
     {
         if (!app) {
-            app = Application.instance;
+            app = require('./application').instance;
             config = app.config;
         }
     }
