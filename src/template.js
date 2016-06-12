@@ -1,6 +1,5 @@
 "use strict";
 
-var Application = require('./application');
 var pug = require('pug');
 var fs = require('fs');
 
@@ -146,7 +145,7 @@ class TemplateFile
      */
     get publicPath()
     {
-        return Application.publicPath(this.attributes.src);
+        return require('./application').publicPath(this.attributes.src);
     }
 
     /**
