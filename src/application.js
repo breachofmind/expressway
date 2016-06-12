@@ -112,6 +112,16 @@ class Application
     {
         return path.normalize(Application.root+"/"+filepath);
     }
+
+    /**
+     * Return a path relative to the public path.
+     * @param filepath string
+     * @returns {string}
+     */
+    static publicPath(filepath)
+    {
+        return Application.rootPath('/'+config.static_uri+'/'+filepath);
+    }
 }
 
 /**

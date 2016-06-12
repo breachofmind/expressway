@@ -1,5 +1,6 @@
 "use strict";
 
+var Application = require('./application');
 var pug = require('pug');
 var fs = require('fs');
 
@@ -10,7 +11,7 @@ class Template
     static boot()
     {
         if (!app) {
-            app = require('./application').instance;
+            app = Application.instance;
             config = app.config;
         }
     }
@@ -134,9 +135,18 @@ class TemplateFile
         this.attributes = typeof attr == "string" ? {src:attr} :  attr;
 
         if (this.exists) {
-            this.attributes.src += "?m="+fs.statSync(this.attributes.src).mtime.getTime();
+            this.attributes.src += "?m="+fs.statSync(this.publicPath).mtime.getTime();
         }
 
+    }
+
+    /**
+     * Return the attributes src public path.
+     * @returns {string}
+     */
+    get publicPath()
+    {
+        return Application.publicPath(this.attributes.src);
     }
 
     /**
@@ -145,7 +155,7 @@ class TemplateFile
      */
     get exists()
     {
-        return this.attributes.src && fs.existsSync(this.attributes.src);
+        return this.attributes.src && fs.existsSync(this.publicPath);
     }
 
     /**
