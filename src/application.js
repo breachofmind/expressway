@@ -161,7 +161,7 @@ Application.middleware = [
      */
     function LocaleMiddleware (app)
     {
-        app.use(locale(config.lang_support || ['en']));
+        app.express.use(locale(config.lang_support || ['en']));
     },
 
     /**
