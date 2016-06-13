@@ -35,6 +35,12 @@ module.exports = {
     port: 8081,
 
     /**
+     * The supported localities.
+     * @var array<string>
+     */
+    lang_support: ['en','en_US'],
+
+    /**
      * Mongo database.
      * @var string
      */

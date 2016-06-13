@@ -6,6 +6,7 @@ var express     = require('express'),
     csrf        = require('csurf'),
     winston     = require('winston'),
     path        = require('path'),
+    locale      = require('locale'),
     MongoStore  = require('connect-mongo')(session);
 
 var Model       = require('./model'),
@@ -154,11 +155,21 @@ Application.middleware = [
     },
 
     /**
+     * Adds localization support.
+     * @param app Application
+     * @returns {Function}
+     */
+    function LocaleMiddleware (app)
+    {
+        app.use(locale(config.lang_support || ['en']));
+    },
+
+    /**
      * Checks the request for a header to see if an AJAX request.
      * @param app Application
      * @returns {Function}
      */
-        function AjaxMiddleware (app)
+    function AjaxMiddleware (app)
     {
         return function (request,response,next) {
             request.ajax = request.get('x-requested-with') === 'XMLHttpRequest';
@@ -171,7 +182,7 @@ Application.middleware = [
      * @param app Application
      * @returns {null}|{Function}
      */
-        function staticContentMiddleware (app)
+    function staticContentMiddleware (app)
     {
         return config.static_uri ? express.static(config.static_uri) : null;
     },
@@ -180,7 +191,7 @@ Application.middleware = [
      * Parses the body response.
      * @param app Application
      */
-        function bodyParserMiddleware (app)
+    function bodyParserMiddleware (app)
     {
         app.express.use(bodyParser.json());
         app.express.use(bodyParser.urlencoded({extended:true}));
@@ -191,7 +202,7 @@ Application.middleware = [
      * @param app Application
      * @returns {Function}
      */
-        function SessionMiddleware (app)
+    function SessionMiddleware (app)
     {
         return session ({
             secret: config.appKey,
@@ -208,7 +219,7 @@ Application.middleware = [
      * @param app Application
      * @returns {Function}
      */
-        function CSRFMiddleware (app)
+    function CSRFMiddleware (app)
     {
         app.express.use(csrf());
 
@@ -224,7 +235,7 @@ Application.middleware = [
      * Set up the user authentication middleware.
      * @param app Application
      */
-        function AuthMiddleware (app)
+    function AuthMiddleware (app)
     {
         return Auth(app);
     }

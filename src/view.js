@@ -1,6 +1,7 @@
 "use strict";
 
 var Template = require('./template');
+var lang = require('./support/lang');
 
 var app,config;
 
@@ -72,6 +73,7 @@ class View
         this.template.meta('csrf-token',request.csrfToken());
         this.data.request = request;
         this.data.template = this.template;
+        this.data.lang = lang(request);
 
         return response.render(this.file, this.data);
     }
