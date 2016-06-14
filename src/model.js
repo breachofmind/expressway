@@ -31,22 +31,17 @@ class ModelFactory
         // Name of the model.
         this.name = name;
 
+        this.guarded = [];
+
+        this.fillable = [];
+
         // Model structure.
         this.fields(schema);
 
-        // Basic toJSON method.
-        this.schema.methods.toJSON = function()
-        {
-            var out = {};
-            for(let column in schema) {
-                out[column] = this[column];
-            }
-            out['_url'] = utils.url(`api/v1/${name.toLowerCase()}/${this.id}`);
-            return out;
-        };
-
         // Expose to API?
         this.expose = true;
+
+        this.title = 'id';
 
         // Default ranging field and sort order.
         this.range('_id',1);
@@ -58,14 +53,75 @@ class ModelFactory
     }
 
     /**
+     * Sets the schema json output.
+     */
+    setJsonOutput()
+    {
+        var blueprint = this;
+
+        this.schema.methods.toJSON = function()
+        {
+            var out = {};
+            var model = this;
+
+            blueprint.fillable.forEach(function(column)
+            {
+                if (typeof column == 'function') {
+                    var arr = column(model,blueprint);
+                    if (arr) {
+                        return out[arr[0]] = arr[1];
+                    }
+                }
+                if (typeof model[column] == "function") {
+                    return out[column] = model[column] ();
+                }
+                // Skip fields that are in the guarded column.
+                if (blueprint.guarded.indexOf(column) > -1) {
+                    return;
+                }
+                return out[column] = model[column];
+            })
+
+            out['id'] = model._id;
+            out['_title'] = out[blueprint.title];
+            out['_url'] = utils.url(`api/v1/${blueprint.name.toLowerCase()}/${model._id}`);
+
+            return out;
+        }
+    }
+
+    /**
+     * Append a field to the fillable list
+     * @param column string|function
+     * @returns {ModelFactory}
+     */
+    appends(column)
+    {
+        this.fillable.push(column);
+
+        return this;
+    }
+
+    /**
+     * Guard a column from being displayed in the JSON string.
+     * @param column string
+     * @returns {ModelFactory}
+     */
+    guard(column)
+    {
+        this.guarded.push(column);
+
+        return this;
+    }
+
+    /**
      * Add methods to the model.
      * @param object
      * @returns {ModelFactory}
      */
     methods(object)
     {
-        for(let method in object)
-        {
+        for(let method in object) {
             this.schema.methods[method] = object[method];
         }
 
@@ -75,6 +131,9 @@ class ModelFactory
     fields(schema)
     {
         if (schema) {
+            for (var column in schema) {
+                this.fillable.push(column);
+            }
             this.schema = new db.Schema(schema);
         }
         return this;
@@ -111,6 +170,7 @@ class ModelFactory
      */
     build()
     {
+        this.setJsonOutput();
         this.model = db.model(this.name,this.schema);
 
         ModelFactory[this.name] = this.model;
