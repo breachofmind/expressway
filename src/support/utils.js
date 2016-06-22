@@ -18,11 +18,16 @@ function compact(object,properties)
     return out;
 }
 
+/**
+ * Return a url string.
+ * @param uri string
+ * @returns {string}
+ */
 function url(uri)
 {
     var config = require('../application').instance.config;
     if (!uri) uri = "";
-    return `${config.url}:${config.port}/${uri}`;
+    return `${config.url}/${uri}`;
 }
 
 module.exports = {

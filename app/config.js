@@ -20,7 +20,7 @@ module.exports = {
      * The webserver base URL.
      * @var string
      */
-    url: "http://localhost",
+    url: "http://localhost:8081",
 
     /**
      * The directory where static content is served.
