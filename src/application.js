@@ -84,7 +84,7 @@ class Application
     {
         this.express.listen(config.port, function()
         {
-            winston.info(`Starting '${config.environment}' server on ${config.url}:${config.port}...`);
+            winston.info(`Starting '${config.environment}' server on ${config.url} (port ${config.port})...`);
         });
 
         winston.profile('boot');
