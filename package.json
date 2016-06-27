@@ -30,6 +30,7 @@
     "csvtojson": "^0.5.12",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
+    "glob": "^7.0.5",
     "locale": "0.0.21",
     "mongoose": "^4.4.4",
     "passport": "^0.3.2",

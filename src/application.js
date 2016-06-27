@@ -12,7 +12,8 @@ var express     = require('express'),
 var Model       = require('./model'),
     Controller  = require('./controller'),
     Auth        = require('./auth'),
-    core        = require('./core');
+    core        = require('./core'),
+    lang        = require('./support/lang');
 
 var config, routes;
 
@@ -31,16 +32,16 @@ class Application
     {
         winston.profile('boot');
 
+        lang.init();
         config = require(Application.root+'config');
         routes = require(Application.root+'routes');
 
         Application.instance = this;
 
-        this.logger = winston;
-
+        this.logger      = winston;
         this.environment = config.environment;
-        this.config = config;
-        this.db = mongoose;
+        this.config      = config;
+        this.db          = mongoose;
 
         this.db.connect(config.db);
 
@@ -51,12 +52,10 @@ class Application
 
     /**
      * Initial setup of the server.
-     * @returns Express
+     * @returns Application
      */
     bootstrap()
     {
-
-
         this.express = express();
 
         this.express.set('view engine', config.view_engine || 'pug');
@@ -78,7 +77,7 @@ class Application
 
     /**
      * Start the application server.
-     * @returns boolean
+     * @returns Application
      */
     server()
     {

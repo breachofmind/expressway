@@ -1,7 +1,7 @@
 "use strict";
 
 var Template = require('./template');
-var lang = require('./support/lang');
+var lang = require('./support/lang').lang;
 
 var app,config;
 

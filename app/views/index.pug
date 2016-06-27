@@ -6,5 +6,7 @@ block content
 
         p=message
 
+        p=lang("index.welcome", "Johnny!")
+
         if request.user
             p=request.user.fullName()
