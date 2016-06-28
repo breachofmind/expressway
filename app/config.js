@@ -71,6 +71,6 @@ module.exports = {
      */
     files: {
         models: ['user','media'],
-        controllers: ['authController','indexController','restController']
+        controllers: ['authController','indexController','restController','langController']
     }
 };

@@ -32,12 +32,12 @@ class Application
     {
         winston.profile('boot');
 
-        lang.init();
         config = require(Application.root+'config');
         routes = require(Application.root+'routes');
 
         Application.instance = this;
 
+        this.locale      = lang.init();
         this.logger      = winston;
         this.environment = config.environment;
         this.config      = config;
@@ -161,6 +161,13 @@ Application.middleware = [
     function LocaleMiddleware (app)
     {
         app.express.use(locale(config.lang_support || ['en']));
+        return function(request,response,next)
+        {
+            if (request.query.cc) {
+                request.locale = request.query.cc.toLowerCase();
+            }
+            next();
+        }
     },
 
     /**

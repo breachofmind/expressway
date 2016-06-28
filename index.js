@@ -11,5 +11,14 @@ module.exports = {
     Controller:  require('./src/controller'),
     Paginator:   require('./src/support/paginator'),
     CLI:         require('./src/cli'),
-    utils:       require('./src/support/utils')
+    utils:       require('./src/support/utils'),
+
+    /**
+     * Return the application instance if it exists.
+     * @returns {Application|null}
+     */
+    app: function()
+    {
+        return require('./src/application').instance;
+    }
 };

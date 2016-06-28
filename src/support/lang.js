@@ -17,7 +17,7 @@ var KeyStore = function()
 
         for (var i=0; i<args.length; i++)
         {
-            string = string.replace("{$"+i+"}", args[i]);
+            string = string.replace("{"+i+"}", args[i]);
         }
         return string;
     }
@@ -43,11 +43,14 @@ var KeyStore = function()
      */
     this.getKey = function(locale, key, args)
     {
-        var value = this.index[locale][key];
+        if (this.hasLocale(locale)) {
+            var value = this.index[locale][key];
 
-        if (value) {
-            return args ? doReplace(value, args) : value;
+            if (value) {
+                return args ? doReplace(value, args) : value;
+            }
         }
+
         return "undefined:"+locale+"."+key;
     };
 
@@ -60,6 +63,21 @@ var KeyStore = function()
     {
         this.index[localeName] = {};
         return this;
+    };
+
+    this.hasLocale = function(localName)
+    {
+        return this.index.hasOwnProperty(localName);
+    };
+
+    /**
+     * Return all the keys for the given locale.
+     * @param localeName string
+     * @returns {*|null}
+     */
+    this.getLocale = function(localeName)
+    {
+        return this.index[localeName] || null;
     };
 
     /**
@@ -115,8 +133,9 @@ module.exports = {
             {
                 store.setLocaleDir(dirPath)
             })
-        })
+        });
 
+        return store;
     },
 
     /**

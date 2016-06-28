@@ -25,7 +25,7 @@ class ControllerFactory
 
         this._bindings = {};
 
-        this.methods = setup(this);
+        this.methods = setup(this,app);
     }
 
     /**
@@ -37,7 +37,7 @@ class ControllerFactory
     {
         return this.has(name)
             ? this.methods[name]
-            : function errorMethod(request,params,response) { return false; }
+            : function errorMethod(request,response) { return false; }
     }
 
     /**

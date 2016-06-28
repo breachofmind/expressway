@@ -1,4 +1,4 @@
 module.exports = {
 
-    welcome: "Welcome {$0}"
+    welcome: "Welcome {0}"
 }
