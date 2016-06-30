@@ -9,7 +9,7 @@ var utils       = ExpressMVC.utils;
 Controller.create('restController', function(controller, app)
 {
     var Class,
-        Object,
+        object,
         blueprint;
 
     /**
@@ -36,7 +36,7 @@ Controller.create('restController', function(controller, app)
     controller.bind('id', function(value,request)
     {
         if (Class && value) {
-            return Object = Class.findOne({_id: value});
+            return object = Class.findOne({_id: value});
         }
     });
 
@@ -65,7 +65,7 @@ Controller.create('restController', function(controller, app)
          */
         fetchOne: function(request,response)
         {
-            return Object.exec().then(function(data) {
+            return object.exec().then(function(data) {
 
                 return response.api(data,200);
 

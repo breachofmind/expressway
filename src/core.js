@@ -24,8 +24,8 @@ module.exports = function Core (request,response)
      */
     var handle = function(value,status)
     {
-        // Headers were sent already.
-        if (response.headersSent) {
+        // Headers were sent already or being handled differently.
+        if (response.headersSent || value === true) {
             return null;
         }
 
