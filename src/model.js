@@ -80,7 +80,7 @@ class ModelFactory
                     return;
                 }
                 return out[column] = model[column];
-            })
+            });
 
             out['id'] = model._id;
             out['_title'] = out[blueprint.title];
@@ -147,10 +147,28 @@ class ModelFactory
      */
     range(key,sort)
     {
+        if (! arguments.length) {
+            var out = {}; out[this.key] = this.sort;
+            return out;
+        }
         this.key = key;
         this.sort = sort || 1;
         this.keyType = this.schema.tree[this.key].type;
         return this;
+    }
+
+    /**
+     * Return an object for a filter query.
+     * @param value string from ?p
+     * @returns {{}}
+     */
+    paging(value)
+    {
+        var q = {};
+        q[this.key] = this.sort == 1
+            ? {$gt:value}
+            : {$lt:value};
+        return q;
     }
 
     /**
@@ -203,7 +221,7 @@ class ModelFactory
      */
     static get(name)
     {
-        return models[name] || null;
+        return models[name.toLowerCase()] || null;
     }
 
     /**

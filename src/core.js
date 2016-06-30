@@ -25,14 +25,14 @@ module.exports = function Core (request,response)
     var handle = function(value,status)
     {
         // Headers were sent already.
-        if (response.headersSent || typeof value==="undefined") {
+        if (response.headersSent) {
             return null;
         }
 
         if (status) response.status(status);
 
         // Does not exist.
-        if (! value || value === null)
+        if (! value || value === null || value === undefined)
         {
             return handle(response.view('error/404'), 404);
         }
@@ -70,9 +70,27 @@ module.exports = function Core (request,response)
         return `${request.protocol}://${request.get('host')}${request.originalUrl}`;
     };
 
+    /**
+     * Return the name of the request controller name and method.
+     * @returns {string}
+     */
     request.controllerToString = function()
     {
         return request.controller.name + "@" + request.controller.method;
+    };
+
+    /**
+     * Return a query string value or the default value.
+     * @param property string
+     * @param defaultValue optional
+     * @returns {string}
+     */
+    request.getQuery = function(property,defaultValue)
+    {
+        if (request.query && request.query.hasOwnProperty(property)) {
+            return request.query[property];
+        }
+        return defaultValue;
     };
 
     /**
@@ -107,10 +125,11 @@ module.exports = function Core (request,response)
 
     /**
      * Send a response formatted for the API.
-     * @param data
-     * @param status
+     * @param data mixed
+     * @param status Number
+     * @param metadata object, optional
      */
-    response.api = function(data,status)
+    response.api = function(data,status,metadata)
     {
         response.status(status);
 
@@ -119,10 +138,16 @@ module.exports = function Core (request,response)
             message: response.phrase(),
             method: request.method,
             url: request.absUrl(),
-            user: request.user,
-            pagination: request.pagination||null,
-            data: data
+            user: request.user
         };
+        if (metadata) {
+            for (var prop in metadata) {
+                if (metadata.hasOwnProperty(prop)) {
+                    res[prop] = metadata[prop];
+                }
+            }
+        }
+        res.data = data;
         response.smart(res,status);
     };
 

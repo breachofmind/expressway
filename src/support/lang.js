@@ -23,26 +23,40 @@ var KeyStore = function()
     }
 
     /**
+     * Return the locale name, or the default locale value.
+     * @param localeName string
+     * @returns {string}
+     */
+    function getLocaleValue(localeName)
+    {
+        return localeName.toLowerCase();
+    }
+
+    /**
      * Set a locale key.
-     * @param locale string
+     * @param localeName string
      * @param key string
      * @param value string
      * @returns {*}
      */
-    this.setKey = function(locale, key, value)
+    this.setKey = function(localeName, key, value)
     {
+        var locale = getLocaleValue(localeName);
+
         return this.index[locale][key] = value;
     };
 
     /**
      * Get a locale key.
-     * @param locale string
+     * @param localeName string
      * @param key string
      * @param args array
      * @returns {*}
      */
-    this.getKey = function(locale, key, args)
+    this.getKey = function(localeName, key, args)
     {
+        var locale = getLocaleValue(localeName);
+
         if (this.hasLocale(locale)) {
             var value = this.index[locale][key];
 
@@ -61,13 +75,18 @@ var KeyStore = function()
      */
     this.setLocale = function(localeName)
     {
-        this.index[localeName] = {};
+        this.index[ getLocaleValue(localeName) ] = {};
         return this;
     };
 
-    this.hasLocale = function(localName)
+    /**
+     * Check if the locale exists in the index.
+     * @param localeName string
+     * @returns {boolean}
+     */
+    this.hasLocale = function(localeName)
     {
-        return this.index.hasOwnProperty(localName);
+        return this.index.hasOwnProperty( getLocaleValue(localeName) );
     };
 
     /**
@@ -77,7 +96,7 @@ var KeyStore = function()
      */
     this.getLocale = function(localeName)
     {
-        return this.index[localeName] || null;
+        return this.index[ getLocaleValue(localeName) ] || null;
     };
 
     /**

@@ -62,7 +62,7 @@ module.exports = {
      * The limit of models to return in REST api.
      * @var Number
      */
-    limit: 10,
+    limit: 10000,
 
 
     /**

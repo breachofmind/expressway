@@ -9,9 +9,15 @@ module.exports = {
     Model:       require('./src/model'),
     Template:    require('./src/template'),
     Controller:  require('./src/controller'),
-    Paginator:   require('./src/support/paginator'),
     CLI:         require('./src/cli'),
     utils:       require('./src/support/utils'),
+
+    init: function(rootPath)
+    {
+        this.Application.root = rootPath;
+
+        return this.Application.create().bootstrap();
+    },
 
     /**
      * Return the application instance if it exists.

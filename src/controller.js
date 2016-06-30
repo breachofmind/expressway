@@ -24,6 +24,7 @@ class ControllerFactory
         ControllerFactory.boot(this);
 
         this._bindings = {};
+        this._queryBindings = {};
 
         this.methods = setup(this,app);
     }
@@ -51,7 +52,7 @@ class ControllerFactory
     }
 
     /**
-     * Replace a parameter with a new value.
+     * When a url parameter matches the given key, run a callback against it.
      * @param parameter string
      * @param callback function
      * @returns {ControllerFactory}
@@ -63,17 +64,39 @@ class ControllerFactory
     }
 
     /**
+     * When a url query parameter matches a given key, run a callback against it.
+     * @param key string
+     * @param callback
+     * @returns {ControllerFactory}
+     */
+    query(key, callback)
+    {
+        this._queryBindings[key] = callback;
+        return this;
+    }
+
+    /**
      * Apply the bindings to parameters to the request.
      * @param request
      * @param response
      */
     applyBindings(request,response)
     {
-        for(var param in request.params)
-        {
-            var callback = this._bindings[param];
-            if (callback) {
-                callback(request.params[param],request,response);
+        var objects = {
+            params: this._bindings,
+            query: this._queryBindings
+        };
+        for (var prop in objects) {
+            if (! objects.hasOwnProperty(prop)) {
+                continue;
+            }
+            var index = objects[prop];
+            for (var key in request[prop])
+            {
+                if (! index.hasOwnProperty(key)) {
+                    continue;
+                }
+                index[key] (request[prop][key], request,response);
             }
         }
     }
