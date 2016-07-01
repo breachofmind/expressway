@@ -154,6 +154,7 @@ module.exports = function(controller, app)
             var promise = Class
                 .find(search.where)
                 .sort(search.sort)
+                .limit(search.limit || app.config.limit)
                 .populate(blueprint.population)
                 .exec();
 
