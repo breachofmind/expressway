@@ -176,4 +176,10 @@ class ControllerFactory
     }
 }
 
+// Maintained Controllers that contain only the factory setup function.
+ControllerFactory.basic = {
+    REST: require('./controllers/restController'),
+    Locales: require('./controllers/langController')
+};
+
 module.exports = ControllerFactory;
