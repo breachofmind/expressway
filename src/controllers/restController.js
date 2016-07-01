@@ -143,6 +143,31 @@ module.exports = function(controller, app)
         },
 
         /**
+         * Initiate a new search.
+         *
+         * POST /api/{model}/search
+         */
+        search: function(request,response)
+        {
+            var search = request.body;
+
+            var promise = Class
+                .find(search.where)
+                .sort(search.sort)
+                .populate(blueprint.population)
+                .exec();
+
+            return promise.then(function(data)
+            {
+                return response.api(data,200);
+
+            }, function(err) {
+
+                return response.api({error:err},400);
+            });
+        },
+
+        /**
          * Update a model.
          *
          * PUT /api/{model}/{id}
