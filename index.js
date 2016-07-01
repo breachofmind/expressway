@@ -11,6 +11,7 @@ module.exports = {
     Controller:  require('./src/controller'),
     CLI:         require('./src/cli'),
     utils:       require('./src/support/utils'),
+    gulpUtil:    require('./src/support/gulp'),
 
     init: function(rootPath)
     {
