@@ -17,7 +17,7 @@ module.exports = function(gulp, paths)
          */
         pathTo: function(name, path)
         {
-            return paths[name] + "/" + (path || null);
+            return paths[name] + "/" + (path || "");
         },
 
         /**
@@ -33,6 +33,14 @@ module.exports = function(gulp, paths)
             {
                 return self.pathTo(name,path);
             })
+        },
+
+        /**
+         * Return the destination build path.
+         * @returns {*}
+         */
+        dest: function() {
+            return gulp.dest(paths.build);
         }
     }
 };
