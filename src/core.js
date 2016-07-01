@@ -2,16 +2,16 @@
 
 var View = require('./view');
 var codes = require('./support/status');
+var utils = require('./support/utils');
 
 /**
  * Adds some helper functions to the request and response.
+ * @param app Application
  * @param request
  * @param response
  */
-module.exports = function Core (request,response)
+module.exports = function Core (app,request,response)
 {
-    var app = require('./application').instance;
-    var utils = require('./support/utils');
     var logger = app.logger;
 
     request.controller = {name:null,method:null};

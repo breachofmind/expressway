@@ -2,6 +2,12 @@
 var Model = require('../model');
 var utils = require('../support/utils');
 
+/**
+ * Maintained controller that does basic CRUD and REST stuff.
+ * @param controller
+ * @param app
+ * @returns {object}
+ */
 module.exports = function(controller, app)
 {
     var Class,

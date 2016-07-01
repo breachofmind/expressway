@@ -148,7 +148,7 @@ Application.middleware = [
     {
         return function(request,response,next)
         {
-            core(request,response);
+            core(app,request,response);
             next();
         }
     },
