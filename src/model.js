@@ -31,6 +31,9 @@ class ModelFactory
         // Name of the model.
         this.name = name;
 
+        // Column labels, optional.
+        this.labels = {};
+
         this.guarded = [];
 
         this.fillable = [];

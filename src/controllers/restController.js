@@ -29,7 +29,8 @@ module.exports = function(controller, app)
             return response.api({error:`You must be logged in to view "${value}" models.`}, 401);
         }
 
-        return Class = blueprint.model;
+        request.Model = blueprint.model;
+        request.blueprint = blueprint;
     });
 
     /**
@@ -37,14 +38,14 @@ module.exports = function(controller, app)
      */
     controller.bind('id', function(value,request)
     {
-        if (Class && value) {
-            return object = Class.findOne({_id: value});
+        if (request.Model && value) {
+            request.Object = request.Model.findOne({_id: value});
         }
     });
 
     controller.query('p', function(value,request)
     {
-        request.query.filter = blueprint.paging(utils.fromBase64(value));
+        request.query.filter = request.blueprint.paging(utils.fromBase64(value));
     });
 
 
@@ -57,7 +58,10 @@ module.exports = function(controller, app)
          */
         index: function(request,response)
         {
-            return "Express MVC API v1";
+            return {
+                message: "Express MVC API v1",
+                currentUser: request.user
+            };
         },
 
         /**
@@ -67,9 +71,12 @@ module.exports = function(controller, app)
          */
         fetchOne: function(request,response)
         {
-            return object.exec().then(function(data) {
+            return request.Object.exec().then(function(data) {
 
-                return response.api(data,200);
+                return response.api(data,200,{
+                    labels: request.blueprint.labels,
+                    model: request.blueprint.name
+                });
 
             }, function(err) {
 
@@ -89,7 +96,7 @@ module.exports = function(controller, app)
                 total:      0,
                 limit:      app.config.limit || 10000,
                 filter:     request.getQuery('filter', null),
-                sort:       request.getQuery('sort', blueprint.range()),
+                sort:       request.getQuery('sort', request.blueprint.range()),
                 next:       null
             };
             /**
@@ -100,7 +107,7 @@ module.exports = function(controller, app)
             paging.setNext = function(data)
             {
                 if (data.length) {
-                    var lastValue = data[data.length-1][blueprint.key];
+                    var lastValue = data[data.length-1][request.blueprint.key];
                 }
                 this.count = data.length;
                 this.next = this.total > this.limit
@@ -111,15 +118,15 @@ module.exports = function(controller, app)
             };
 
             // Find the total record count first, then find the range.
-            return Class.count(paging.filter).exec().then(function(count) {
+            return request.Model.count(paging.filter).exec().then(function(count) {
 
                 paging.total = count;
 
-                var promise = Class
+                var promise = request.Model
                     .find       (paging.filter)
                     .sort       (paging.sort)
                     .limit      (paging.limit)
-                    .populate   (blueprint.population)
+                    .populate   (request.blueprint.population)
                     .exec();
 
                 // After finding the count, find the records.
@@ -127,7 +134,11 @@ module.exports = function(controller, app)
 
                     paging.setNext(data);
 
-                    return response.api(data,200, {pagination: paging});
+                    return response.api(data,200, {
+                        pagination: paging,
+                        labels: request.blueprint.labels,
+                        model: request.blueprint.name
+                    });
 
                 }, function(err) {
 
@@ -151,11 +162,11 @@ module.exports = function(controller, app)
         {
             var search = request.body;
 
-            var promise = Class
+            var promise = request.Model
                 .find(search.where)
                 .sort(search.sort)
                 .limit(search.limit || app.config.limit)
-                .populate(blueprint.population)
+                .populate(request.blueprint.population)
                 .exec();
 
             return promise.then(function(data)
@@ -179,9 +190,9 @@ module.exports = function(controller, app)
 
             request.body.modified_at = Date.now();
 
-            return Class
+            return request.Model
                 .findByIdAndUpdate(request.params.id, request.body, {new:true})
-                .populate(blueprint.population)
+                .populate(request.blueprint.population)
                 .exec()
                 .then(function(data) {
 
@@ -200,7 +211,7 @@ module.exports = function(controller, app)
          */
         create: function(request,response)
         {
-            var model = new Class (request.body);
+            var model = new request.Model (request.body);
 
             return model.save().then(function(data)
             {
@@ -220,7 +231,7 @@ module.exports = function(controller, app)
          */
         trash: function(request,response)
         {
-            return Class.remove({_id:request.params.id}).then(function(results) {
+            return request.Model.remove({_id:request.params.id}).then(function(results) {
                 var data = {
                     results: results,
                     objectId : request.params.id
