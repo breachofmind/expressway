@@ -15,6 +15,8 @@ var Model       = require('./model'),
     core        = require('./core'),
     lang        = require('./support/lang');
 
+mongoose.Promise = require('bluebird');
+
 var config, routes;
 
 
