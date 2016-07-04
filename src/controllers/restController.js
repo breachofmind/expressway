@@ -10,16 +10,12 @@ var utils = require('../support/utils');
  */
 module.exports = function(controller, app)
 {
-    var Class,
-        object,
-        blueprint;
-
     /**
      * Resolve the model parameter with the model class.
      */
     controller.bind('model', function(value,request,response)
     {
-        blueprint = Model.get(value);
+        var blueprint = Model.get(value);
 
         if (! blueprint) {
             return response.api({error:`Model "${value}" doesn't exist.`}, 404);
