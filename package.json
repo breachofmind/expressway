@@ -29,6 +29,7 @@
     "connect-mongo": "^1.1.0",
     "csurf": "^1.8.3",
     "csvtojson": "^0.5.12",
+    "ejs": "^2.4.2",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
     "glob": "^7.0.5",
@@ -36,7 +37,6 @@
     "mongoose": "^4.4.4",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
-    "pug": "^2.0.0-alpha6",
     "winston": "^2.2.0"
   },
   "devDependencies": {

@@ -165,8 +165,7 @@ module.exports = function Core (app,request,response)
         // Not Modified, who cares
         if (response.statusCode == 304) return;
 
-        logger[type]('[%s] %s %s %d "%s" %s %s',
-            new Date().toISOString(),
+        logger.log(type, "%s %s %d '%s' %s %s",
             request.ip,
             request.method,
             response.statusCode,

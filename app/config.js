@@ -35,6 +35,24 @@ module.exports = {
     port: 8081,
 
     /**
+     * Where your views are located.
+     * @var string
+     */
+    views: "app/views",
+
+    /**
+     * The path your logs are stored.
+     * @var string
+     */
+    log_path: 'tmp',
+
+    /**
+     * Which view engine you are using.
+     * @var string ejs|pug|hbs...
+     */
+    view_engine: "ejs",
+
+    /**
      * The supported localities.
      * @var array<string>
      */

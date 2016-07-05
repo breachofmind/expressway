@@ -1,0 +1,25 @@
+<% include common/head %>
+
+<main id="Body">
+    <h1>Login</h1>
+
+    <form action="/login" method="POST">
+
+        <fieldset>
+
+            <label for="Username">Username
+                <input type="text" name="username" id="Username">
+            </label>
+
+            <label for="Password">Password
+                <input type="password" name="password" id="Password">
+            </label>
+
+            <input type="hidden" name="_csrf" value="<%= request.csrfToken() %>">
+            <button type="submit">Submit</button>
+        </fieldset>
+
+    </form>
+</main>
+
+<% include common/footer %>

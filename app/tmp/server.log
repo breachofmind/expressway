@@ -1,0 +1,22 @@
+{"durationMs":37,"level":"info","message":"boot","timestamp":"2016-07-05T15:42:53.909Z"}
+{"level":"info","message":"Starting 'local' server on http://localhost:8081 (port 8081)...","timestamp":"2016-07-05T15:42:53.912Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:43:39.593Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:43:52.749Z"}
+{"level":"info","message":"::1 GET 200 'OK' indexController@index /","timestamp":"2016-07-05T15:43:55.251Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:44:01.350Z"}
+{"level":"info","message":"::1 GET 302 'Found' authController@logout /logout","timestamp":"2016-07-05T15:44:05.444Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:44:05.449Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:44:42.549Z"}
+{"level":"info","message":"::1 POST 302 'Found' static /login","timestamp":"2016-07-05T15:44:49.736Z"}
+{"level":"info","message":"::1 GET 200 'OK' indexController@index /","timestamp":"2016-07-05T15:44:49.746Z"}
+{"level":"info","message":"::1 GET 200 'OK' indexController@index /","timestamp":"2016-07-05T15:45:01.473Z"}
+{"durationMs":38,"level":"info","message":"boot","timestamp":"2016-07-05T15:45:37.481Z"}
+{"level":"info","message":"Starting 'local' server on http://localhost:8081 (port 8081)...","timestamp":"2016-07-05T15:45:37.483Z"}
+{"level":"info","message":"::1 GET 200 'OK' indexController@index /","timestamp":"2016-07-05T15:45:39.012Z"}
+{"level":"info","message":"::1 GET 302 'Found' authController@logout /logout","timestamp":"2016-07-05T15:45:42.029Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:45:42.033Z"}
+{"level":"info","message":"::1 GET 200 'OK' authController@login /login","timestamp":"2016-07-05T15:45:55.500Z"}
+{"level":"access","message":"[2016-07-05T15:46:00.492Z] Login attempt by mike@bom.us","timestamp":"2016-07-05T15:46:00.492Z"}
+{"level":"access","message":"Login successful: '2016-07-05T15:46:00.496Z' mike@bom.us","timestamp":"2016-07-05T15:46:00.496Z"}
+{"level":"info","message":"::1 POST 302 'Found' static /login","timestamp":"2016-07-05T15:46:00.499Z"}
+{"level":"info","message":"::1 GET 200 'OK' indexController@index /","timestamp":"2016-07-05T15:46:00.505Z"}

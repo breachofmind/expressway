@@ -1,6 +1,6 @@
 "use strict";
 
-var pug = require('pug');
+var ejs = require('ejs');
 var fs = require('fs');
 
 var app,config;
@@ -114,9 +114,9 @@ Template.defaults = function(template)
 
 
 var _fileTemplate = {
-    link: pug.compile('link(rel="stylesheet", type="text/css", href=attributes.src)'),
-    script: pug.compile('script(src=attributes.src, type="text/javascript")'),
-    meta: pug.compile('meta(name=name, content=attributes.value)')
+    link: ejs.compile('<link rel="" type="text/css" href="<%= attributes.src %>"/>'),
+    script: ejs.compile('<script type="text/javascript" src="<%= attributes.src %>"></script>'),
+    meta: ejs.compile('<meta name="<%=name%>" content="<%=attributes.value%>"/>')
 };
 
 var _jsonProperties = ['name','element','attributes'];

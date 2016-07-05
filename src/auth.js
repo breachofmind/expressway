@@ -33,7 +33,7 @@ var Auth = function(app)
     {
         Model.User.findOne({ email: username }, function (err, user) {
 
-            app.logger.warn(`[%s] Login attempt by ${username}`, new Date());
+            app.logger.log('access', "Login attempt: '%s'", username);
 
             // If error, return with error.
             if (err) {
@@ -42,15 +42,18 @@ var Auth = function(app)
 
             // If user is not found, fail with message.
             if (! user) {
+                app.logger.log('access', "User does not exist: '%s'", username);
                 return done(null, false, { message: 'User does not exist.' });
             }
 
             // If user password is not valid, fail with message.
             if (! user.isValid(password)) {
+                app.logger.log('access', "Login attempt failed: '%s'", username);
                 return done(null, false, { message: 'Incorrect password.' });
             }
 
-            app.logger.warn(`[%s] Login successful by ${username}`, new Date());
+
+            app.logger.log('access', "Login successful: '%s'", username);
             return done(null, user);
         });
     }));

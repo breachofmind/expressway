@@ -4,7 +4,6 @@ var express     = require('express'),
     bodyParser  = require('body-parser'),
     session     = require('express-session'),
     csrf        = require('csurf'),
-    winston     = require('winston'),
     path        = require('path'),
     locale      = require('locale'),
     MongoStore  = require('connect-mongo')(session);
@@ -13,7 +12,8 @@ var Model       = require('./model'),
     Controller  = require('./controller'),
     Auth        = require('./auth'),
     core        = require('./core'),
-    lang        = require('./support/lang');
+    lang        = require('./support/lang'),
+    logger      = require('./support/logger');
 
 mongoose.Promise = require('bluebird');
 
@@ -32,19 +32,18 @@ class Application
      */
     constructor()
     {
-        winston.profile('boot');
-
         config = require(Application.root+'config');
         routes = require(Application.root+'routes');
 
         Application.instance = this;
 
-        this.locale      = lang.init();
-        this.logger      = winston;
         this.environment = config.environment;
+        this.locale      = lang.init();
+        this.logger      = logger(this,config);
         this.config      = config;
         this.db          = mongoose;
 
+        this.logger.profile('boot');
         this.db.connect(config.db);
 
         this._middlewares = [];
@@ -60,7 +59,7 @@ class Application
     {
         this.express = express();
 
-        this.express.set('view engine', config.view_engine || 'pug');
+        this.express.set('view engine', config.view_engine || 'ejs');
         this.express.set('views', config.views || 'app/views');
 
         Application.middleware.forEach(function(func)
@@ -85,10 +84,10 @@ class Application
     {
         this.express.listen(config.port, function()
         {
-            winston.info(`Starting '${config.environment}' server on ${config.url} (port ${config.port})...`);
-        });
+            this.logger.info(`Starting '${config.environment}' server on ${config.url} (port ${config.port})...`);
+        }.bind(this));
 
-        winston.profile('boot');
+        this.logger.profile('boot');
 
         return this;
     };
