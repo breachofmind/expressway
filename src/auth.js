@@ -4,14 +4,13 @@ var passport    = require('passport'),
     Strategy    = require('passport-local').Strategy,
     crypto      = require('crypto');
 
-var Model = require('./model');
-
 /**
  * Set up the authentication middleware.
  * @param app Application
  */
 var Auth = function(app)
 {
+    var Model = app.ModelFactory;
     app.express.use(passport.initialize());
     app.express.use(passport.session());
 
@@ -53,7 +52,7 @@ var Auth = function(app)
             }
 
 
-            app.logger.log('access', "Login successful: '%s'", username);
+            app.logger.log('access', "Login successful: '%s' %s", username, user.id);
             return done(null, user);
         });
     }));

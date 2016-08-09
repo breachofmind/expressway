@@ -1,9 +1,23 @@
 var glob = require('glob');
 var path = require('path');
+var utils = require('./utils');
 
-var KeyStore = function()
+/**
+ * The main key store.
+ * @type {KeyStore}
+ */
+var store = new KeyStore();
+
+
+/**
+ * A collection of keys and values.
+ * @constructor
+ */
+function KeyStore()
 {
     this.index = {};
+
+    this.app = null;
 
     /**
      * Replaces variables in the string in order.
@@ -110,48 +124,43 @@ var KeyStore = function()
         var localeName = path.basename(dirName);
         this.setLocale(localeName);
 
-        glob(dirName+"/*.js", function(err,files)
+        var files = utils.getFileBaseNames(dirName+"/");
+
+        files.forEach(function(file)
         {
-            files.forEach(function(file) {
-                if (file == dirName) {
-                    return;
+            var lang = require(dirName+"/"+file);
+
+            var index=0;
+            for (var prop in lang)
+            {
+                if (! lang.hasOwnProperty(prop)) {
+                    continue;
                 }
-                var fileBaseName = path.basename(file,'.js');
-                var lang = require(file);
-                for (var prop in lang)
-                {
-                    if (! lang.hasOwnProperty(prop)) {
-                        continue;
-                    }
-                    store.setKey(localeName, fileBaseName+"."+prop, lang[prop]);
-                }
-            });
+                store.setKey(localeName, file+"."+prop, lang[prop]);
+                index++;
+            }
+            store.app.logger.debug("Loaded Language File: %s.%s (%d keys)", localeName, file, index);
         });
     }
 
-};
-
-/**
- * The main key store.
- * @type {KeyStore}
- */
-var store = new KeyStore();
+}
 
 module.exports = {
 
     /**
      * Initializes the locale functionality.
+     * @param app Application
+     * @returns KeyStore
      */
-    init: function()
+    init: function(app)
     {
-        var Application = require('../application');
+        store.app = app;
 
-        glob(Application.rootPath('lang/*'), function(err,files)
+        var langDirs = glob.sync(app.constructor.rootPath('lang/*'));
+
+        langDirs.forEach(function(dirPath,i)
         {
-            files.forEach(function(dirPath)
-            {
-                store.setLocaleDir(dirPath)
-            })
+            store.setLocaleDir(dirPath)
         });
 
         return store;

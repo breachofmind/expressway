@@ -6,20 +6,25 @@ var express     = require('express'),
     csrf        = require('csurf'),
     path        = require('path'),
     locale      = require('locale'),
-    MongoStore  = require('connect-mongo')(session);
+    MongoStore  = require('connect-mongo')(session),
+    cp          = require('child_process');
 
-var Model       = require('./model'),
-    Controller  = require('./controller'),
-    Auth        = require('./auth'),
-    core        = require('./core'),
-    router      = require('./router'),
-    lang        = require('./support/lang'),
-    logger      = require('./support/logger'),
-    utils       = require('./support/utils');
+var ModelProvider       = require('./model'),
+    LoggerProvider      = require('./support/logger'),
+    ControllerProvider  = require('./controller'),
+    AuthProvider        = require('./auth'),
+    RouterProvider      = require('./router'),
+    TemplateProvider    = require('./template'),
+    ViewProvider        = require('./view'),
+    UrlProvider         = require('./url');
+
+var core  = require('./core'),
+    lang  = require('./support/lang'),
+    utils = require('./support/utils'),
+    config,
+    routes;
 
 mongoose.Promise = require('bluebird');
-
-var config, routes;
 
 
 /**
@@ -34,23 +39,38 @@ class Application
      */
     constructor()
     {
+        Application.instance = this;
+
         config = require(Application.root+'config');
         routes = require(Application.root+'routes');
 
-        Application.instance = this;
-
-        this.environment = config.environment;
-        this.locale      = lang.init();
-        this.logger      = logger(this,config);
-        this.config      = config;
-        this.db          = mongoose;
-
-        this.logger.profile('boot');
-        this.db.connect(config.db);
+        this.env    = config.environment;
+        this.db     = mongoose;
+        this.config = config;
 
         this._middlewares = [];
-        this._models = Model.load(config.files.models);
-        this._controllers = Controller.load(config.files.controllers);
+        this._loadDatabase();
+        this._loadProviders();
+    }
+
+    _loadDatabase()
+    {
+        this.db.connect(config.db);
+    }
+
+    _loadProviders()
+    {
+        this.utils = utils;
+        this.logger = LoggerProvider(this);
+        this.url = UrlProvider(this);
+        this.lang = lang.init(this);
+        this.Auth = AuthProvider;
+        this.ModelFactory = ModelProvider(this);
+        this.ControllerFactory = ControllerProvider(this);
+        this.Router = RouterProvider(this);
+        this.Template = TemplateProvider(this);
+        this.View = ViewProvider(this);
+
     }
 
     /**
@@ -59,6 +79,8 @@ class Application
      */
     bootstrap()
     {
+        this.ModelFactory.build();
+
         this.express = express();
 
         this.express.set('view engine', config.view_engine || 'ejs');
@@ -72,7 +94,7 @@ class Application
 
         }.bind(this));
 
-        routes.call(router(this));
+        routes.call(this.Router);
 
         return this;
     }
@@ -87,13 +109,15 @@ class Application
         this.express.listen(config.port, function()
         {
             this.logger.info(`Starting %s server on %s (%s)...`,
-                config.environment,
+                this.env,
                 config.url,
                 utils.url());
         }.bind(this));
 
-        this.logger.profile('boot');
-
+        // Boot google chrome if developing locally.
+        if (this.env == 'local') {
+            cp.exec(`open /Applications/Google\\ Chrome.app ${utils.url()}`, function(err){});
+        }
         return this;
     };
 
@@ -149,6 +173,7 @@ Application.instance = null;
  * @type {*[]}
  */
 Application.middleware = [
+
     function CoreMiddleware (app)
     {
         return function(request,response,next)
@@ -248,7 +273,7 @@ Application.middleware = [
      */
     function AuthMiddleware (app)
     {
-        return Auth(app);
+        return app.Auth(app);
     }
 ];
 

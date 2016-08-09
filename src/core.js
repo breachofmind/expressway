@@ -1,8 +1,6 @@
 "use strict";
 
-var View = require('./view');
 var codes = require('./support/status');
-var utils = require('./support/utils');
 
 /**
  * Adds some helper functions to the request and response.
@@ -12,7 +10,9 @@ var utils = require('./support/utils');
  */
 module.exports = function Core (app,request,response)
 {
+    var utils = app.utils;
     var logger = app.logger;
+    var View = app.View;
 
     request.controller = {name:null,method:null};
 
@@ -164,13 +164,14 @@ module.exports = function Core (app,request,response)
         // Not Modified, who cares
         if (response.statusCode == 304) return;
 
-        logger.log(type, "%s %s %d '%s' %s %s",
+        logger.log(type, "%s %s %d '%s' %s %s %s",
             request.ip,
             request.method,
             response.statusCode,
             response.phrase(),
             controller,
-            request.url
+            request.url,
+            request.user ? request.user.id : ""
         );
     });
 };

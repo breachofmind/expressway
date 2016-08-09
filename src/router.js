@@ -1,9 +1,8 @@
 "use strict";
 var utils = require('./support/utils');
 
-module.exports = function RouterModule(app)
+module.exports = function RouterProvider(app)
 {
-    var express = app.express;
     var routes = [];
 
     /**
@@ -28,7 +27,7 @@ module.exports = function RouterModule(app)
         }
 
         routes.push(this);
-        express[verb].apply(express, [url].concat(this.methods));
+        app.express[verb].apply(app.express, [url].concat(this.methods));
     }
 
     /**

@@ -1,3 +1,6 @@
+var glob = require('glob');
+var path = require('path');
+
 /**
  * Helper methods.
  * @author Mike Adamczyk <mike@bom.us>
@@ -24,13 +27,10 @@ module.exports = {
      * @param uri string
      * @returns {string}
      */
-
     url: function(uri)
     {
-        var config = require('../application').instance.config;
-        if (!uri) uri = "";
-        var url = config.proxy ? config.proxy : config.url + ":" +config.port;
-        return `${url}/${uri}`;
+        var app = require('../application').instance;
+        return app.url(uri);
     },
 
     /**
@@ -60,7 +60,8 @@ module.exports = {
      */
     getRouteFunctions: function(values)
     {
-        var dispatch = require('../controller').dispatch;
+        var app = require('../application').instance;
+        var dispatch = app.ControllerFactory.dispatch;
         var out = [];
 
         if (! Array.isArray(values)) {
@@ -78,5 +79,19 @@ module.exports = {
         });
 
         return out;
+    },
+
+    /**
+     * Return just the file basenames (without the .js).
+     * @param dir string
+     * @returns {*}
+     */
+    getFileBaseNames: function(dir)
+    {
+        var files = glob.sync(dir+"*.js");
+
+        return files.map(function(file) {
+            return path.basename(file,".js");
+        });
     }
 };

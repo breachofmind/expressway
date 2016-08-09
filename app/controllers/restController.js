@@ -1,6 +1,5 @@
 "use strict";
-var ExpressMVC = require('../../index');
-
-var Controller  = ExpressMVC.Controller;
-
-Controller.create('restController', Controller.basic.REST);
+module.exports = function(Factory)
+{
+    Factory.create('restController', Factory.basic.REST);
+};

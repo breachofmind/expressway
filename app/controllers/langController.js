@@ -1,5 +1,5 @@
 "use strict";
-
-var Controller = require('../../index').Controller;
-
-Controller.create('langController', Controller.basic.Locales);
+module.exports = function(Factory)
+{
+    Factory.create('langController', Factory.basic.Locales);
+};
