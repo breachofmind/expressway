@@ -1,3 +1,3 @@
 var ExpressMVC = require('./index');
 
-var app = ExpressMVC.init(__dirname + "/app/").server();
+var app = ExpressMVC(__dirname + "/app/").server();

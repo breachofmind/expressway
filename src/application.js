@@ -17,7 +17,8 @@ var ModelProvider       = require('./model'),
     RouterProvider      = require('./router'),
     TemplateProvider    = require('./template'),
     ViewProvider        = require('./view'),
-    UrlProvider         = require('./url');
+    UrlProvider         = require('./url'),
+    CLIProvider         = require('./cli');
 
 var core  = require('./core'),
     lang  = require('./support/lang'),
@@ -47,11 +48,12 @@ class Application
         config = require(Application.root+'config/config');
         routes = require(Application.root+'config/routes');
 
-        this.version = npmPackage.version;
-        this.env     = config.environment;
-        this.db      = mongoose;
-        this.config  = config;
-        this.logger  = LoggerProvider(this);
+        this.version  = npmPackage.version;
+        this.env      = config.environment;
+        this.db       = mongoose;
+        this.config   = config;
+        this.logger   = LoggerProvider(this);
+        this.rootPath = Application.rootPath;
 
         this._package = npmPackage;
         this._middlewares = [];
@@ -78,6 +80,7 @@ class Application
         this.utils = utils;
         this.url = UrlProvider(this);
         this.lang = lang.init(this);
+        this.cli = CLIProvider(this);
         this.Auth = AuthProvider;
         this.ModelFactory = ModelProvider(this);
         this.ControllerFactory = ControllerProvider(this);

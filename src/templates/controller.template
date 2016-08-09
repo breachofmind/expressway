@@ -1,0 +1,13 @@
+module.exports = function(Factory, app) {
+
+    Factory.create("<%=name%>", function(app) {
+
+        return {
+            index: function(request,response,next)
+            {
+                // Codez
+            }
+        };
+
+    });
+}

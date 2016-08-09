@@ -2,81 +2,78 @@
 
 var program = require('commander');
 var cp = require('child_process');
+var ejs = require('ejs');
+var fs = require('fs');
 
-class CLI
+module.exports = function CLIProvider(app)
 {
-    /**
-     * Named constructor.
-     * @returns {CLI}
-     */
-    static init()
-    {
-        return new CLI();
-    }
+    var actions = {};
+    var cli = program.version(app.version);
 
-    /**
-     * Constructor.
-     */
-    constructor()
-    {
-        this._actions = {};
-        this.cli = program.version('1.0.0');
-    }
 
-    /**
-     * Register an action.
-     * @param name string
-     * @param func
-     */
-    action(name, func)
+    function createTemplate(type)
     {
-        this.cli.command(name).action(func);
-        this._actions[name] = func;
-    }
-
-    /**
-     * Set multiple actions.
-     * @param obj
-     */
-    actions(obj)
-    {
-        for (let name in obj)
-        {
-            this.action(name,obj[name]);
+        return function(name) {
+            if (! name || name=="") {
+                throw new Error("Specify a name for the "+type);
+            }
+            var template = ejs.compile(fs.readFileSync(__dirname + `/templates/${type}.template`).toString());
+            var str = template({name:name});
+            fs.writeFileSync(app.rootPath(`${type}s/${name}.js`),str);
         }
     }
 
-    /**
-     * Run and process the cli arguments.
-     * @returns void
-     */
-    run()
-    {
-        this.cli.parse(process.argv);
-    }
+    return {
+        logger: app.logger,
 
-    /**
-     * Log a message using the application logger.
-     * @param message string
-     */
-    log(message)
-    {
-        console.log(message);
-    }
+        controller: createTemplate('controller'),
 
-    /**
-     * Execute a cli command and print the response to the console.
-     * @param command string
-     * @param args array
-     * @returns void
-     */
-    exec(command,args)
-    {
-        var process = cp.spawn(command,args);
-        process.stdout.on('data', function(data) {
-            console.log(data.toString());
-        });
-    }
-}
+        model: createTemplate('model'),
 
-module.exports = CLI;
+        /**
+         * Register an action.
+         * @param name string
+         * @param func
+         */
+        action: function(name,func)
+        {
+            cli.command(name).action(func);
+            actions[name] = func;
+        },
+
+        /**
+         * Set multiple actions.
+         * @param obj
+         */
+        actions: function(obj)
+        {
+            for (let name in obj)
+            {
+                this.action(name, obj[name]);
+            }
+        },
+
+        /**
+         * Run and process the cli arguments.
+         * @returns void
+         */
+        run: function()
+        {
+            cli.parse(process.argv);
+        },
+
+        /**
+         * Execute a cli command and print the response to the console.
+         * @param command string
+         * @param args array
+         * @returns void
+         */
+        exec: function(command,args)
+        {
+            var process = cp.spawn(command,args);
+            process.stdout.on('data', function(data) {
+                console.log(data.toString());
+            });
+        }
+    };
+};
