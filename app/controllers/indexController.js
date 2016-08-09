@@ -2,9 +2,10 @@
 
 var Controller = require('../../index').Controller;
 
-Controller.create('indexController', function(controller)
+Controller.create('indexController', function(app)
 {
     // Specify your global variables or controller bindings up here.
+    // These should not change for each request.
     var globals = {
         message: "Enjoy yourself"
     };
@@ -16,4 +17,5 @@ Controller.create('indexController', function(controller)
             return response.view('index').and(globals);
         }
     }
+
 });

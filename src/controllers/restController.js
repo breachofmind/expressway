@@ -4,45 +4,40 @@ var utils = require('../support/utils');
 
 /**
  * Maintained controller that does basic CRUD and REST stuff.
- * @param controller
  * @param app
  * @returns {object}
  */
-module.exports = function(controller, app)
+module.exports = function(app)
 {
     /**
-     * Resolve the model parameter with the model class.
+     * Assign the route middleware.
      */
-    controller.bind('model', function(value,request,response)
-    {
-        var blueprint = Model.get(value);
-
-        if (! blueprint) {
-            return response.api({error:`Model "${value}" doesn't exist.`}, 404);
-        }
-
-        if (blueprint.expose == false && ! request.user) {
-            return response.api({error:`You must be logged in to view "${value}" models.`}, 401);
-        }
-
-        request.Model = blueprint.model;
-        request.blueprint = blueprint;
+    this.middleware({
+        update : apiAuthMiddleware,
+        create : apiAuthMiddleware,
+        trash  : apiAuthMiddleware
     });
+
+    /**
+     * Assign global middleware.
+     */
+    this.middleware(modelMiddleware);
 
     /**
      * Resolve the id of the model with the object.
      */
-    controller.bind('id', function(value,request)
+    this.bind('id', function(value,request)
     {
         if (request.Model && value) {
             request.Object = request.Model.findOne({_id: value});
         }
     });
 
-    controller.query('p', function(value,request)
+    this.query('p', function(value,request)
     {
         request.query.filter = request.blueprint.paging(utils.fromBase64(value));
     });
+
 
 
     return {
@@ -243,3 +238,45 @@ module.exports = function(controller, app)
 
     }
 };
+
+/**
+ * Special middleware to check if this is a model being requested.
+ * @param request
+ * @param response
+ * @param next
+ */
+function modelMiddleware(request,response,next)
+{
+    if (! request.params.hasOwnProperty('model')) {
+        return next();
+    }
+    var value = request.params.model;
+    var blueprint = Model.get(value);
+
+    if (! blueprint) {
+        return response.api({error:`Model "${value}" doesn't exist.`}, 404);
+    }
+
+    if (blueprint.expose == false && ! request.user) {
+        return response.api({error:`You must be logged in to view "${value}" models.`}, 401);
+    }
+
+
+    request.Model = blueprint.model;
+    request.blueprint = blueprint;
+    return next();
+}
+
+/**
+ * Special middleware for certain routes on this controller.
+ * @param request
+ * @param response
+ * @param next
+ */
+function apiAuthMiddleware (request,response,next)
+{
+    if (! request.user) {
+        return response.api({error:`You are not authorized to perform this operation.`}, 401);
+    }
+    next(request);
+}

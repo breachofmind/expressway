@@ -20,7 +20,19 @@ module.exports = {
      * The webserver base URL.
      * @var string
      */
-    url: "http://localhost:8081",
+    url: "http://localhost",
+
+    /**
+     * The webserver port.
+     * @var Number
+     */
+    port: 8081,
+
+    /**
+     * The proxy URL, if using a proxy.
+     * @var string|null
+     */
+    proxy: null,
 
     /**
      * The directory where static content is served.
@@ -28,11 +40,6 @@ module.exports = {
      */
     static_uri: 'public',
 
-    /**
-     * The webserver port.
-     * @var Number
-     */
-    port: 8081,
 
     /**
      * Where your views are located.
@@ -44,7 +51,7 @@ module.exports = {
      * The path your logs are stored.
      * @var string
      */
-    log_path: 'tmp',
+    log_path: 'logs',
 
     /**
      * Which view engine you are using.

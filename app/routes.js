@@ -1,39 +1,34 @@
 /**
  * Provides some routes for the application.
- * @param app Application
- * @param router Express
- * @param dispatch function
  */
-module.exports = function(app,router,dispatch)
+module.exports = function()
 {
-    var passport = app.passport;
-
-    var ApiAuthMiddleware = function(request,response,next)
-    {
-        if (! request.user) {
-            return response.api({error:`You are not authorized to perform this operation.`}, 401);
-        }
-        next();
-    };
-
     // Authentication routes.
-    router.get  ('/login',  dispatch('authController', 'login'));
-    router.get  ('/logout', dispatch('authController', 'logout'));
-    router.post ('/login',  passport.authenticate('local', {
-        successRedirect: "/",
-        failureRedirect: "/login"
-    }));
+    this.get({
+        '/login' : 'authController.login',
+        '/logout': 'authController.logout'
+    }).post({
+        '/login' : 'authController.authenticate'
+    });
 
-    // RESTful api
-    router.get      ('/api/v1',            dispatch('restController','index'));
-    router.get      ('/api/v1/lang',       dispatch('langController','index'));
-    router.get      ('/api/v1/:model',     dispatch('restController','fetchAll'));
-    router.post     ('/api/v1/:model',     ApiAuthMiddleware, dispatch('restController','create'));
-    router.get      ('/api/v1/:model/:id', dispatch('restController','fetchOne'));
-    router.put      ('/api/v1/:model/:id', ApiAuthMiddleware, dispatch('restController','update'));
-    router.delete   ('/api/v1/:model/:id', ApiAuthMiddleware, dispatch('restController','trash'));
+    // API routes.
+    this.get({
+        '/api/v1'               : 'restController.index',
+        '/api/v1/lang'          : 'langController.index',
+        '/api/v1/:model'        : 'restController.fetchAll',
+        '/api/v1/:model/:id'    : 'restController.fetchOne'
+    }).post({
+        '/api/v1/:model'        : 'restController.create',
+        '/api/v1/:model/search' : 'restController.search'
+    }).put({
+        '/api/v1/:model/:id'    : 'restController.update'
+    }).delete({
+        '/api/v1/:model/:id'    : 'restController.trash'
+    });
 
 
     // Application routes.
-    router.get('/',      dispatch('indexController','index'));
+    this.get({
+        '/' : 'indexController.index'
+    });
 };

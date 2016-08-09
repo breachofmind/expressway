@@ -29,7 +29,8 @@ module.exports = {
     {
         var config = require('../application').instance.config;
         if (!uri) uri = "";
-        return `${config.url}/${uri}`;
+        var url = config.proxy ? config.proxy : config.url + ":" +config.port;
+        return `${url}/${uri}`;
     },
 
     /**
@@ -50,5 +51,32 @@ module.exports = {
     fromBase64: function(string)
     {
         return new Buffer(string,'base64').toString('utf-8');
+    },
+
+    /**
+     * Given a string or functions, return an array of functions for the express router.
+     * @param values
+     * @returns {Array}
+     */
+    getRouteFunctions: function(values)
+    {
+        var dispatch = require('../controller').dispatch;
+        var out = [];
+
+        if (! Array.isArray(values)) {
+            values = [values];
+        }
+        values.forEach(function(value)
+        {
+            if (typeof value == 'string') {
+                var parts = value.split(".",2);
+                out = out.concat(dispatch.apply(null, parts));
+            }
+            if (typeof value == 'function') {
+                out.push(value);
+            }
+        });
+
+        return out;
     }
 };

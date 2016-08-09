@@ -37,7 +37,6 @@ module.exports = function Core (app,request,response)
             return handle(response.view('error/404'), 404);
         }
 
-        // Send a promise through the handler again.
         if (value.constructor && value.constructor.name == "Promise")
         {
             return value.then(function(returnValue){
@@ -76,7 +75,7 @@ module.exports = function Core (app,request,response)
      */
     request.controllerToString = function()
     {
-        return request.controller.name + "@" + request.controller.method;
+        return request.controller.name + "." + request.controller.method;
     };
 
     /**

@@ -12,8 +12,10 @@ var Model       = require('./model'),
     Controller  = require('./controller'),
     Auth        = require('./auth'),
     core        = require('./core'),
+    router      = require('./router'),
     lang        = require('./support/lang'),
-    logger      = require('./support/logger');
+    logger      = require('./support/logger'),
+    utils       = require('./support/utils');
 
 mongoose.Promise = require('bluebird');
 
@@ -70,7 +72,7 @@ class Application
 
         }.bind(this));
 
-        routes(this, this.express, Controller.dispatch);
+        routes.call(router(this));
 
         return this;
     }
@@ -84,7 +86,10 @@ class Application
     {
         this.express.listen(config.port, function()
         {
-            this.logger.info(`Starting '${config.environment}' server on ${config.url} (port ${config.port})...`);
+            this.logger.info(`Starting %s server on %s (%s)...`,
+                config.environment,
+                config.url,
+                utils.url());
         }.bind(this));
 
         this.logger.profile('boot');
@@ -131,7 +136,6 @@ class Application
  * @type {string}
  */
 Application.root = path.normalize(path.dirname(__dirname) + "/app/");
-
 
 
 /**

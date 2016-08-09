@@ -2,7 +2,7 @@
 
 var Controller = require('../../index').Controller;
 
-Controller.create('authController', function(controller,app)
+Controller.create('authController', function(app)
 {
     return {
         /**
@@ -44,16 +44,16 @@ Controller.create('authController', function(controller,app)
                 if (err) return next(err);
 
                 if (! user) {
-                    return isAjax ? response.smart({success:false, error:info.message}, 401) : response.view('login');
+                    return response.smart(isAjax ? {success:false, error:info.message} : response.view('login'), 401);
                 }
 
                 request.logIn(user, function(err) {
 
                     if (err) {
-                        return isAjax ? response.smart({success:false, error:info.message}, 401) : response.view('login');
+                        return response.smart(isAjax ? {success:false, error:info.message} : response.view('login'), 401);
                     }
 
-                    return isAjax ? response.smart({success:true, user:user, redirect:"/admin"}, 200) : response.redirect('/');
+                    return response.smart(isAjax ? {success:true, user:user, redirect:"/admin"} : response.redirect('/'), 200);
                 });
 
             })(request,response,next);

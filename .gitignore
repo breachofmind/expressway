@@ -1,6 +1,6 @@
 application.iml
 node_modules
 .idea
-app/tmp/*
+app/logs/*
 
 *.DS_Store

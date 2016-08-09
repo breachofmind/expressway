@@ -1,10 +1,9 @@
 /**
  * Maintained controller that returns locale keys and values.
- * @param controller
  * @param app
  * @returns object
  */
-module.exports = function(controller,app)
+module.exports = function(app)
 {
     var lang = app.locale;
 

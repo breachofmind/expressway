@@ -25,8 +25,9 @@ class ControllerFactory
 
         this._bindings = {};
         this._queryBindings = {};
+        this._middleware = [];
 
-        this.methods = setup(this,app);
+        this.methods = setup.call(this,app);
     }
 
     /**
@@ -49,6 +50,34 @@ class ControllerFactory
     has(name)
     {
         return this.methods[name] ? true:false;
+    }
+
+    /**
+     * Associate certain methods on this controller with middleware.
+     * @param methods object {route: [middlewareFunction, ...]}
+     * @return ControllerFactory
+     */
+    middleware(methods)
+    {
+        // This middleware is assigned to all methods.
+        if (typeof methods == 'function') {
+            this._middleware.push(methods);
+            return this;
+        }
+        for (let methodName in methods)
+        {
+            var middlewares = methods[methodName];
+            if (! Array.isArray(middlewares)) {
+                middlewares = [middlewares];
+            }
+            middlewares.forEach(function(middleware) {
+                this._middleware.push({
+                    method: methodName,
+                    middleware: middleware
+                });
+            }.bind(this));
+        }
+        return this;
     }
 
     /**
@@ -102,6 +131,28 @@ class ControllerFactory
     }
 
     /**
+     * Combine the route request with the middleware for Controller.dispatch.
+     * @param method string method requested
+     * @param routeRequest function
+     * @returns {*}
+     */
+    getMiddleware(method, routeRequest)
+    {
+        var out = this._middleware.reduce(function(memo,value)
+        {
+            if (typeof value == 'function') {
+                memo.push(value);
+            } else if (typeof value == 'object' && value.method == method) {
+                memo.push(value.middleware);
+            }
+            return memo;
+        },[]);
+
+        out.push(routeRequest);
+        return out;
+    }
+
+    /**
      * Load the given files.
      * @param items array
      * @returns {*}
@@ -150,7 +201,7 @@ class ControllerFactory
      * Dispatch a controller.
      * @param name string
      * @param method string
-     * @returns {Function}
+     * @returns {Function|Array}
      */
     static dispatch(name, method)
     {
@@ -160,7 +211,7 @@ class ControllerFactory
         /**
          * Callback served to router.
          */
-        return function(request,response,next)
+        function routeRequest(request,response,next)
         {
             request.controller.name = name;
             request.controller.method = method;
@@ -173,6 +224,7 @@ class ControllerFactory
             }
             return response.smart( action(request,response,next) );
         }
+        return controller.getMiddleware(method, routeRequest)
     }
 }
 
