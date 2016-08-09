@@ -1,8 +1,12 @@
 /**
  * Provides some routes for the application.
  */
-module.exports = function()
+module.exports = function(Template)
 {
+    Template.defaults = function(template){
+        template.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
+    };
+
     // Authentication routes.
     this.get({
         '/login' : 'authController.login',

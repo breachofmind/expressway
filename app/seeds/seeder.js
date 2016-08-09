@@ -1,6 +1,6 @@
 var ExpressMVC = require('../index');
 
-ExpressMVC.Application.root = __dirname+"/";
+ExpressMVC.Application.root = __dirname+"/../";
 
 // Different seeder names can be created.
 var seeder = new ExpressMVC.Seeder('installation');

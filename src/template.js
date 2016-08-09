@@ -69,18 +69,14 @@ module.exports = function TemplateProvider(app)
         {
             var template = this;
             var out = [];
-            var order = ['metas','scripts','styles'];
+            var order = arguments.length ? arguments : ['metas','scripts','styles'];
 
-            if (this.description) {
-                this.meta('description',this.description);
-            }
-
-            order.forEach(function(container)
-            {
-                template[container].forEach(function(file) {
+            for (var i=0; i<order.length; i++) {
+                template[order[i]].forEach(function(file) {
                     out.push(file instanceof TemplateFile ? file.render() : file);
                 });
-            });
+            }
+
             return out.join("\n");
         }
 
@@ -107,8 +103,8 @@ module.exports = function TemplateProvider(app)
 
 
     var _fileTemplate = {
-        link: ejs.compile('<link rel="" type="text/css" href="<%= attributes.src %>"/>'),
-        script: ejs.compile('<script type="text/javascript" src="<%= attributes.src %>"></script>'),
+        link: ejs.compile('<link id="<%=attributes.id%>" rel="stylesheet" type="text/css" href="<%= attributes.src %>"/>'),
+        script: ejs.compile('<script id="<%=attributes.id%>" type="text/javascript" src="<%= attributes.src %>"></script>'),
         meta: ejs.compile('<meta name="<%=name%>" content="<%=attributes.value%>"/>')
     };
 
@@ -125,6 +121,9 @@ module.exports = function TemplateProvider(app)
             this.name       = name;
             this.template   = _fileTemplate[element] || null;
             this.attributes = typeof attr == "string" ? {src:attr} :  attr;
+            if (! this.attributes.id) {
+                this.attributes.id = element+"_"+name;
+            }
 
             if (this.exists) {
                 this.attributes.src += "?m="+fs.statSync(this.publicPath).mtime.getTime();

@@ -193,6 +193,7 @@ module.exports = function ModelProvider(app)
             this.model = db.model(this.name,this.schema);
 
             ModelFactory[this.name] = this.model;
+            app.logger.debug('Model Built: %s', this.name);
 
             return this;
         }
@@ -225,6 +226,7 @@ module.exports = function ModelProvider(app)
 
             return loaded.length == 1 ? loaded[0] : loaded;
         }
+
         /**
          * Assign the schema to all loaded models.
          * This is done at the bootstrap level.
@@ -236,6 +238,7 @@ module.exports = function ModelProvider(app)
                 ModelFactory.models[model].build();
             }
         }
+
         /**
          * Return a ModelFactory object.
          * @param name string

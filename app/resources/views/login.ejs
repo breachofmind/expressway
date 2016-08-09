@@ -1,11 +1,10 @@
 <% include common/head %>
 
-<main id="Body">
-    <h1>Login</h1>
+<main class="row">
+    <div class="columns">
+        <h1>Login</h1>
 
-    <form action="/login" method="POST">
-
-        <fieldset>
+        <form action="/login" method="POST">
 
             <label for="Username">Username
                 <input type="text" name="username" id="Username">
@@ -16,10 +15,12 @@
             </label>
 
             <input type="hidden" name="_csrf" value="<%= request.csrfToken() %>">
-            <button type="submit">Submit</button>
-        </fieldset>
 
-    </form>
+            <button type="submit" class="button">Submit</button>
+
+            <a href="/">Back to Site</a>
+        </form>
+    </div>
 </main>
 
 <% include common/footer %>

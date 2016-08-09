@@ -28,6 +28,7 @@ module.exports = function RouterProvider(app)
 
         routes.push(this);
         app.express[verb].apply(app.express, [url].concat(this.methods));
+        app.logger.debug('Route #%d: %s - %s (%d Middleware)', this.order, verb.toUpperCase(), url, this.methods.length);
     }
 
     /**

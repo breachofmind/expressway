@@ -1,3 +1,5 @@
+var env = require('./env');
+
 /**
  * Sample configuration file.
  * @type {{}}
@@ -14,25 +16,25 @@ module.exports = {
      * The environment name.
      * @var string local|sit|uat|prod
      */
-    environment: "local",
+    environment: env.environment || 'local',
 
     /**
      * The webserver base URL.
      * @var string
      */
-    url: "http://localhost",
+    url: env.url || "http://localhost",
 
     /**
      * The webserver port.
      * @var Number
      */
-    port: 8081,
+    port: env.port || 8081,
 
     /**
      * The proxy URL, if using a proxy.
      * @var string|null
      */
-    proxy: null,
+    proxy: env.proxy || null,
 
     /**
      * The directory where static content is served.
@@ -40,12 +42,11 @@ module.exports = {
      */
     static_uri: 'public',
 
-
     /**
      * Where your views are located.
      * @var string
      */
-    views: "app/views",
+    view_path: "app/resources/views",
 
     /**
      * The path your logs are stored.
@@ -69,7 +70,7 @@ module.exports = {
      * Mongo database.
      * @var string
      */
-    db: "mongodb://localhost/expressmvc",
+    db: env.db || "mongodb://localhost/expressmvc",
 
     /**
      * Enable livereload.
@@ -81,21 +82,11 @@ module.exports = {
      * Enable debug mode.
      * @var boolean
      */
-    debug: true,
+    debug: env.debug || true,
 
     /**
      * The limit of models to return in REST api.
      * @var Number
      */
     limit: 10000,
-
-
-    /**
-     * Files to require.
-     * @var object
-     */
-    files: {
-        models: ['user','media'],
-        controllers: ['authController','indexController','restController','langController']
-    }
 };

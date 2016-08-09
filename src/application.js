@@ -41,8 +41,8 @@ class Application
     {
         Application.instance = this;
 
-        config = require(Application.root+'config');
-        routes = require(Application.root+'routes');
+        config = require(Application.root+'config/config');
+        routes = require(Application.root+'config/routes');
 
         this.env    = config.environment;
         this.db     = mongoose;
@@ -67,10 +67,9 @@ class Application
         this.Auth = AuthProvider;
         this.ModelFactory = ModelProvider(this);
         this.ControllerFactory = ControllerProvider(this);
-        this.Router = RouterProvider(this);
         this.Template = TemplateProvider(this);
         this.View = ViewProvider(this);
-
+        this.Router = RouterProvider(this);
     }
 
     /**
@@ -84,7 +83,7 @@ class Application
         this.express = express();
 
         this.express.set('view engine', config.view_engine || 'ejs');
-        this.express.set('views', config.views || 'app/views');
+        this.express.set('views', config.view_path || 'app/views');
 
         Application.middleware.forEach(function(func)
         {
@@ -94,7 +93,7 @@ class Application
 
         }.bind(this));
 
-        routes.call(this.Router);
+        routes.call(this.Router, this.Template);
 
         return this;
     }

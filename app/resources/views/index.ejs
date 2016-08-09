@@ -1,0 +1,18 @@
+<% include common/head %>
+
+<main class="row">
+    <div class="columns">
+        <h1>Welcome</h1>
+
+        <p>Hello, <%=lang('index.welcome', 'The Application')%></p>
+        <a href="/login">Log in</a>
+
+        <% if (template.user) { %>
+        <h2>Logged in: <%=template.user.first_name %></h2>
+        <a href="/logout">Log out</a>
+        <% } %>
+    </div>
+
+</main>
+
+<% include common/footer %>
