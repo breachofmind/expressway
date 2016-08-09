@@ -24,6 +24,7 @@ module.exports = function TemplateProvider(app)
             this.metas          = [];
 
             this.meta('viewport','width=device-width');
+            this.meta('generator','ExpressMVC v.'+app.version);
 
             if (app.environment === "local" && config.livereload) {
                 this.script("livereload", config.livereload);

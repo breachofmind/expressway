@@ -1,5 +1,6 @@
 var glob = require('glob');
 var path = require('path');
+var fs = require('fs');
 
 /**
  * Helper methods.
@@ -51,6 +52,17 @@ module.exports = {
     fromBase64: function(string)
     {
         return new Buffer(string,'base64').toString('utf-8');
+    },
+
+    /**
+     * Read in a JSON text file.
+     * @param file string
+     * @return object
+     */
+    readJSON: function(file)
+    {
+        var contents = fs.readFileSync(file);
+        return JSON.parse(contents);
     },
 
     /**

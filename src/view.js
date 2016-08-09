@@ -66,9 +66,11 @@ module.exports = function ViewProvider(app)
         {
             this.template.setUser(request.user);
             this.template.meta('csrf-token',request.csrfToken());
+            this.template.meta('description', this.template.description);
             this.data.request = request;
             this.data.template = this.template;
             this.data.lang = lang(request);
+            this.data.appVersion = app.version;
 
             return response.render(this.file, this.data);
         }

@@ -1,6 +1,6 @@
 {
   "name": "express-mvc",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "An MVC stack for Express.js",
   "main": "index.js",
   "scripts": {

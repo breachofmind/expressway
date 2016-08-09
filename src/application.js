@@ -1,4 +1,5 @@
 "use strict";
+
 var express     = require('express'),
     mongoose    = require('mongoose'),
     bodyParser  = require('body-parser'),
@@ -24,6 +25,8 @@ var core  = require('./core'),
     config,
     routes;
 
+var npmPackage = utils.readJSON(__dirname+'/../package.json');
+
 mongoose.Promise = require('bluebird');
 
 
@@ -44,24 +47,35 @@ class Application
         config = require(Application.root+'config/config');
         routes = require(Application.root+'config/routes');
 
-        this.env    = config.environment;
-        this.db     = mongoose;
-        this.config = config;
+        this.version = npmPackage.version;
+        this.env     = config.environment;
+        this.db      = mongoose;
+        this.config  = config;
+        this.logger  = LoggerProvider(this);
 
+        this._package = npmPackage;
         this._middlewares = [];
         this._loadDatabase();
         this._loadProviders();
     }
 
+    /**
+     * Connect to the database.
+     * @private
+     */
     _loadDatabase()
     {
         this.db.connect(config.db);
+        this.logger.debug('Connected to Database: %s', config.db);
     }
 
+    /**
+     * Load all the application providers and services.
+     * @private
+     */
     _loadProviders()
     {
         this.utils = utils;
-        this.logger = LoggerProvider(this);
         this.url = UrlProvider(this);
         this.lang = lang.init(this);
         this.Auth = AuthProvider;
@@ -107,8 +121,9 @@ class Application
     {
         this.express.listen(config.port, function()
         {
-            this.logger.info(`Starting %s server on %s (%s)...`,
+            this.logger.info(`Starting %s server v.%s on %s (%s)...`,
                 this.env,
+                this.version,
                 config.url,
                 utils.url());
         }.bind(this));
