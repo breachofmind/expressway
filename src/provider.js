@@ -107,6 +107,7 @@ class Provider
         Provider.queue.forEach(function(provider){
             provider.load(app);
         });
+        app.event.emit('loaded_providers', app, Provider.objects);
         return app._providers;
     }
 
@@ -126,6 +127,7 @@ class Provider
             })
         }
     }
+
 
     /**
      * Named constructor.

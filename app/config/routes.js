@@ -1,7 +1,7 @@
 /**
  * Provides some routes for the application.
  */
-module.exports = function(Template)
+module.exports = function(app,Template)
 {
     Template.defaults = function(template){
         template.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
@@ -15,20 +15,9 @@ module.exports = function(Template)
         '/login' : 'authController.authenticate'
     });
 
-    // API routes.
-    this.get({
-        '/api/v1'               : 'restController.index',
-        '/api/v1/lang'          : 'langController.index',
-        '/api/v1/:model'        : 'restController.fetchAll',
-        '/api/v1/:model/:id'    : 'restController.fetchOne'
-    }).post({
-        '/api/v1/:model'        : 'restController.create',
-        '/api/v1/:model/search' : 'restController.search'
-    }).put({
-        '/api/v1/:model/:id'    : 'restController.update'
-    }).delete({
-        '/api/v1/:model/:id'    : 'restController.trash'
-    });
+
+    app.ControllerFactory.basic.Locales.routes(this);
+    app.ControllerFactory.basic.REST.routes(this);
 
 
     // Application routes.

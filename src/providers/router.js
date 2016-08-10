@@ -6,6 +6,7 @@ Provider.create('routerProvider', function(app) {
 
     this.requires([
         'loggerProvider',
+        'controllerProvider',
         'templateProvider',
         'expressProvider'
     ]);
@@ -86,6 +87,6 @@ Provider.create('routerProvider', function(app) {
 
     // After express is loaded, add the routes to it.
     app.event.on('bootstrap', function(app) {
-        appRoutes.call(app.Router, app.Template);
+        appRoutes.call(app.Router, app, app.Template);
     });
 });

@@ -190,7 +190,7 @@ Provider.create('controllerProvider', function(app) {
          * @param name string
          * @returns {*}
          */
-        static find(name)
+        static get(name)
         {
             return ControllerFactory.controllers[name] || null;
         }
@@ -212,7 +212,7 @@ Provider.create('controllerProvider', function(app) {
          */
         static dispatch(name, method)
         {
-            var controller = ControllerFactory.find(name);
+            var controller = ControllerFactory.get(name);
             var action = controller.use(method);
 
             /**
@@ -252,18 +252,12 @@ Provider.create('controllerProvider', function(app) {
      */
     ControllerFactory.controllers = {};
 
-    /**
-     * Maintained Controllers that contain only the factory setup function.
-     * @type {{REST: (*|exports|module.exports), Locales: (*|exports|module.exports)}}
-     */
-    ControllerFactory.basic = {
-        REST:    require('../controllers/restController'),
-        Locales: require('../controllers/langController')
-    };
-
-    ControllerFactory.boot();
-
     // Attach the factory to the application for use by other modules.
     app.ControllerFactory = ControllerFactory;
+
+    app.event.on('loaded_providers', function(app) {
+        ControllerFactory.boot();
+    });
+
 });
 

@@ -6,10 +6,9 @@ GLOBAL.ENV_DEV = 'development';
 GLOBAL.ENV_PROD = 'production';
 GLOBAL.ENV_CLI = 'cli';
 
-var express     = require('express'),
-    path        = require('path'),
-    events      = require('events'),
-    cp          = require('child_process');
+var path   = require('path'),
+    events = require('events'),
+    cp     = require('child_process');
 
 /**
  * The default application root directory.
@@ -28,6 +27,7 @@ var providers = [
     'database',
     'auth',
     'controller',
+    'controllerDefaults',
     'model',
     'template',
     'view',

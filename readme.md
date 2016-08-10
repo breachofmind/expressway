@@ -1,74 +1,127 @@
-# Express MVC
+# Express MVC v.0.5.0 (In development)
 
 This is just a handy little starter framework. Includes:
 
 - Express.js webserver
 - MongoDB Database and mongoose ORM
 - Controllers and parameter binding
+- Controller-wide and route Middleware
 - Smart response rendering (objects render as JSON)
-- CRUD API and JSON response
+- CRUD API and JSON response (if you want it!)
 - Range-based pagination in JSON API
 - User authentication and session storage
-- Pug templates, but ability to override
+- EJS templates, but ability to override with your own templating library
 - CSV to JSON database seeding
 - CLI utility for custom actions
 - Locale support
+- Extension-ready using providers
 
-## Usage
+## Configuration
 
-Create an application directory, similar to this one:
-/app
-/app/config.js
-/app/routes.js
-/app/models
-/app/controllers
-/app/lang
-/app/views
+See `/app` for a sample directory structure.
 
-Require the class object in the file that will run your server. Be sure to change the Application.root path to your app directory.
+Inside `/app/config`, there should be these files:
+
+- `config.js` - Global configuration for the application.
+- `env.js` - Environment configuration for the application. Be sure to add to your `.gitignore`.
+- `routes.js` - Your application routes.
+
+## Running the Application
+
+This micro-framework was designed to be super easy to set up. Just require the object in your `index.js` entry point and initialize with your application's root directory.
 
 ```javascript
 
 var ExpressMVC = require('express-mvc');
  
-ExpressMVC.Application.root = __dirname + "/app/";
+var app = ExpressMVC.init(__dirname+"/app/");
  
-var app = ExpressMVC.Application.create().bootstrap().server();
+app.server();
  
 ```
 
-### Controllers
+## Using Default Controllers
 
-Controllers help organize your routes and join data with your views. To make a controller, create a file and include the file in your config.js.
+This framework comes with a couple standard controllers you can use.
+
+- `ControllerFactory.basic.REST` - A basic REST API for your application.
+- `ControllerFactory.basic.Locales` - A place to retrieve your language resources, if building a rich web app.
+
+To use any of these, create a new controller...
 
 ```javascript
-
-// /app/controllers/index.js
-
-var Controller = require('express-mvc').Controller;
-
-Controller.create('indexController', function(controller){
-
-    // Your controller setup happens here, where parameter bindings can occur or globals set.
-    
-    controller.bind('id', function(value,request,response) {
-        // For the url pattern /model/:id, value will be the :id parameter value.
-    }
-    
-    var globalVar = 5;
-    
-    // The return object contains your controller methods.
-    return {
-        index: function(request,response,next) {
-        
-            // Return a view, string or object. Objects are serialized into JSON responses.
-            return "Hello!";
-        }
-    }
-
-});
+// controllers/restController.js
+module.exports = function(Factory)
+{
+    return Factory.create('restController', Factory.basic.REST);
+};
 
 ```
+
+And create your routes, or use the default ones...
+
+```javascript
+// config/routes.js
+module.exports = function(app,Template)
+{
+    app.ControllerFactory.basic.Locales.routes(this);
+    app.ControllerFactory.basic.REST.routes(this);
+}
+
+```
+
+
+## Routing
+
+Routes are handled in a simplified way. Using a controller: (controllerName.controllerMethod)
+
+```javascript
+// config/routes.js
+module.exports = function(app,Template)
+{
+    this.get({
+        '/url' : 'indexController.index',
+    });
+}
+
+```
+
+Or, the old-fashioned way:
+
+```javascript
+module.exports = function(app,Template)
+{
+    this.get({
+        '/url' : function(request,response,next) { ... },
+    });
+}
+
+```
+
+## Route Middleware
+
+Adding middleware to controller routes can be done via the controller setup method:
+
+```javascript
+// controllers/authController.js
+module.exports = function(Factory)
+{
+    return Factory.create('authController', function(app)
+    {
+        // Assign middleware to a controller method.
+        this.middleware({
+            update : apiAuthMiddleware,
+            create : apiAuthMiddleware,
+            trash  : apiAuthMiddleware
+        });
+                    
+        // Assign middleware to all controller methods.
+        this.middleware(modelMiddleware);
+    }
+}
+```
+
+
 
 ### CLI Utility
 
@@ -80,6 +133,7 @@ Controller.create('indexController', function(controller){
 To use locales, create the `/app/lang` directory. Inside this directory, create sub-directories with the locale namespace, i.e. `en_us`.
 
 You can separate your key/value pairs using .js files. For instance, creating an `index.js` file in `/app/lang/en_us`:
+
 ```javascript
 module.exports = {
   myKey: "Welcome, {$0} {$1}"
@@ -87,7 +141,7 @@ module.exports = {
 }
 ```
 
-In your markup, use the `lang` method:
+In your markup, use the `lang()` method. The passed parameters are filled in:
 
 ```
 h1=lang("myKey", ["Johnny", "Rico"])
