@@ -1,0 +1,13 @@
+"use strict";
+
+module.exports = function(Provider)
+{
+    Provider.create('<%=name%>', function(app) {
+
+        // Codez
+
+        app.event.on('load_provider', function(provider) {
+
+        });
+    });
+}

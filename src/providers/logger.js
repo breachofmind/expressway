@@ -1,4 +1,7 @@
+"use strict";
+
 var winston = require('winston');
+var Provider = require('../provider');
 
 var appLevels = {
     levels: {
@@ -20,13 +23,15 @@ var appLevels = {
 
 winston.addColors(appLevels.colors);
 
-module.exports = function(app)
-{
+Provider.create('loggerProvider', function(app) {
+
+    this.order = -1;
+
     var config = app.config;
     var logPath = app.constructor.rootPath(config.log_path || "logs") + "/";
     var fileMaxSize = 1000 * 1000 * 10; // 10MB
 
-    return new winston.Logger({
+    var logger = new winston.Logger({
         levels: appLevels.levels,
         transports: [
             new winston.transports.Console({
@@ -40,4 +45,7 @@ module.exports = function(app)
             })
         ]
     });
-};
+
+    // Attach to the application.
+    app.logger = logger;
+});

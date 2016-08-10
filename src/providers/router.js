@@ -1,9 +1,23 @@
 "use strict";
-var utils = require('./support/utils');
 
-module.exports = function RouterProvider(app)
-{
+var Provider = require('../provider');
+
+Provider.create('routerProvider', function(app) {
+
+    this.requires([
+        'loggerProvider',
+        'templateProvider',
+        'expressProvider'
+    ]);
+
+    var utils = app.utils;
+
     var routes = [];
+
+    var appRoutes = require(app.rootPath('config/routes'));
+
+    // Attach the router class to the application.
+    app.Router = new Router();
 
     /**
      * Route class.
@@ -70,5 +84,8 @@ module.exports = function RouterProvider(app)
         }
     }
 
-    return new Router();
-};
+    // After express is loaded, add the routes to it.
+    app.event.on('bootstrap', function(app) {
+        appRoutes.call(app.Router, app.Template);
+    });
+});

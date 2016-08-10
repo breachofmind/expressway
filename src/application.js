@@ -1,34 +1,51 @@
 "use strict";
 
+// Environment constants.
+GLOBAL.ENV_LOCAL = 'local';
+GLOBAL.ENV_DEV = 'development';
+GLOBAL.ENV_PROD = 'production';
+GLOBAL.ENV_CLI = 'cli';
+
 var express     = require('express'),
-    mongoose    = require('mongoose'),
-    bodyParser  = require('body-parser'),
-    session     = require('express-session'),
-    csrf        = require('csurf'),
     path        = require('path'),
-    locale      = require('locale'),
-    MongoStore  = require('connect-mongo')(session),
+    events      = require('events'),
     cp          = require('child_process');
 
-var ModelProvider       = require('./model'),
-    LoggerProvider      = require('./support/logger'),
-    ControllerProvider  = require('./controller'),
-    AuthProvider        = require('./auth'),
-    RouterProvider      = require('./router'),
-    TemplateProvider    = require('./template'),
-    ViewProvider        = require('./view'),
-    UrlProvider         = require('./url'),
-    CLIProvider         = require('./cli');
+/**
+ * The default application root directory.
+ * This is where the config, routes, models and controller files are located.
+ * @type {string}
+ */
+var rootPath = path.normalize(path.dirname(__dirname) + "/app/");
 
-var core  = require('./core'),
-    lang  = require('./support/lang'),
-    utils = require('./support/utils'),
-    config,
-    routes;
+var Provider = require('./provider');
+var utils = require('./support/utils');
 
+var providers = [
+    'logger',
+    'url',
+    'cli',
+    'database',
+    'auth',
+    'controller',
+    'model',
+    'template',
+    'view',
+    'locale',
+    'express',
+    'router'
+];
+
+// Require the providers.
+providers.forEach(function(file) {
+    require('./providers/'+file);
+});
+
+/**
+ * The package.json object.
+ * @type {*|Object}
+ */
 var npmPackage = utils.readJSON(__dirname+'/../package.json');
-
-mongoose.Promise = require('bluebird');
 
 
 /**
@@ -39,54 +56,25 @@ class Application
 {
     /**
      * Constructor.
+     * @param env string
      * @returns Application
      */
-    constructor()
+    constructor(env)
     {
         Application.instance = this;
 
-        config = require(Application.root+'config/config');
-        routes = require(Application.root+'config/routes');
-
+        this.config   = require (Application.rootPath('config/config'));
         this.version  = npmPackage.version;
-        this.env      = config.environment;
-        this.db       = mongoose;
-        this.config   = config;
-        this.logger   = LoggerProvider(this);
+        this.event    = new events.EventEmitter();
+        this.env      = env || this.config.environment;
         this.rootPath = Application.rootPath;
+        this.utils    = utils;
 
         this._package = npmPackage;
-        this._middlewares = [];
-        this._loadDatabase();
-        this._loadProviders();
-    }
 
-    /**
-     * Connect to the database.
-     * @private
-     */
-    _loadDatabase()
-    {
-        this.db.connect(config.db);
-        this.logger.debug('Connected to Database: %s', config.db);
-    }
+        this._providers = [];
 
-    /**
-     * Load all the application providers and services.
-     * @private
-     */
-    _loadProviders()
-    {
-        this.utils = utils;
-        this.url = UrlProvider(this);
-        this.lang = lang.init(this);
-        this.cli = CLIProvider(this);
-        this.Auth = AuthProvider;
-        this.ModelFactory = ModelProvider(this);
-        this.ControllerFactory = ControllerProvider(this);
-        this.Template = TemplateProvider(this);
-        this.View = ViewProvider(this);
-        this.Router = RouterProvider(this);
+        Provider.loadAll(this);
     }
 
     /**
@@ -95,22 +83,7 @@ class Application
      */
     bootstrap()
     {
-        this.ModelFactory.build();
-
-        this.express = express();
-
-        this.express.set('view engine', config.view_engine || 'ejs');
-        this.express.set('views', config.view_path || 'app/views');
-
-        Application.middleware.forEach(function(func)
-        {
-            this._middlewares.push(func.constructor.name);
-            let middleware = func(this);
-            if (middleware) this.express.use(middleware);
-
-        }.bind(this));
-
-        routes.call(this.Router, this.Template);
+        this.event.emit('bootstrap', this);
 
         return this;
     }
@@ -122,32 +95,36 @@ class Application
      */
     server()
     {
-        this.express.listen(config.port, function()
-        {
-            this.logger.info(`Starting %s server v.%s on %s (%s)...`,
-                this.env,
-                this.version,
-                config.url,
-                utils.url());
-        }.bind(this));
+        this.event.emit('server', this);
 
         // Boot google chrome if developing locally.
-        if (this.env == 'local') {
+        if (this.env == GLOBAL.ENV_LOCAL) {
             cp.exec(`open /Applications/Google\\ Chrome.app ${utils.url()}`, function(err){});
         }
         return this;
     };
 
     /**
+     * Return a path relative to the public path.
+     * @param filepath string
+     * @returns {string}
+     */
+    publicPath(filepath)
+    {
+        return this.rootPath(`../${this.config.static_uri}/${filepath}`);
+    }
+
+    /**
      * Named constructor.
+     * @param env string
      * @returns {Application}
      */
-    static create()
+    static create(env)
     {
         if (Application.instance) {
             return Application.instance;
         }
-        return new Application();
+        return new Application(env);
     }
 
     /**
@@ -157,143 +134,25 @@ class Application
      */
     static rootPath(filepath)
     {
-        return path.normalize(Application.root+"/"+filepath);
+        return path.normalize(rootPath+"/"+filepath);
     }
 
     /**
-     * Return a path relative to the public path.
-     * @param filepath string
-     * @returns {string}
+     * Set the root path to your application.
+     * @param dir string
+     * @returns string
      */
-    static publicPath(filepath)
+    static setRootPath(dir)
     {
-        return Application.rootPath("../"+config.static_uri+'/'+filepath);
+        return rootPath = dir;
     }
 }
-
-/**
- * The default application root directory.
- * This is where the config, routes, models and controller files are located.
- * @type {string}
- */
-Application.root = path.normalize(path.dirname(__dirname) + "/app/");
-
 
 /**
  * The Application singleton object.
  * @type {Application}
  */
 Application.instance = null;
-
-/**
- * The various route middlewares.
- * @type {*[]}
- */
-Application.middleware = [
-
-    function CoreMiddleware (app)
-    {
-        return function(request,response,next)
-        {
-            core(app,request,response);
-            next();
-        }
-    },
-
-    /**
-     * Adds localization support.
-     * @param app Application
-     * @returns {Function}
-     */
-    function LocaleMiddleware (app)
-    {
-        app.express.use(locale(config.lang_support || ['en']));
-        return function(request,response,next)
-        {
-            if (request.query.cc) {
-                request.locale = request.query.cc.toLowerCase();
-            }
-            next();
-        }
-    },
-
-    /**
-     * Checks the request for a header to see if an AJAX request.
-     * @param app Application
-     * @returns {Function}
-     */
-    function AjaxMiddleware (app)
-    {
-        return function (request,response,next) {
-            request.ajax = request.get('x-requested-with') === 'XMLHttpRequest';
-            next();
-        };
-    },
-
-    /**
-     * Creates a static content uri.
-     * @param app Application
-     * @returns {null}|{Function}
-     */
-    function staticContentMiddleware (app)
-    {
-        return config.static_uri ? express.static(config.static_uri) : null;
-    },
-
-    /**
-     * Parses the body response.
-     * @param app Application
-     */
-    function bodyParserMiddleware (app)
-    {
-        app.express.use(bodyParser.json());
-        app.express.use(bodyParser.urlencoded({extended:true}));
-    },
-
-    /**
-     * Sets up the session middleware.
-     * @param app Application
-     * @returns {Function}
-     */
-    function SessionMiddleware (app)
-    {
-        return session ({
-            secret: config.appKey,
-            saveUninitialized: false,
-            resave: false,
-            store: new MongoStore({
-                mongooseConnection: app.db.connection
-            })
-        });
-    },
-
-    /**
-     * Adds CSRF protection.
-     * @param app Application
-     * @returns {Function}
-     */
-    function CSRFMiddleware (app)
-    {
-        app.express.use(csrf());
-
-        return function (err, request, response, next) {
-            if (err.code !== 'EBADCSRFTOKEN') {
-                return next();
-            }
-            return response.smart(response.view('error/403'), 403);
-        };
-    },
-
-    /**
-     * Set up the user authentication middleware.
-     * @param app Application
-     */
-    function AuthMiddleware (app)
-    {
-        return app.Auth(app);
-    }
-];
-
 
 
 module.exports = Application;

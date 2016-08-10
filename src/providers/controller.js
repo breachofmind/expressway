@@ -1,18 +1,20 @@
 "use strict";
 
-module.exports = function ControllerProvider(app)
-{
-    if (! arguments.length) {
-        throw new Error('ControllerProvider has not been booted with the Application class.');
-    }
+var Provider = require('../provider');
 
-    if (app.ControllerFactory) {
-        return app.ControllerFactory;
-    }
+/**
+ * Provides the controller functionality and class creation.
+ * @author Mike Adamczyk <mike@bom.us>
+ */
+Provider.create('controllerProvider', function(app) {
 
     var utils = app.utils;
 
-    var controllerPath = app.constructor.rootPath('controllers/');
+    /**
+     * Path relative to your application that contains the controller declarations.
+     * @type {string}
+     */
+    var controllerPath = app.rootPath('controllers/');
 
     /**
      * Controller factory class, for creating new controllers.
@@ -165,8 +167,8 @@ module.exports = function ControllerProvider(app)
         {
             items.forEach(function(file) {
 
-                require(controllerPath+"/"+file) (ControllerFactory, app);
-                app.logger.debug('Loaded Controller: %s', file);
+                var controller = require(controllerPath+"/"+file) (ControllerFactory, app);
+                app.event.emit('load_controller', controller);
             });
 
             return ControllerFactory.controllers;
@@ -255,16 +257,13 @@ module.exports = function ControllerProvider(app)
      * @type {{REST: (*|exports|module.exports), Locales: (*|exports|module.exports)}}
      */
     ControllerFactory.basic = {
-        REST:    require('./controllers/restController'),
-        Locales: require('./controllers/langController')
+        REST:    require('../controllers/restController'),
+        Locales: require('../controllers/langController')
     };
 
     ControllerFactory.boot();
 
-    //ControllerFactory.load(app.config.files.controllers);
-
-    return ControllerFactory;
-};
-
-
+    // Attach the factory to the application for use by other modules.
+    app.ControllerFactory = ControllerFactory;
+});
 

@@ -2,7 +2,7 @@
 
 module.exports = function(Factory)
 {
-    Factory.create('authController', function(app)
+    return Factory.create('authController', function(app)
     {
         return {
             /**

@@ -2,11 +2,24 @@
 
 var ejs = require('ejs');
 var fs = require('fs');
+var Provider = require('../provider');
 
-module.exports = function TemplateProvider(app)
-{
+Provider.create('templateProvider', function(app) {
+
     var config = app.config;
 
+    var _fileTemplate = {
+        link: ejs.compile('<link id="<%=attributes.id%>" rel="stylesheet" type="text/css" href="<%= attributes.src %>"/>'),
+        script: ejs.compile('<script id="<%=attributes.id%>" type="text/javascript" src="<%= attributes.src %>"></script>'),
+        meta: ejs.compile('<meta name="<%=name%>" content="<%=attributes.value%>"/>')
+    };
+
+    var _jsonProperties = ['name','element','attributes'];
+
+    /**
+     * The Template class, for building HTML documents.
+     * @constructor
+     */
     class Template
     {
         /**
@@ -26,7 +39,7 @@ module.exports = function TemplateProvider(app)
             this.meta('viewport','width=device-width');
             this.meta('generator','ExpressMVC v.'+app.version);
 
-            if (app.environment === "local" && config.livereload) {
+            if (app.env === "local" && config.livereload) {
                 this.script("livereload", config.livereload);
             }
 
@@ -103,13 +116,7 @@ module.exports = function TemplateProvider(app)
     };
 
 
-    var _fileTemplate = {
-        link: ejs.compile('<link id="<%=attributes.id%>" rel="stylesheet" type="text/css" href="<%= attributes.src %>"/>'),
-        script: ejs.compile('<script id="<%=attributes.id%>" type="text/javascript" src="<%= attributes.src %>"></script>'),
-        meta: ejs.compile('<meta name="<%=name%>" content="<%=attributes.value%>"/>')
-    };
 
-    var _jsonProperties = ['name','element','attributes'];
     /**
      * Template file class.
      * Used for script,style and meta tags.
@@ -138,7 +145,7 @@ module.exports = function TemplateProvider(app)
          */
         get publicPath()
         {
-            return require('./application').publicPath(this.attributes.src);
+            return app.publicPath(this.attributes.src);
         }
 
         /**
@@ -176,5 +183,5 @@ module.exports = function TemplateProvider(app)
         }
     }
 
-    return Template;
-};
+    app.Template = Template;
+});

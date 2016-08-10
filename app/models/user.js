@@ -1,7 +1,5 @@
 module.exports = function(Factory,app)
 {
-    var Auth = app.Auth;
-
     var User = Factory.create('User', {
 
         first_name:     String,
@@ -23,7 +21,7 @@ module.exports = function(Factory,app)
                 if (! password) {
                     return false;
                 }
-                return this.password === Auth.encrypt(password,this.created_at.getTime().toString());
+                return this.password === app.Auth.encrypt(password,this.created_at.getTime().toString());
             },
 
             /**
@@ -42,7 +40,7 @@ module.exports = function(Factory,app)
 
     User.schema.pre('save', function(next) {
 
-        this.password = Auth.encrypt(this.password, this.created_at.getTime().toString());
+        this.password = app.Auth.encrypt(this.password, this.created_at.getTime().toString());
         next();
     });
 

@@ -1,18 +1,23 @@
-module.exports = function UrlProvider(app)
-{
+"use strict";
+
+var Provider = require('../provider');
+
+Provider.create('urlProvider', function(app) {
+
     var config = app.config;
 
     var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
-
-    app.logger.debug('Base URL: %s', baseurl);
 
     /**
      * Return a url to the given path.
      * @return string
      */
-    return function Url(uri)
+    function getUrl(uri)
     {
         if (!uri) uri = "";
         return `${baseurl}/${uri}`;
     }
-};
+
+    // Attach to the application.
+    app.url = getUrl;
+});

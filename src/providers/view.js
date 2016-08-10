@@ -1,14 +1,12 @@
 "use strict";
-var lang = require('./support/lang').lang;
 
-module.exports = function ViewProvider(app)
-{
+var Provider = require('../provider');
+
+Provider.create('viewProvider', function(app) {
+
+    this.requires('templateProvider');
+
     var Template = app.Template;
-    var config = app.config;
-
-    if (app.View) {
-        return app.View;
-    }
 
     /**
      * The view class, which combines data with the template.
@@ -69,8 +67,9 @@ module.exports = function ViewProvider(app)
             this.template.meta('description', this.template.description);
             this.data.request = request;
             this.data.template = this.template;
-            this.data.lang = lang(request);
             this.data.appVersion = app.version;
+
+            app.event.emit('view_create', this, request);
 
             return response.render(this.file, this.data);
         }
@@ -87,5 +86,6 @@ module.exports = function ViewProvider(app)
         }
     }
 
-    return View;
-};
+    // Attach the View class to the application.
+    app.View = View;
+});

@@ -1,17 +1,18 @@
 "use strict";
 
-module.exports = function ModelProvider(app)
-{
-    if (! arguments.length) {
-        throw new Error('ModelProvider has not been booted with the Application class.');
-    }
-    if (app.ModelFactory) {
-        return app.ModelFactory;
-    }
+var Provider = require('../provider');
+
+Provider.create('modelProvider', function(app) {
+
+    this.requires([
+        'databaseProvider'
+    ]);
 
     var utils = app.utils;
+
     var db = app.db;
-    var modelPath = app.constructor.rootPath('models/');
+
+    var modelPath = app.rootPath('models/');
 
     /**
      * Model Factory class.
@@ -302,6 +303,11 @@ module.exports = function ModelProvider(app)
 
     ModelFactory.boot();
 
-    return ModelFactory;
-};
+    // Attach the factory class to the application.
+    app.ModelFactory = ModelFactory;
 
+    // Models need to have their schema attached for use.
+    app.event.on('bootstrap', function(app) {
+        app.ModelFactory.build();
+    });
+});

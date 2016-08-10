@@ -16,7 +16,7 @@ module.exports = {
      * The environment name.
      * @var string local|sit|uat|prod
      */
-    environment: env.environment || 'local',
+    environment: env.environment || GLOBAL.ENV_LOCAL,
 
     /**
      * The webserver base URL.
@@ -83,6 +83,14 @@ module.exports = {
      * @var boolean
      */
     debug: env.debug || true,
+
+    /**
+     * User defined providers for your application.
+     * @var array
+     */
+    providers: [
+        // Your providers here
+    ],
 
     /**
      * The limit of models to return in REST api.

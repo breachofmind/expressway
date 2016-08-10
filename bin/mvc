@@ -3,26 +3,15 @@
  * This is an example of a CLI utility for express-mvc.
  * @author Mike Adamczyk <mike@bom.us>
  */
-var app = require('../index')(__dirname + "/../app/");
-var cli = app.cli;
+var ExpressMVC = require('../index');
+
+var app = ExpressMVC.init(__dirname+"/../app/", GLOBAL.ENV_CLI);
+var cli = app.CLI;
 
 /**
  * Your actions are set up in an object.
  */
 cli.actions({
-    controller: function(env,opt){
-        cli.controller(env);
-        process.exit();
-    },
-    model: function(env,opt){
-        cli.model(env);
-        process.exit();
-    },
-    server: function() {
-        cli.exec('mongod');
-        app.server();
-    },
-
     mongo: function() {
         app.logger.info('Starting MongoDB Server...');
         cli.exec('mongod');
