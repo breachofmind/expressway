@@ -24,6 +24,7 @@ var providers = [
     'logger',
     'url',
     'cli',
+    'seeder',
     'database',
     'auth',
     'controller',

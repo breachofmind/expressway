@@ -1,41 +1,29 @@
-var ExpressMVC = require('../index');
-
-ExpressMVC.Application.root = __dirname+"/../";
-
-// Different seeder names can be created.
-var seeder = new ExpressMVC.Seeder('installation');
-
-// The root path where all your seed .csv files are stored.
-seeder.seedPath = __dirname + "/seeds/";
-
-/**
- * Create a new model to seed using the seeder.add() method.
- * @param name string of seed
- * @param path string of seed, relative to seeder.seedPath
- * @param parser function, optional
- */
-seeder.add('media', 'media.csv');
-
-seeder.add('user', 'users.csv', function(row,i)
+module.exports = function(Seeder,app)
 {
-    // Each user row is parsed before a model is created.
-    // In this case, we're creating a salted password.
-    row.created_at = new Date();
-    var salt = row.created_at.getTime().toString();
-    row.password = ExpressMVC.Auth.encrypt(row.password,salt);
+    var seeder = Seeder.create('installation');
 
-    return row;
-});
+    seeder.add('media', 'media.csv');
+    seeder.add('user', 'users.csv', userParser);
 
-/**
- * A callback is required when all the CSV files are processed.
- * Then, you can start persisting the models to the database.
- */
-seeder.on('done', function(seeds)
-{
-    seeder.createModels();
-});
 
-// Start the seeding process.
-// When finished, the script will end.
-seeder.seed();
+    function userParser(row,i)
+    {
+        row.created_at = new Date();
+        var salt = row.created_at.getTime().toString();
+        row.password = app.Auth.encrypt(row.password,salt);
+
+        return row;
+    }
+
+    seeder.run().then(function(){
+
+        seeder.get('media').reset = true;
+        seeder.get('user').reset = true;
+
+        seeder.seed().then(function(){
+
+            process.exit();
+        })
+    })
+
+};

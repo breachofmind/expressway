@@ -18,8 +18,8 @@ cli.actions({
     },
 
     seed: function() {
-        app.logger.info('Seeding...');
-        require('../app/db/seeder');
+        app.logger.info('Running Seed Command...');
+        require('../app/db/seeder')(app.Seeder,app);
     },
 
     test: function() {
