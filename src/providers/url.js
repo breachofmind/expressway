@@ -2,22 +2,25 @@
 
 var Provider = require('../provider');
 
-Provider.create('urlProvider', function(app) {
+Provider.create('urlProvider', function() {
 
-    var config = app.config;
-
-    var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
-
-    /**
-     * Return a url to the given path.
-     * @return string
-     */
-    function getUrl(uri)
+    return function(app)
     {
-        if (!uri) uri = "";
-        return `${baseurl}/${uri}`;
-    }
+        var config = app.config;
 
-    // Attach to the application.
-    app.url = getUrl;
+        var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
+
+        /**
+         * Return a url to the given path.
+         * @return string
+         */
+        function getUrl(uri)
+        {
+            if (!uri) uri = "";
+            return `${baseurl}/${uri}`;
+        }
+
+        // Attach to the application.
+        app.url = getUrl;
+    }
 });

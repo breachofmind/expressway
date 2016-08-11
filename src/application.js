@@ -84,7 +84,7 @@ class Application
      */
     bootstrap()
     {
-        this.event.emit('bootstrap', this);
+        this.event.emit('application.bootstrap', this);
 
         return this;
     }
@@ -96,7 +96,7 @@ class Application
      */
     server()
     {
-        this.event.emit('server', this);
+        this.event.emit('application.server', this);
 
         // Boot google chrome if developing locally.
         if (this.env == GLOBAL.ENV_LOCAL) {

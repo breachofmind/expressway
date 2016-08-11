@@ -4,40 +4,25 @@ var noop = function(){};
 
 class Provider
 {
-    constructor(name, register)
+    constructor(name, boot)
     {
         this.name = name;
         this.active = true;
         this.loaded = false;
         this.dependencies = [];
+        this.environments = [];
         this.order = 1;
 
-        this._register = register || noop;
-
-        /**
-         * The developer can add their own boot function which
-         * modifies this provider before runtime.
-         * @type {noop}
-         */
-        this.boot = noop;
+        var register = boot.call(this);
+        this._register = typeof register == 'function' ? register : noop;
 
         Provider.queue.push(this);
         Provider.objects[name] = this;
     }
 
-    /**
-     * Specify the provider(s) that this provider depends on.
-     * @param providers array|string
-     * @returns Provider
-     */
-    requires(providers)
+    loadDependencies()
     {
-        if (! Array.isArray(providers)) {
-            providers = [providers];
-        }
-        providers.forEach(function(providerName) {
-
-            this.dependencies.push(providerName);
+        this.dependencies.forEach(function(providerName) {
 
             var provider = Provider.get(providerName);
 
@@ -52,6 +37,19 @@ class Provider
             provider.load();
 
         }.bind(this));
+    }
+
+    /**
+     * Specify the provider(s) that this provider depends on.
+     * @param providers array|string
+     * @returns Provider
+     */
+    requires(providers)
+    {
+        if (! Array.isArray(providers)) {
+            providers = [providers];
+        }
+        this.dependencies = this.dependencies.concat(providers);
 
         return this;
     }
@@ -60,9 +58,10 @@ class Provider
      * Check if this provider can be loaded.
      * @returns {boolean}
      */
-    isLoadable()
+    isLoadable(env)
     {
-        return this.active && !this.loaded;
+        var inEnvironment = !this.environments.length ? true : this.environments.indexOf(env) > -1;
+        return this.active && !this.loaded && inEnvironment;
     }
 
     /**
@@ -73,15 +72,14 @@ class Provider
     {
         var app = Provider._app;
 
-        if (this.isLoadable())
+        if (this.isLoadable(app.env))
         {
-            if (app.logger) app.logger.debug('Loading Provider: %s...', this.name);
-
-            app.event.emit('preload_provider', this);
+            app.event.emit('provider.loading', this);
+            this.loadDependencies();
             this._register.call(this,app);
             this.loaded = true;
             app._providers.push(this.name);
-            app.event.emit('loaded_provider', this);
+            app.event.emit('provider.loaded', this);
 
             return true;
         }
@@ -107,7 +105,7 @@ class Provider
         Provider.queue.forEach(function(provider){
             provider.load(app);
         });
-        app.event.emit('loaded_providers', app, Provider.objects);
+        app.event.emit('provider.registered', app, Provider.objects);
         return app._providers;
     }
 
