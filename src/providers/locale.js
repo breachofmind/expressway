@@ -174,6 +174,9 @@ Provider.create('localeProvider', function(app) {
             var locale = request.locale.toLowerCase();
 
             return function(key, args) {
+                if (! key || key=="") {
+                    return "";
+                }
                 return store.getKey(locale||"en_us", key, args);
             }
         }

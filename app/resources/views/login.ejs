@@ -2,7 +2,14 @@
 
 <main class="row">
     <div class="columns">
+
         <h1>Login</h1>
+
+        <% if (message!="") { %>
+        <div class="callout warning">
+            <%= lang(message) %>
+        </div>
+        <% } %>
 
         <form action="/login" method="POST">
 
@@ -16,7 +23,7 @@
 
             <input type="hidden" name="_csrf" value="<%= request.csrfToken() %>">
 
-            <button type="submit" class="button">Submit</button>
+            <button type="submit" class="button"><%= lang('auth.button_submit') %></button>
 
             <a href="/">Back to Site</a>
         </form>

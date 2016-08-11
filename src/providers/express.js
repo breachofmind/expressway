@@ -7,7 +7,10 @@ var Provider = require('../provider'),
     bodyParser = require('body-parser'),
     session = require('express-session'),
     csrf = require('csurf'),
+    flash = require('connect-flash'),
+    cookieParser = require('cookie-parser'),
     MongoStore = require('connect-mongo')(session);
+
 
 Provider.create('expressProvider', function() {
 
@@ -78,17 +81,18 @@ Provider.create('expressProvider', function() {
              * Parses the body response.
              * @param app
              */
-                function bodyParserMiddleware(app)
+            function bodyParserMiddleware(app)
             {
                 app.express.use(bodyParser.json());
                 app.express.use(bodyParser.urlencoded({extended:true}));
+                app.express.use(cookieParser(app.config.appKey));
             },
 
             /**
              * Sets up the session middleware.
              * @param app
              */
-                function sessionMiddleware (app)
+            function sessionMiddleware (app)
             {
                 return session ({
                     secret: config.appKey,
@@ -100,11 +104,16 @@ Provider.create('expressProvider', function() {
                 });
             },
 
+            function flashMiddleware(app)
+            {
+                app.express.use(flash());
+            },
+
             /**
              * Adds CSRF protection.
              * @param app
              */
-                function CSRFMiddleware (app)
+            function CSRFMiddleware (app)
             {
                 app.express.use(csrf());
 

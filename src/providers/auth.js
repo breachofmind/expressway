@@ -77,13 +77,13 @@ Provider.create('authProvider', function() {
                     // If user is not found, fail with message.
                     if (! user) {
                         app.logger.log('access', "User does not exist: '%s'", username);
-                        return done(null, false, { message: 'User does not exist.' });
+                        return done(null, false, { message: 'auth.user_missing' });
                     }
 
                     // If user password is not valid, fail with message.
                     if (! user.isValid(password)) {
                         app.logger.log('access', "Login attempt failed: '%s'", username);
-                        return done(null, false, { message: 'Incorrect password.' });
+                        return done(null, false, { message: 'auth.incorrect_password' });
                     }
 
 

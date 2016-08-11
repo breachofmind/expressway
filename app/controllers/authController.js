@@ -15,7 +15,9 @@ module.exports = function(Factory)
                 if (request.user) {
                     response.redirect('/');
                 }
-                return response.view('login').set('title',"Login");
+                return response.view('login').set('title',"Login").and({
+                    message: request.flash('message') || null
+                });
             },
 
             /**
@@ -29,6 +31,7 @@ module.exports = function(Factory)
                     app.logger.access('User logging out: %s', request.user.id);
                 }
                 request.logout();
+                request.flash('message', 'Successfully Logged out.');
                 response.redirect('/login');
             },
 
@@ -47,13 +50,15 @@ module.exports = function(Factory)
                     if (err) return next(err);
 
                     if (! user) {
-                        return response.smart(isAjax ? {success:false, error:info.message} : response.view('login'), 401);
+                        request.flash('message', info.message);
+                        return isAjax ? response.smart({success:false, error:info.message}) : response.redirect('/login');
                     }
 
                     request.logIn(user, function(err) {
 
                         if (err) {
-                            return response.smart(isAjax ? {success:false, error:info.message} : response.view('login'), 401);
+                            request.flash('message', info.message);
+                            return isAjax ? response.smart({success:false, error:info.message}) : response.redirect('/login');
                         }
 
                         return response.smart(isAjax ? {success:true, user:user, redirect:"/admin"} : response.redirect('/'), 200);
