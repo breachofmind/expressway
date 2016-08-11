@@ -2,12 +2,17 @@
 
 module.exports = function(Provider)
 {
-    Provider.create('<%=name%>', function(app) {
+    Provider.create('<%=name%>', function() {
 
-        // Codez
+        // Provider setup...
+        this.order = 0;
+        this.requires(['loggerProvider']);
+        this.environments = [ENV_CLI];
 
-        app.event.on('load_provider', function(provider) {
+        // Return the registration function...
+        return function(app){
 
-        });
+            // Codez
+        }
     });
 }
