@@ -31,7 +31,7 @@ module.exports = function(Controller)
                     app.logger.access('User logging out: %s', request.user.id);
                 }
                 request.logout();
-                request.flash('message', 'Successfully Logged out.');
+                request.flash('message', 'auth.logged_out');
                 response.redirect('/login');
             },
 
