@@ -1,6 +1,6 @@
-module.exports = function(Factory, app) {
+module.exports = function(Controller, app) {
 
-    return Factory.create("<%=name%>", function(app) {
+    return Controller.create("<%=name%>", function(app) {
 
         return {
             /**

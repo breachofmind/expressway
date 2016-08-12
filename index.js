@@ -58,7 +58,8 @@ var applicationProviders = {};
     'view',
     'locale',
     'express',
-    'router'
+    'router',
+    'gate'
 
 ].map(function(name) {
     applicationProviders[name] = require('./src/providers/' + name);

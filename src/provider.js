@@ -60,11 +60,18 @@ class Provider
      */
     requires(providers)
     {
-        if (! Array.isArray(providers)) {
-            providers = [providers];
-        }
         this.dependencies = this.dependencies.concat(providers);
+        return this;
+    }
 
+    /**
+     * Specify the environments(s) that this provider can run in.
+     * @param environments array|string
+     * @returns Provider
+     */
+    runIn(environments)
+    {
+        this.environments = this.dependencies.concat(environments);
         return this;
     }
 

@@ -1,7 +1,6 @@
-module.exports = function(Factory, app) {
+module.exports = function(Model, app) {
 
-    var <%=name%> = Factory.create("<%=name%>", {
-        occurred_at:    { type: Date, default: Date.now },
+    var <%=name%> = Model.create("<%=name%>", {
         created_at:     { type: Date, default: Date.now },
         modified_at:    { type: Date, default: Date.now }
 

@@ -242,6 +242,7 @@ module.exports = function(Provider)
                     for(let model in ModelFactory.models) {
                         ModelFactory.models[model].build();
                     }
+                    app.event.emit('models.built', ModelFactory);
                 }
 
                 /**
@@ -252,6 +253,16 @@ module.exports = function(Provider)
                 static get(name)
                 {
                     return ModelFactory.models[name.toLowerCase()] || null;
+                }
+
+                /**
+                 * Check if a model exists.
+                 * @param name string
+                 * @returns {boolean}
+                 */
+                static has(name)
+                {
+                    return ModelFactory.get(name) ? true:false;
                 }
 
                 /**

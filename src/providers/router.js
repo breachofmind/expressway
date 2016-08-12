@@ -16,7 +16,7 @@ module.exports = function(Provider)
             'expressProvider'
         ]);
 
-        this.environments = [ENV_LOCAL,ENV_DEV,ENV_PROD];
+        this.runIn([ENV_LOCAL,ENV_DEV,ENV_PROD]);
 
         return function(app)
         {

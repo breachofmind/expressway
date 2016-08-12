@@ -31,6 +31,19 @@ module.exports = function(Factory,app)
             name: function()
             {
                 return [this.first_name,this.last_name].join(" ");
+            },
+
+            /**
+             * Check if a user can perform an action.
+             * @param object string
+             * @param method string
+             * @returns {*}
+             */
+            can: function(object,method)
+            {
+                if (! app.gate) return true;
+
+                return app.gate.check(this,object,method);
             }
 
         })

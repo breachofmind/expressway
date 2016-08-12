@@ -75,6 +75,7 @@ module.exports = {
         system.controllerDefaults,
         system.database,
         system.express,
+        system.gate,
         system.locale,
         system.logger,
         system.model,

@@ -19,6 +19,20 @@ module.exports = function(Provider)
             'modelProvider'
         ]);
 
+        var msg = {
+            running: "[Seeder] Running seeder: %s",
+            seeding: "[Seeder] Error seeding: %s",
+            parsed:  "[Seeder] Parsed Seed: %s (%d rows)",
+            prepare: "[Seeder] Preparing Seed: %s",
+            created: "[Seeder] Created Models: %s, %d objects",
+            dumping: "[Seeder] Dumping models: %s",
+
+            err_noModel:  "[Seeder] Error seeding, no model or data: %s",
+            err_creating: "[Seeder] Error creating models: %s",
+            err_dumping:  "[Seeder] Error dumping models: %s"
+
+        };
+
         return function(app)
         {
             var ObjectId = app.db.Types.ObjectId;
@@ -50,15 +64,15 @@ module.exports = function(Provider)
                 /**
                  * Add a new seed.
                  * @param name string
-                 * @param file string
+                 * @param datasource string|array
                  * @param parse function, optional
                  * @returns {Seed}
                  */
-                add(name, file, parse)
+                add(name, datasource, parse)
                 {
-                    var filepath = this.path + file;
-                    var seed = new Seed(name,filepath,parse);
-                    seed.setParent(this);
+                    var seed = new Seed(name,datasource,parse, this);
+                    this._index[seed.name] = seed;
+                    this._order.push(seed);
 
                     return seed;
                 }
@@ -69,7 +83,7 @@ module.exports = function(Provider)
                  */
                 run()
                 {
-                    logger.debug('[Seeder] Running seeder: %s', this.name);
+                    logger.info(msg.running, this.name);
                     return this._runMethodOnOrder('prepare');
                 }
 
@@ -85,7 +99,7 @@ module.exports = function(Provider)
 
                     function errorHandler(err,seed)
                     {
-                        logger.error("Error seeding: %s", seed.name);
+                        logger.error(msg.seeding, seed.name);
                     }
 
                     return new Promise(function(resolve,reject)
@@ -93,7 +107,7 @@ module.exports = function(Provider)
                         var next = function(index){
                             return function(seed) {
                                 if (!order[index]) {
-                                    return resolve(self);
+                                    return resolve(self, self._index);
                                 }
                                 order[index][funcName]().then(next(index+1)).error(errorHandler);
                             }
@@ -146,21 +160,34 @@ module.exports = function(Provider)
              */
             class Seed
             {
-                constructor(name,path,parse)
+                constructor(name,datasource,parse,parent)
                 {
                     this.name = name;
-                    this.path = path;
-                    this.parse = parse || function(row,i) { return row; };
+                    this.path = null;
                     this.seeder = null;
                     this.parsed = false;
                     this.seeded = false;
                     this.reset = false;
                     this.data = [];
                     this.models = [];
+                    this.parse = parse || function(row,i) { return row; };
                     this.blueprint = app.ModelFactory.get(name);
                     this.model = this.blueprint ? this.blueprint.model : null;
 
+                    this._setup(datasource);
+                    this._parent(parent);
+
                     this._converter = new Converter({});
+                }
+
+                _setup(datasource)
+                {
+                    if (typeof datasource == 'string') {
+                        this.path = datasource;
+                        return;
+                    }
+                    // datasource is an array of objects.
+                    this.setData(datasource);
                 }
 
                 /**
@@ -168,16 +195,14 @@ module.exports = function(Provider)
                  * @param seeder Seeder|null
                  * @returns Seeder|null
                  */
-                setParent(seeder)
+                _parent(seeder)
                 {
-                    if (seeder instanceof Seeder) {
-                        seeder._index[this.name] = (seeder._order.push(this)-1);
-                        this.seeder = seeder;
-                    } else {
-                        throw ('Parent for a seed must be a Seeder object.');
+                    this.seeder = seeder;
+                    if (this.path) {
+                        this.path = seeder.path + this.path;
                     }
-                    return this.seeder;
                 }
+
 
                 setData(results)
                 {
@@ -189,7 +214,7 @@ module.exports = function(Provider)
                     this.data = results;
                     this.parsed = true;
 
-                    logger.debug('[Seeder] Parsed Seed: %s (%d rows)', this.name, results.length);
+                    logger.info(msg.parsed, this.name, results.length);
 
                     return results;
                 }
@@ -204,7 +229,10 @@ module.exports = function(Provider)
 
                     return new Promise(function(resolve,reject) {
 
-                        logger.debug ('[Seeder] Preparing Seed: %s', self.path);
+                        if (self.parsed || !self.path) {
+                            return resolve(self);
+                        }
+                        logger.info(msg.prepare, self.path);
 
                         self._converter.fromFile(self.path, complete);
 
@@ -231,6 +259,7 @@ module.exports = function(Provider)
                     this.seeded = true;
                     this.models = arr;
                 }
+
                 /**
                  * Seed the database with the data contained in this seed.
                  * @returns {bluebird|exports|module.exports}
@@ -241,17 +270,30 @@ module.exports = function(Provider)
 
                     return new Promise(function(resolve, reject) {
 
+                        if (self.seeded) {
+                            return resolve(self);
+                        }
                         // Just move on to the next one.
                         if (! self.model || ! self.data.length) {
-                            return error("No model or data for seed");
+                            return error(msg.noModel)(null);
                         }
 
-                        // There was an error.
+                        // User is asking to dump the database records first.
+                        if (self.reset) {
+                            logger.info(msg.dumping, self.blueprint.name);
+                            self.model.remove().then(create, error(msg.err_dumping));
+                        } else {
+                            create();
+                        }
+
+                        // Standard error handler.
                         function error(message)
                         {
-                            return function(){
-                                logger.error("[Seeder] "+message+': %s', self.name);
-                                resolve(self);
+                            return function(err)
+                            {
+                                if (err) console.error(err);
+                                logger.error(message, self.name);
+                                resolve(err);
                             }
                         }
 
@@ -260,18 +302,11 @@ module.exports = function(Provider)
                         {
                             self.model.create(self.data).then(function(response) {
                                 self.setModels(response);
-                                logger.debug('[Seeder] Created Models: %s, %d objects',self.blueprint.name, response.length);
+                                logger.info(msg.created, self.blueprint.name, response.length);
 
                                 resolve(self);
 
-                            }, error("Error creating seeds"));
-                        }
-                        // User is asking to dump the database records first.
-                        if (self.reset) {
-                            logger.debug('[Seeder] Dumping models: %s', self.blueprint.name);
-                            self.model.remove().then(create, error("Error removing seeds"));
-                        } else {
-                            create();
+                            }, error(msg.err_creating));
                         }
                     });
                 }
