@@ -12,21 +12,14 @@ module.exports = function(Provider)
 {
     Provider.create('controllerDefaultsProvider', function() {
 
-        this.requires('controllerProvider');
+        this.requires([
+            'controllerProvider',
+            'urlProvider'
+        ]);
 
-        return function(app)
-        {
-            var basic = {
-                REST: restController,
-
-                Locales: localeController
-            };
-
-            /**
-             * The route configuration for this managed controller.
-             * @param router
-             */
-            basic.REST.routes = function(router)
+        this.REST = {
+            controller: restController,
+            routes: function(router)
             {
                 router.get({
                     '/api/v1'               : 'restController.index',
@@ -40,25 +33,20 @@ module.exports = function(Provider)
                 }).delete({
                     '/api/v1/:model/:id'    : 'restController.trash'
                 });
-            };
+            }
+        };
 
-            /**
-             * The route configuration for this managed controller.
-             * @param router
-             */
-            basic.Locales.routes = function(router)
+        this.Locales = {
+            controller: localeController,
+            routes: function(router)
             {
                 router.get({
-                    '/api/v1/lang'          : 'langController.index',
+                    '/api/v1/lang' : 'langController.index',
                 })
-            };
+            }
+        };
 
-            /**
-             * Maintained Controllers that contain only the factory setup function.
-             * @type {{REST: (*|exports|module.exports), Locales: (*|exports|module.exports)}}
-             */
-            app.ControllerFactory.basic = basic;
-        }
+        return function() {};
     });
 };
 

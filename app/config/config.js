@@ -85,6 +85,16 @@ module.exports = {
         system.view,
 
         // Your providers here...
+        function(Provider) {
+            Provider.create('templateDefaults', function(){
+                this.requires('templateProvider');
+                return function(app) {
+                    app.Template.defaults = function(template) {
+                        template.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
+                    };
+                }
+            })
+        }
     ],
 
     /**

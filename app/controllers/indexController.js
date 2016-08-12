@@ -1,7 +1,7 @@
 "use strict";
-module.exports = function(Factory)
+module.exports = function(Controller)
 {
-    return Factory.create('indexController', function(app)
+    return Controller.create('indexController', function(app)
     {
         // Specify your global variables or controller bindings up here.
         // These should not change for each request.

@@ -126,6 +126,17 @@ class Application
     {
         return rootPath = dir;
     }
+
+    /**
+     * Get a provider by name.
+     * Providers can have configurations or objects attached to them.
+     * @param providerName string
+     * @returns {Provider|null}
+     */
+    get(providerName)
+    {
+        return Provider.get(providerName);
+    }
 }
 
 /**

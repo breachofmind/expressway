@@ -1,8 +1,8 @@
 "use strict";
 
-module.exports = function(Factory)
+module.exports = function(Controller)
 {
-    return Factory.create('authController', function(app)
+    return Controller.create('authController', function(app)
     {
         return {
             /**

@@ -5,7 +5,7 @@
  */
 var ExpressMVC = require('../index');
 
-var app = ExpressMVC.init(__dirname+"/../app/", GLOBAL.ENV_CLI);
+var app = ExpressMVC.init(__dirname+"/../app/", ENV_CLI);
 var cli = app.CLI;
 
 /**

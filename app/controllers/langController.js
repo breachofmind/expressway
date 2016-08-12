@@ -1,5 +1,7 @@
 "use strict";
-module.exports = function(Factory)
+module.exports = function(Controller, app)
 {
-    return Factory.create('langController', Factory.basic.Locales);
+    var defaults = app.get('controllerDefaultsProvider');
+
+    return Controller.create('langController', defaults.Locales.controller);
 };

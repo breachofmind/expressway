@@ -1,5 +1,7 @@
 "use strict";
-module.exports = function(Factory)
+module.exports = function(Controller, app)
 {
-    return Factory.create('restController', Factory.basic.REST);
+    var defaults = app.get('controllerDefaultsProvider');
+
+    return Controller.create('restController', defaults.REST.controller);
 };

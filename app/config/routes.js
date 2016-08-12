@@ -3,10 +3,6 @@
  */
 module.exports = function(app,Template)
 {
-    Template.defaults = function(template){
-        template.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
-    };
-
     // Authentication routes.
     this.get({
         '/login' : 'authController.login',
@@ -15,10 +11,10 @@ module.exports = function(app,Template)
         '/login' : 'authController.authenticate'
     });
 
+    var defaults = app.get('controllerDefaultsProvider');
 
-    app.ControllerFactory.basic.Locales.routes(this);
-    app.ControllerFactory.basic.REST.routes(this);
-
+    defaults.REST.routes(this);
+    defaults.Locales.routes(this);
 
     // Application routes.
     this.get({
