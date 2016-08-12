@@ -1,4 +1,5 @@
 var env = require('./env');
+var system = require('../../index').Providers;
 
 /**
  * Sample configuration file.
@@ -61,6 +62,32 @@ module.exports = {
     view_engine: "ejs",
 
     /**
+     * User defined providers for your application.
+     * @var array
+     */
+    providers: [
+
+        // Default system providers.
+        // Feel free to swap out with your own implementations.
+        system.auth,
+        system.cli,
+        system.controller,
+        system.controllerDefaults,
+        system.database,
+        system.express,
+        system.locale,
+        system.logger,
+        system.model,
+        system.router,
+        system.seeder,
+        system.template,
+        system.url,
+        system.view,
+
+        // Your providers here...
+    ],
+
+    /**
      * The supported localities.
      * @var array<string>
      */
@@ -83,14 +110,6 @@ module.exports = {
      * @var boolean
      */
     debug: env.debug || true,
-
-    /**
-     * User defined providers for your application.
-     * @var array
-     */
-    providers: [
-        // Your providers here
-    ],
 
     /**
      * The limit of models to return in REST api.

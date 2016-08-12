@@ -1,20 +1,27 @@
 "use strict";
 
-var Provider = require('../provider');
 var mongoose = require('mongoose');
 
 mongoose.Promise = require('bluebird');
 
-Provider.create('databaseProvider', function() {
+/**
+ * Provides the MongoDB database connection.
+ * @author Mike Adamczyk <mike@bom.us>
+ * @param Provider
+ */
+module.exports = function(Provider)
+{
+    Provider.create('databaseProvider', function() {
 
-    this.requires('loggerProvider');
+        this.requires('loggerProvider');
 
-    return function(app)
-    {
-        app.db = mongoose;
+        return function(app)
+        {
+            app.db = mongoose;
 
-        app.db.connect(app.config.db);
+            app.db.connect(app.config.db);
 
-        app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
-    }
-});
+            app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
+        }
+    });
+};

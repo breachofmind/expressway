@@ -2,8 +2,18 @@
 
 var noop = function(){};
 
+/**
+ * Provider class.
+ * For adding or modifying functionality to the application.
+ * @constructor
+ */
 class Provider
 {
+    /**
+     * Create an instance of a provider.
+     * @param name string
+     * @param boot func
+     */
     constructor(name, boot)
     {
         this.name = name;
@@ -20,7 +30,11 @@ class Provider
         Provider.objects[name] = this;
     }
 
-    loadDependencies()
+    /**
+     * Loads the dependencies for this provider.
+     * @param app Application
+     */
+    loadDependencies(app)
     {
         this.dependencies.forEach(function(providerName) {
 
@@ -34,7 +48,7 @@ class Provider
                 throw (`Provider ${this.name} dependency needs to be loadable: ${providerName}`);
             }
             // Load the provider.
-            provider.load();
+            provider.load(app);
 
         }.bind(this));
     }
@@ -61,6 +75,7 @@ class Provider
     isLoadable(env)
     {
         var inEnvironment = !this.environments.length ? true : this.environments.indexOf(env) > -1;
+
         return this.active && !this.loaded && inEnvironment;
     }
 
@@ -68,22 +83,22 @@ class Provider
      * Boot this provider into the application.
      * @returns {boolean}
      */
-    load()
+    load(app)
     {
-        var app = Provider._app;
-
-        if (this.isLoadable(app.env))
-        {
-            app.event.emit('provider.loading', this);
-            this.loadDependencies();
-            this._register.call(this,app);
-            this.loaded = true;
-            app._providers.push(this.name);
-            app.event.emit('provider.loaded', this);
-
-            return true;
+        if (! this.isLoadable(app.env)) {
+            return false;
         }
-        return false;
+
+        app.event.emit('provider.loading', this);
+
+        this.loadDependencies(app);
+        this._register.call(this,app);
+        this.loaded = true;
+
+        app._providers.push(this.name);
+        app.event.emit('provider.loaded', this);
+
+        return true;
     }
 
     /**
@@ -94,11 +109,6 @@ class Provider
      */
     static loadAll(app)
     {
-        Provider._app = app;
-
-        // Load the user providers.
-        Provider._loadAllFromConfig(app);
-
         Provider.queue.sort(function(a,b) {
             return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
         });
@@ -106,26 +116,22 @@ class Provider
             provider.load(app);
         });
         app.event.emit('provider.registered', app, Provider.objects);
+
         return app._providers;
     }
 
     /**
-     * Loads any providers specified by the user in the config file.
-     * @param app
+     * Runs the module functions, which creates the provider instances.
+     * @param arr array<function>
+     * @returns {Number}
      */
-    static _loadAllFromConfig(app)
+    static modules(arr)
     {
-        if (app.config.providers && app.config.providers.length) {
-            app.config.providers.forEach(function(providerName) {
-                try {
-                    require(app.rootPath('providers/'+providerName)) (Provider);
-                } catch(err){
-                    console.error('Application Provider missing: '+providerName);
-                }
-            })
-        }
+        arr.forEach(function(module) {
+            if (typeof module == 'function') module(Provider);
+        });
+        return arr.length;
     }
-
 
     /**
      * Named constructor.
@@ -149,7 +155,16 @@ class Provider
     }
 }
 
+/**
+ * The queue of providers to load.
+ * @type {Array}
+ */
 Provider.queue = [];
+
+/**
+ * An index of providers by name.
+ * @type {{}}
+ */
 Provider.objects = {};
 
 module.exports = Provider;

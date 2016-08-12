@@ -20,28 +20,6 @@ var rootPath = path.normalize(path.dirname(__dirname) + "/app/");
 var Provider = require('./provider');
 var utils = require('./support/utils');
 
-var providers = [
-    'logger',
-    'url',
-    'cli',
-    'seeder',
-    'database',
-    'auth',
-    'controller',
-    'controllerDefaults',
-    'model',
-    'template',
-    'view',
-    'locale',
-    'express',
-    'router'
-];
-
-// Require the providers.
-providers.forEach(function(file) {
-    require('./providers/'+file);
-});
-
 /**
  * The package.json object.
  * @type {*|Object}
@@ -57,14 +35,15 @@ class Application
 {
     /**
      * Constructor.
+     * @param config object
      * @param env string
      * @returns Application
      */
-    constructor(env)
+    constructor(config, env)
     {
         Application.instance = this;
 
-        this.config   = require (Application.rootPath('config/config'));
+        this.config   = config;
         this.version  = npmPackage.version;
         this.event    = new events.EventEmitter();
         this.env      = env || this.config.environment;
@@ -72,10 +51,7 @@ class Application
         this.utils    = utils;
 
         this._package = npmPackage;
-
         this._providers = [];
-
-        Provider.loadAll(this);
     }
 
     /**
@@ -84,6 +60,8 @@ class Application
      */
     bootstrap()
     {
+        Provider.loadAll(this);
+
         this.event.emit('application.bootstrap', this);
 
         return this;
@@ -117,15 +95,16 @@ class Application
 
     /**
      * Named constructor.
+     * @param config object
      * @param env string
      * @returns {Application}
      */
-    static create(env)
+    static create(config,env)
     {
         if (Application.instance) {
             return Application.instance;
         }
-        return new Application(env);
+        return new Application(config,env);
     }
 
     /**

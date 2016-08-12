@@ -7,6 +7,8 @@
         <p>Hello, <%=lang('index.welcome', 'The Application')%></p>
         <a href="/login">Log in</a>
 
+        <h1><%=test%></h1>
+
         <% if (template.user) { %>
         <h2>Logged in: <%=template.user.first_name %></h2>
         <a href="/logout">Log out</a>
