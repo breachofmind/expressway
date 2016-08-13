@@ -1,11 +1,14 @@
-module.exports = function(Factory,app)
+module.exports = function(Model,app)
 {
-    var User = Factory.create('User', {
+    var User = Model.create('User', {
 
-        first_name:     String,
-        last_name:      String,
-        email:          String,
-        password:       String,
+        email:          { type: String, required: true },
+        password:       { type: String, required: true },
+        first_name:     { type: String },
+        last_name:      { type: String },
+        roles: [
+            { type:Model.types.ObjectId, ref:"Role" }
+        ],
         created_at:     { type: Date, default: Date.now },
         modified_at:    { type: Date, default: Date.now }
 

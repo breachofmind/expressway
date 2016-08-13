@@ -3,7 +3,8 @@
 var program = require('commander'),
     cp      = require('child_process'),
     ejs     = require('ejs'),
-    fs      = require('fs');
+    fs      = require('fs'),
+    _string = require('lodash/string');
 
 /**
  * Provides a Command Line interface module.
@@ -31,22 +32,29 @@ module.exports = function(Provider)
             function createTemplate(type)
             {
                 return function(name) {
+                    var templateFile = __dirname + `/../templates/${type}.template`;
                     var destDir = app.rootPath(`${type}s`);
+                    var destFile = `${destDir}/${_string.camelCase(name)}.js`;
+
                     if (!fs.existsSync(destDir)){
                         fs.mkdirSync(destDir);
                     }
-                    var destFile = `${destDir}/${name}.js`;
+
                     if (! name || name=="") {
                         throw new Error("Specify a name for the "+type);
                     }
                     if (fs.existsSync(destFile)) {
                         throw ("File exists: "+destFile);
                     }
-                    var template = ejs.compile(fs.readFileSync(__dirname + `/../templates/${type}.template`).toString());
-                    var str = template({name:name});
+                    var template = ejs.compile(fs.readFileSync(templateFile, 'utf8').toString());
+                    var str = template({
+                        name: name,
+                        _: _string
+                    });
                     fs.writeFileSync(destFile,str);
                 }
             }
+
 
             function CLI ()
             {

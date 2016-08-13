@@ -2,6 +2,11 @@ module.exports = function(Seeder,app)
 {
     var seeder = Seeder.create('installation');
 
+    var roles = [{
+        name: 'superuser',
+        description: "Has system-wide permissions.",
+        permissions: []
+    }];
     var models = ['media','user'];
     var methods = ['create','read','update','delete'];
     var permissions = [];
@@ -10,10 +15,15 @@ module.exports = function(Seeder,app)
             permissions.push({object:model, method:method})
         })
     });
+
     var seeds = {
         media:       seeder.add('media', 'media.csv'),
         users:       seeder.add('user', 'users.csv'),
-        permissions: seeder.add('permission', permissions)
+        permissions: seeder.add('permission', permissions, function(row,i) {
+            roles[0].permissions.push(row._id);
+            return row;
+        }),
+        roles:       seeder.add('role', roles)
     };
 
     seeder.run().then(function(){

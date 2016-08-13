@@ -36,6 +36,7 @@
     "express-session": "^1.13.0",
     "glob": "^7.0.5",
     "locale": "0.0.21",
+    "lodash": "^4.15.0",
     "mongoose": "^4.4.4",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",

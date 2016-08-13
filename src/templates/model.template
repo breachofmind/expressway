@@ -1,6 +1,6 @@
 module.exports = function(Model, app) {
 
-    var <%=name%> = Model.create("<%=name%>", {
+    var <%=_.capitalize(name)%> = Model.create("<%=_.capitalize(name)%>", {
         created_at:     { type: Date, default: Date.now },
         modified_at:    { type: Date, default: Date.now }
 
@@ -8,7 +8,7 @@ module.exports = function(Model, app) {
         // Model methods.
     });
 
-    <%=name%>.expose = true;
+    <%=_.capitalize(name)%>.expose = true;
 
-    return <%=name%>;
-}
+    return <%=_.capitalize(name)%>;
+};

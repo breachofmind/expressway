@@ -1,5 +1,7 @@
 "use strict";
 
+var _string = require('lodash/string');
+
 /**
  * Provides a view helper class.
  * @author Mike Adamczyk <mike@bom.us>
@@ -72,9 +74,11 @@ module.exports = function(Provider)
                     this.template.setUser(request.user);
                     this.template.meta('csrf-token',request.csrfToken());
                     this.template.meta('description', this.template.description);
+
                     this.data.request = request;
                     this.data.template = this.template;
                     this.data.appVersion = app.version;
+                    this.data._ = _string;
 
                     app.event.emit('view.created', this, request);
 
