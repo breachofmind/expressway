@@ -1,4 +1,7 @@
 "use strict";
+
+var _ = require('lodash');
+
 /**
  * Maintained controller that does basic CRUD and REST stuff.
  * @param app
@@ -50,7 +53,7 @@ module.exports = function(app)
         if (! request.params.hasOwnProperty('model')) {
             return next();
         }
-        var value = request.params.model;
+        var value = _.capitalize(request.params.model);
         var blueprint = Model.get(value);
 
         if (! blueprint) {
@@ -130,7 +133,7 @@ module.exports = function(app)
                 total:      0,
                 limit:      app.config.limit || 10000,
                 filter:     request.getQuery('filter', null),
-                sort:       request.getQuery('sort', request.blueprint.range()),
+                sort:       request.getQuery('sort', request.blueprint.range),
                 next:       null
             };
             /**
@@ -160,7 +163,7 @@ module.exports = function(app)
                     .find       (paging.filter)
                     .sort       (paging.sort)
                     .limit      (paging.limit)
-                    .populate   (request.blueprint.population)
+                    .populate   (request.blueprint.populate)
                     .exec();
 
                 // After finding the count, find the records.
@@ -200,7 +203,7 @@ module.exports = function(app)
                 .find(search.where)
                 .sort(search.sort)
                 .limit(search.limit || app.config.limit)
-                .populate(request.blueprint.population)
+                .populate(request.blueprint.populate)
                 .exec();
 
             return promise.then(function(data)
@@ -226,7 +229,7 @@ module.exports = function(app)
 
             return request.Model
                 .findByIdAndUpdate(request.params.id, request.body, {new:true})
-                .populate(request.blueprint.population)
+                .populate(request.blueprint.populate)
                 .exec()
                 .then(function(data) {
 

@@ -1,14 +1,21 @@
 module.exports = function(Model, app) {
 
-    var <%=_.capitalize(name)%> = Model.create("<%=_.capitalize(name)%>", {
-        created_at:     { type: Date, default: Date.now },
-        modified_at:    { type: Date, default: Date.now }
+    return Model.create("<%=_.capitalize(name)%>", function Blueprint()
+    {
+        this.title = 'id';
+        this.expose = true;
+        this.guarded = [];
+        this.appends = [];
+        this.labels = {};
 
-    }).methods({
-        // Model methods.
+
+        // Set the schema for this model.
+        this.schema = {
+            created_at:     { type: Date, default: Date.now },
+            modified_at:    { type: Date, default: Date.now }
+        }
+
+        // Set the model methods.
+        this.methods = {}
     });
-
-    <%=_.capitalize(name)%>.expose = true;
-
-    return <%=_.capitalize(name)%>;
 };

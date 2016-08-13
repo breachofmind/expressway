@@ -1,18 +1,30 @@
 module.exports = function(Model,app)
 {
-    var User = Model.create('User', {
+    return Model.create('User', function Blueprint(){
 
-        email:          { type: String, required: true },
-        password:       { type: String, required: true },
-        first_name:     { type: String },
-        last_name:      { type: String },
-        roles: [
-            { type:Model.types.ObjectId, ref:"Role" }
-        ],
-        created_at:     { type: Date, default: Date.now },
-        modified_at:    { type: Date, default: Date.now }
+        this.title = 'email';
+        this.expose = false;
+        this.guarded = ['password'];
+        this.labels = {};
+        this.appends = ['name'];
+        this.populate = ['roles'];
 
-    }).methods({
+        this.schema = {
+            email:          { type: String, required: true },
+            password:       { type: String, required: true },
+            first_name:     { type: String },
+            last_name:      { type: String },
+            roles:          [{ type:Model.types.ObjectId, ref:"Role" }],
+            created_at:     { type: Date, default: Date.now },
+            modified_at:    { type: Date, default: Date.now }
+        };
+
+        this.schema.pre('save', function Model(next) {
+            this.password = app.Auth.encrypt(this.password, this.created_at.getTime().toString());
+            next();
+        });
+
+        this.methods = {
 
             /**
              * Checks the hashed password and salt.
@@ -48,23 +60,7 @@ module.exports = function(Model,app)
 
                 return app.gate.check(this,object,method);
             }
-
-        })
-        .guard('password')
-        .appends('name');
-
-
-    User.schema.pre('save', function(next) {
-
-        this.password = app.Auth.encrypt(this.password, this.created_at.getTime().toString());
-        next();
+        };
     });
-
-    User.title = "name";
-
-    // Don't expose to API.
-    User.expose = false;
-
-    return User;
 };
 

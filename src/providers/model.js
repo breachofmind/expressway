@@ -13,154 +13,87 @@ module.exports = function(Provider)
 
         return function(app)
         {
-
             var db = app.db;
             var utils = app.utils;
             var modelPath = app.rootPath('models/');
+            var blueprints = {};
 
-            /**
-             * Model Factory class.
-             * For making those mongoose models.
-             */
-            class ModelFactory
-            {
-                constructor(name,schema)
+            class ModelFactory {
+
+                constructor(name, boot)
                 {
-                    // Name of the model.
-                    this.name = name;
+                    this._schema = null;
 
-                    // Column labels, optional.
-                    this.labels = {};
-
-                    this.guarded = [];
-
+                    this.name     = name;
+                    this.slug     = _.snakeCase(name);
+                    this.title    = "id";
+                    this.expose   = true;
+                    this.guarded  = [];
                     this.fillable = [];
+                    this.appends  = [];
+                    this.populate = [];
+                    this.labels   = {};
+                    this.key      = "id";
+                    this.sort     = 1;
 
-                    // Model structure.
-                    this.fields(schema);
+                    boot.call(this);
+                    this._setJsonMethod();
+                    this.model = db.model(this.name, this._schema);
 
-                    // Expose to API?
-                    this.expose = true;
-
-                    this.title = 'id';
-
-                    // Default ranging field and sort order.
-                    this.range('_id',1);
-
-                    // Reference fields to populate.
-                    this.population = [];
-
-                    ModelFactory.store(name,this);
+                    // Store the object instances.
+                    blueprints[this.name] = this;
+                    ModelFactory[this.name] = this.model;
                 }
 
                 /**
-                 * Sets the schema json output.
+                 * Get the sorting range.
+                 * @returns {{}}
                  */
-                setJsonOutput()
+                get range()
                 {
-                    var blueprint = this;
-
-                    this.schema.methods.toJSON = function()
-                    {
-                        var out = {};
-                        var model = this;
-
-                        blueprint.fillable.forEach(function(column)
-                        {
-                            if (typeof column == 'function') {
-                                var arr = column(model,blueprint);
-                                if (arr) {
-                                    return out[arr[0]] = arr[1];
-                                }
-                            }
-                            if (typeof model[column] == "function") {
-                                return out[column] = model[column] ();
-                            }
-                            // Skip fields that are in the guarded column.
-                            if (blueprint.guarded.indexOf(column) > -1) {
-                                return;
-                            }
-                            return out[column] = model[column];
-                        });
-
-                        out['id'] = model._id;
-                        out['_title'] = out[blueprint.title];
-                        out['_url'] = utils.url(`api/v1/${blueprint.name.toLowerCase()}/${model._id}`);
-
-                        return out;
-                    }
+                    var out = {}; out[this.key] = this.sort;
+                    return out;
                 }
 
                 /**
-                 * Append a field to the fillable list
-                 * @param column string|function
-                 * @returns {ModelFactory}
-                 */
-                appends(column)
-                {
-                    this.fillable.push(column);
-
-                    return this;
-                }
-
-                /**
-                 * Guard a column from being displayed in the JSON string.
-                 * @param column string
-                 * @returns {ModelFactory}
-                 */
-                guard(column)
-                {
-                    this.guarded.push(column);
-
-                    return this;
-                }
-
-                /**
-                 * Add methods to the model.
+                 * Set the model schema.
                  * @param object
-                 * @returns {ModelFactory}
                  */
-                methods(object)
-                {
-                    for(let method in object) {
-                        this.schema.methods[method] = object[method];
-                    }
-
-                    return this;
+                set schema(object) {
+                    this.fillable = Object.keys(object);
+                    this._schema = new db.Schema(object);
                 }
 
                 /**
-                 * Set the fields on the schema.
-                 * @param schema object
-                 * @returns {ModelFactory}
+                 * Get the model schema.
+                 * @returns {*}
                  */
-                fields(schema)
-                {
-                    if (schema) {
-                        for (var column in schema) {
-                            this.fillable.push(column);
-                        }
-                        this.schema = new db.Schema(schema);
-                    }
-                    return this;
+                get schema() {
+                    return this._schema;
                 }
 
                 /**
-                 * Set the range key and sort value.
-                 * @param key string
-                 * @param sort int
-                 * @returns {ModelFactory}
+                 * Set the schema methods.
+                 * @param object
                  */
-                range(key,sort)
-                {
-                    if (! arguments.length) {
-                        var out = {}; out[this.key] = this.sort;
-                        return out;
-                    }
-                    this.key = key;
-                    this.sort = sort || 1;
-                    this.keyType = this.schema.tree[this.key].type;
-                    return this;
+                set methods(object) {
+                    this._schema.methods = object;
+                }
+
+                /**
+                 * Get the schema methods.
+                 * @returns {*}
+                 */
+                get methods() {
+                    return this._schema.methods;
+                }
+
+                /**
+                 * Get the datatype for this key.
+                 * @returns {*}
+                 */
+                get keyType() {
+                    return this._schema.tree[this.key].type;
                 }
 
                 /**
@@ -178,43 +111,68 @@ module.exports = function(Provider)
                 }
 
                 /**
-                 * Population settings for this model.
-                 * @param args array|object
-                 * @returns {ModelFactory}
+                 * Sets the schema json output.
+                 * @private
+                 * @returns void
                  */
-                populate(args)
+                _setJsonMethod()
                 {
-                    this.population = args||[];
-                    return this;
+                    var self = this;
+
+                    this.methods.toJSON = function()
+                    {
+                        var out = {};
+                        var model = this;
+
+                        self.fillable.forEach(function(column)
+                        {
+                            // Skip fields that are in the guarded column.
+                            if (self.guarded.indexOf(column) > -1) {
+                                return;
+                            }
+                            return out[column] = model[column];
+                        });
+
+                        // The developer can append other columns to the output.
+                        self.appends.forEach(function(column)
+                        {
+                            if (typeof column == 'function') {
+                                var arr = column(model,self);
+                                if (arr) {
+                                    return out[arr[0]] = arr[1];
+                                }
+                            }
+                            if (typeof model[column] == "function") {
+                                return out[column] = model[column] ();
+                            }
+                        });
+
+                        out['id'] = model._id;
+                        out['_title'] = out[self.title];
+                        out['_url'] = utils.url(`api/v1/${self.name.toLowerCase()}/${model._id}`);
+
+                        return out;
+                    }
                 }
 
                 /**
-                 * Assign the schema to the model.
+                 * Named constructor.
+                 * @param name string
+                 * @param boot function
                  * @returns {ModelFactory}
                  */
-                build()
-                {
-                    this.setJsonOutput();
-                    this.model = db.model(this.name,this.schema);
-
-                    ModelFactory[this.name] = this.model;
-                    app.logger.debug('[Model] Created: %s', this.name);
-
-                    return this;
+                static create(name, boot) {
+                    return new ModelFactory(name,boot);
                 }
 
                 /**
-                 * Load the given files.
-                 * @param items array|string
+                 * Load all application models.
                  * @returns {*}
                  */
-                static load(items)
+                static loadAll()
                 {
+                    var items = utils.getFileBaseNames(modelPath);
                     var loaded = [];
-
-                    if (typeof items == 'string') {
-                        items = [items];
-                    }
 
                     items.forEach(function(name)
                     {
@@ -233,26 +191,12 @@ module.exports = function(Provider)
                 }
 
                 /**
-                 * Assign the schema to all loaded models.
-                 * This is done at the bootstrap level.
-                 * @returns {void}
-                 */
-                static build()
-                {
-                    for(let model in ModelFactory.models) {
-                        ModelFactory.models[model].build();
-                    }
-                    app.event.emit('models.built', ModelFactory);
-                }
-
-                /**
                  * Return a ModelFactory object.
                  * @param name string
                  * @returns {*|null}
                  */
-                static get(name)
-                {
-                    return ModelFactory.models[name.toLowerCase()] || null;
+                static get(name) {
+                    return blueprints[name] || null;
                 }
 
                 /**
@@ -260,71 +204,17 @@ module.exports = function(Provider)
                  * @param name string
                  * @returns {boolean}
                  */
-                static has(name)
-                {
+                static has(name) {
                     return ModelFactory.get(name) ? true:false;
-                }
-
-                /**
-                 * Return the models object.
-                 * @returns {{}}
-                 */
-                static all()
-                {
-                    return ModelFactory.models;
-                }
-
-                /**
-                 * Store an instance of a model blueprint in the repository.
-                 * @param name string
-                 * @param object ModelFactory
-                 * @returns {*}
-                 */
-                static store(name,object)
-                {
-                    return ModelFactory.models[name.toLowerCase()] = object;
-                }
-
-                /**
-                 * Named constructor.
-                 * @param name string
-                 * @param schema object
-                 * @returns {ModelFactory}
-                 */
-                static create(name, schema)
-                {
-                    return new ModelFactory(name,schema);
-                }
-
-                /**
-                 * Boot all created models.
-                 * @returns void
-                 */
-                static boot()
-                {
-                    var files = utils.getFileBaseNames(modelPath);
-
-                    ModelFactory.load(files);
                 }
             }
 
-            /**
-             * Repository of created model blueprints.
-             * @type {{}}
-             */
-            ModelFactory.models = {};
-
             ModelFactory.types = db.Schema.Types;
 
-            ModelFactory.boot();
+            ModelFactory.loadAll();
 
             // Attach the factory class to the application.
             app.ModelFactory = ModelFactory;
-
-            // Models need to have their schema attached for use.
-            app.event.on('application.bootstrap', function(app) {
-                app.ModelFactory.build();
-            });
         }
     });
 };

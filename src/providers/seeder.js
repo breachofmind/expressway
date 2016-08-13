@@ -55,6 +55,7 @@ module.exports = function(Provider)
                 constructor(name, path)
                 {
                     this.name = name;
+                    this.reset = false;
                     this.path = path || app.rootPath('db/seeds/');
 
                     this._order = [];
@@ -172,7 +173,7 @@ module.exports = function(Provider)
                     this.models = [];
                     this.parse = parse || function(row,i) { return row; };
                     this.blueprint = app.ModelFactory.get(name);
-                    this.model = this.blueprint ? this.blueprint.model : null;
+                    this.model = app.ModelFactory[name];
 
                     this._setup(datasource);
                     this._parent(parent);
@@ -198,6 +199,7 @@ module.exports = function(Provider)
                 _parent(seeder)
                 {
                     this.seeder = seeder;
+                    this.reset = seeder.reset;
                     if (this.path) {
                         this.path = seeder.path + this.path;
                     }

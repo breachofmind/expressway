@@ -1,16 +1,17 @@
 module.exports = function(Model, app) {
 
-    var Permission = Model.create("Permission", {
-        created_at:     { type: Date, default: Date.now },
-        modified_at:    { type: Date, default: Date.now },
-        object:         { type: String, required:true },
-        method:         { type: String, required:true },
+    return Model.create("Permission", function Blueprint()
+    {
+        this.title = 'name';
+        this.expose = false;
 
-    }).methods({
-        // Model methods.
+        // Set the schema for this model.
+        this.schema = {
+            object: { type: String, required:true },
+            method: { type: String, required:true },
+        };
+
+        // Set the model methods.
+        this.methods = {}
     });
-
-    Permission.expose = false;
-
-    return Permission;
 };

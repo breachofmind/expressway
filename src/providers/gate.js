@@ -23,8 +23,8 @@ module.exports = function(Provider)
         {
             var permissions = {};
 
-            if (! app.ModelFactory.has('permission')) {
-                throw ("Gate provider requires the permission model");
+            if (! app.ModelFactory.has('Permission')) {
+                throw ("Gate provider requires the Permission model");
             }
 
             /**
