@@ -4,7 +4,7 @@ module.exports = function(Model, app) {
 
     return Model.create("Role", function Blueprint()
     {
-        this.title = 'id';
+        this.title = 'name';
         this.expose = false;
         this.guarded = [];
         this.appends = [];

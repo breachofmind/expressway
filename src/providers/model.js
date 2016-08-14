@@ -1,4 +1,5 @@
 "use strict";
+var _ = require('lodash');
 
 /**
  * Provides mongoose model blueprints.
@@ -41,7 +42,7 @@ module.exports = function(Provider)
                     this.model = db.model(this.name, this._schema);
 
                     // Store the object instances.
-                    blueprints[this.name] = this;
+                    blueprints[this.slug] = this;
                     ModelFactory[this.name] = this.model;
                 }
 
@@ -197,6 +198,14 @@ module.exports = function(Provider)
                  */
                 static get(name) {
                     return blueprints[name] || null;
+                }
+
+                /**
+                 * Return all blueprints.
+                 * @returns {{}}
+                 */
+                static all() {
+                    return blueprints;
                 }
 
                 /**

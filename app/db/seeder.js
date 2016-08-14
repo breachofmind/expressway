@@ -19,15 +19,20 @@ module.exports = function(Seeder,app)
     });
 
     var seeds = {
-        user: seeder.add('User', 'users.csv'),
-        permissions: seeder.add('Permission', permissions, function(row,i) {
+        user: seeder.add('user', 'users.csv'),
+        permissions: seeder.add('permission', permissions, function(row,i) {
             roles[0].permissions.push(row._id);
             return row;
         }),
-        roles:       seeder.add('Role', roles)
+        roles: seeder.add('role', roles)
     };
 
     seeder.run().then(function(){
+
+        seeder.get('user').data[0].roles = [
+            seeder.get('role').data[0]._id
+        ];
+
 
         seeder.seed().then(function(){
 

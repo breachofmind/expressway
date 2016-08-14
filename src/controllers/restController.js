@@ -53,7 +53,7 @@ module.exports = function(app)
         if (! request.params.hasOwnProperty('model')) {
             return next();
         }
-        var value = _.capitalize(request.params.model);
+        var value = request.params.model;
         var blueprint = Model.get(value);
 
         if (! blueprint) {
@@ -95,10 +95,20 @@ module.exports = function(app)
          */
         index: function(request,response)
         {
-            return {
+            var blueprints = Model.all();
+            var json = {
                 message: "Express MVC API v1",
-                currentUser: request.user
+                currentUser: request.user,
+                index: {}
             };
+            Object.keys(blueprints).forEach(function(slug) {
+                if (blueprints[slug].expose == false && request.user) {
+                    json.index[blueprints[slug].name] = app.url('api/v1/'+slug);
+                }
+            });
+            app.event.emit('rest.index', json.index);
+
+            return json;
         },
 
         /**
@@ -108,7 +118,7 @@ module.exports = function(app)
          */
         fetchOne: function(request,response)
         {
-            return request.Object.exec().then(function(data) {
+            return request.Object.populate(request.blueprint.populate).exec().then(function(data) {
 
                 return response.api(data,200,{
                     labels: request.blueprint.labels,

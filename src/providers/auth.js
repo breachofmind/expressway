@@ -23,7 +23,7 @@ module.exports = function(Provider)
         {
             var Model = app.ModelFactory;
 
-            if (! Model.get('User')) {
+            if (! Model.get('user')) {
                 throw ('User model is required to use basic Auth functionality.');
             }
 

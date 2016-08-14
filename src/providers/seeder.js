@@ -137,10 +137,7 @@ module.exports = function(Provider)
                  */
                 get(seedName)
                 {
-                    if (this._index[seedName] >= 0) {
-                        return this._order[ this._index[seedName] ]
-                    }
-                    return null;
+                    return this._index.hasOwnProperty(seedName) ? this._index[seedName] : null;
                 }
 
                 /**
@@ -173,7 +170,7 @@ module.exports = function(Provider)
                     this.models = [];
                     this.parse = parse || function(row,i) { return row; };
                     this.blueprint = app.ModelFactory.get(name);
-                    this.model = app.ModelFactory[name];
+                    this.model = this.blueprint.model || null;
 
                     this._setup(datasource);
                     this._parent(parent);

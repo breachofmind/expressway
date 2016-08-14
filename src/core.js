@@ -142,7 +142,7 @@ module.exports = function Core (app)
                 message: response.phrase(),
                 method: request.method,
                 url: request.absUrl(),
-                user: request.user
+                user: request.user ?  request.user.id : null
             };
             if (metadata) {
                 for (var prop in metadata) {
