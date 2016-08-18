@@ -4,12 +4,13 @@
     <div class="columns">
         <h1>Welcome</h1>
 
-        <p>Hello, <%=lang('index.welcome', 'The Application')%></p>
-        <a href="/login">Log in</a>
-
         <% if (user) { %>
         <h2>Logged in: <%= user.first_name %></h2>
-        <a href="/logout">Log out</a>
+        <a href="/logout" class="button alert">Log out</a>
+        <a href="/api/v1" class="button">API</a>
+        <% } else { %>
+        <p>Hello, <%=lang('index.welcome', 'The Application')%></p>
+        <a href="/login" class="button success">Log in</a>
         <% } %>
     </div>
 

@@ -110,6 +110,10 @@ module.exports = function(Provider)
                     });
                 },
 
+                /**
+                 * Adds flash message support.
+                 * @param app
+                 */
                 function flashMiddleware(app)
                 {
                     app.express.use(flash());
@@ -119,9 +123,11 @@ module.exports = function(Provider)
                  * Adds CSRF protection.
                  * @param app
                  */
-                function CSRFMiddleware (app)
+                function csrfMiddleware (app)
                 {
                     app.express.use(csrf());
+
+                    // Attach the csrf token to the <head>.
                     app.event.on('view.created', function(view,request){
                         view.template.meta('csrf-token', request.csrfToken());
                     });
@@ -135,6 +141,10 @@ module.exports = function(Provider)
                 }
             ];
 
+            /**
+             * Called before the server starts.
+             * @param app Application
+             */
             function bootstrap(app)
             {
                 app.express = express();
@@ -142,6 +152,7 @@ module.exports = function(Provider)
                 app.express.set('view engine', conf('view_engine', 'ejs'));
                 app.express.set('views', app.rootPath(conf('views_path', 'resources/views')));
 
+                // Install the default middleware.
                 middleware.forEach(function(func)
                 {
                     app.logger.debug('[Express] Adding Application Middleware: %s', func.name);
@@ -152,7 +163,10 @@ module.exports = function(Provider)
                 });
             }
 
-
+            /**
+             * Called when the server is ready to start.
+             * @param app Application
+             */
             function server(app)
             {
                 app.express.listen(config.port, function()

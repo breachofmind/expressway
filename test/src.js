@@ -20,12 +20,6 @@ describe('configuration', function()
         test.number(config.port)
             .isBetween(1,9000);
     });
-    it('has controllers', function(){
-        test.array(config.files.controllers);
-    });
-    it('has models', function(){
-        test.array(config.files.models);
-    });
     it('has correct env', function(){
         test.string(app.environment)
             .match((it)=> {

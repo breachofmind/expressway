@@ -3,9 +3,10 @@ var env = require('./env');
 module.exports = function(system)
 {
     return {
+        // The environment
+        environment: env.environment || ENV_LOCAL,
         appKey:      "",
         debug:       env.debug || true,
-        environment: env.environment || ENV_LOCAL,
         db:          env.db || "mongodb://localhost/expressmvc",
         url:         env.url || "http://localhost",
         port:        env.port | 8081,
@@ -43,17 +44,7 @@ module.exports = function(system)
             system.view,
 
             // Your providers here...
-            function(Provider) {
-                Provider.create('templateDefaults', function(){
-                    this.requires('templateProvider');
-                    return function(app) {
-                        app.Template.defaults = function(view) {
-                            this.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
-                            this.meta('viewport','width=device-width');
-                        };
-                    }
-                })
-            }
+            require('../providers/templateDefaults')
         ]
     }
 };
