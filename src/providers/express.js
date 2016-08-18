@@ -25,8 +25,9 @@ module.exports = function(Provider)
 
         return function(app)
         {
-            var config = app.config;
             var utils = app.utils;
+            var conf = utils.conf;
+            var config = app.config;
 
             app._middlewares = [];
 
@@ -35,7 +36,7 @@ module.exports = function(Provider)
                  * The core middleware.
                  * @param app
                  */
-                    function coreMiddleware(app)
+                function coreMiddleware(app)
                 {
                     return core(app);
                 },
@@ -45,7 +46,7 @@ module.exports = function(Provider)
                  * from an ajax request.
                  * @param app
                  */
-                    function ajaxMiddleware(app)
+                function ajaxMiddleware(app)
                 {
                     return function(request,response,next)
                     {
@@ -58,9 +59,9 @@ module.exports = function(Provider)
                  * Adds localization support.
                  * @param app
                  */
-                    function localeMiddleware (app)
+                function localeMiddleware (app)
                 {
-                    app.express.use(locale(config.lang_support || ['en']));
+                    app.express.use(locale(conf('lang_support', ['en_US'])));
 
                     return function (request,response,next)
                     {
@@ -75,10 +76,10 @@ module.exports = function(Provider)
                  * Serves static content, if configured.
                  * @param app
                  */
-                    function staticContentMiddleware (app)
+                function staticContentMiddleware (app)
                 {
-                    if (config.static_uri) {
-                        express.static(config.static_uri)
+                    if (conf('static_path')) {
+                        express.static(conf('static_path'))
                     }
                 },
 
@@ -86,21 +87,21 @@ module.exports = function(Provider)
                  * Parses the body response.
                  * @param app
                  */
-                    function bodyParserMiddleware(app)
+                function bodyParserMiddleware(app)
                 {
                     app.express.use(bodyParser.json());
                     app.express.use(bodyParser.urlencoded({extended:true}));
-                    app.express.use(cookieParser(app.config.appKey));
+                    app.express.use(cookieParser(conf('appKey', "keyboard cat")));
                 },
 
                 /**
                  * Sets up the session middleware.
                  * @param app
                  */
-                    function sessionMiddleware (app)
+                function sessionMiddleware (app)
                 {
                     return session ({
-                        secret: config.appKey,
+                        secret: conf('appKey', 'keyboard cat'),
                         saveUninitialized: false,
                         resave: false,
                         store: new MongoStore({
@@ -118,9 +119,12 @@ module.exports = function(Provider)
                  * Adds CSRF protection.
                  * @param app
                  */
-                    function CSRFMiddleware (app)
+                function CSRFMiddleware (app)
                 {
                     app.express.use(csrf());
+                    app.event.on('view.created', function(view,request){
+                        view.template.meta('csrf-token', request.csrfToken());
+                    });
 
                     return function (err, request, response, next) {
                         if (err.code !== 'EBADCSRFTOKEN') {
@@ -135,8 +139,8 @@ module.exports = function(Provider)
             {
                 app.express = express();
 
-                app.express.set('view engine', config.view_engine || 'ejs');
-                app.express.set('views', config.view_path || 'app/views');
+                app.express.set('view engine', conf('view_engine', 'ejs'));
+                app.express.set('views', app.rootPath(conf('views_path', 'resources/views')));
 
                 middleware.forEach(function(func)
                 {
@@ -156,7 +160,7 @@ module.exports = function(Provider)
                     app.logger.info(`Starting %s server v.%s on %s (%s)...`,
                         app.env,
                         app.version,
-                        config.url,
+                        conf('url'),
                         utils.url());
                 });
             }

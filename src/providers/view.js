@@ -33,18 +33,25 @@ module.exports = function(Provider)
                     this.file = file;
                     this.data = data||{};
 
-                    this.template = Template.create();
+                    this.template = Template.create(this);
                 }
 
                 /**
                  * Perform template actions.
-                 * @param property string
+                 * @param property string|object
                  * @param value mixed value
                  * @returns {*}
                  */
                 set(property,value)
                 {
-                    this.template[property] = value;
+                    if (typeof property == 'object') {
+                        Object.keys(property).forEach(function(key) {
+                            this.template[key] = property[key];
+                        }.bind(this));
+                    } else {
+                        this.template[property] = value;
+                    }
+
                     return this;
                 }
 
@@ -53,7 +60,7 @@ module.exports = function(Provider)
                  * @param data object
                  * @returns {View}
                  */
-                and(data)
+                use(data)
                 {
                     if (! data) return this;
                     for (let prop in data)
@@ -71,10 +78,6 @@ module.exports = function(Provider)
                  */
                 render(request,response)
                 {
-                    this.template.setUser(request.user);
-                    this.template.meta('csrf-token',request.csrfToken());
-                    this.template.meta('description', this.template.description);
-
                     this.data.request = request;
                     this.data.template = this.template;
                     this.data.appVersion = app.version;

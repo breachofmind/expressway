@@ -12,12 +12,13 @@ module.exports = function(Provider)
         return function(app)
         {
             var utils = app.utils;
+            var conf = utils.conf;
 
             /**
              * Path relative to your application that contains the controller declarations.
              * @type {string}
              */
-            var controllerPath = app.rootPath('controllers/');
+            var controllerPath = app.rootPath(conf('controllers_path', 'controllers') + "/");
 
             /**
              * Controller factory class, for creating new controllers.

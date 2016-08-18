@@ -25,9 +25,10 @@ module.exports = function(Provider)
              */
             var store = new KeyStore();
             var utils = app.utils;
+            var langPath = utils.conf('locales_path', 'lang');
 
             // Load the language files.
-            var langDirs = glob.sync(app.rootPath('lang/*'));
+            var langDirs = glob.sync(app.rootPath(langPath+'/*'));
 
             langDirs.forEach(function(dirPath,i)
             {

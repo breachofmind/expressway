@@ -9,7 +9,7 @@ var winston = require('winston');
  */
 module.exports = function(Provider)
 {
-    Provider.create('loggerProvider', function() {
+    Provider.create('loggerProvider', function Class() {
 
         this.order = -1;
 
@@ -36,14 +36,14 @@ module.exports = function(Provider)
             winston.addColors(appLevels.colors);
 
             var fileMaxSize = 1000 * 1000 * 10; // 10MB
-            var config = app.config;
-            var logPath = app.rootPath(config.log_path || "logs") + "/";
+            var conf = app.utils.conf;
+            var logPath = app.rootPath(conf('logs_path', 'logs')) + "/";
 
             var logger = new winston.Logger({
                 levels: appLevels.levels,
                 transports: [
                     new winston.transports.Console({
-                        level: (config.debug ? 'debug' : 'info'),
+                        level: (conf('debug') == true ? 'debug' : 'info'),
                         colorize:true
                     }),
                     new winston.transports.File({

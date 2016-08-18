@@ -100,7 +100,7 @@ module.exports = {
     {
         Application.setRootPath(rootPath);
 
-        var config = require (Application.rootPath('config/config'));
+        var config = require (Application.rootPath('config/config')) (applicationProviders);
 
         Provider.modules(config.providers);
 

@@ -15,8 +15,12 @@ module.exports = function(Controller)
                 if (request.user) {
                     response.redirect('/');
                 }
-                return response.view('login').set('title',"Login").and({
-                    message: request.flash('message') || null
+                return response.view('login')
+                    .set({
+                        title: "Login"
+                    })
+                    .use({
+                        message: request.flash('message') || null
                 });
             },
 

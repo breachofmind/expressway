@@ -104,6 +104,10 @@ module.exports = function(Provider)
             app.Auth = Auth;
 
             app.event.on('application.bootstrap', bootstrap);
+
+            app.event.on('view.created', function(view,request){
+                view.data.user = request.user;
+            })
         }
 
     });

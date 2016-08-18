@@ -6,9 +6,10 @@ GLOBAL.ENV_DEV = 'development';
 GLOBAL.ENV_PROD = 'production';
 GLOBAL.ENV_CLI = 'cli';
 
-var path   = require('path'),
-    events = require('events'),
-    cp     = require('child_process');
+var path     = require('path');
+var events   = require('events');
+var Provider = require('./provider');
+var utils    = require('./support/utils');
 
 /**
  * The default application root directory.
@@ -16,9 +17,6 @@ var path   = require('path'),
  * @type {string}
  */
 var rootPath = path.normalize(path.dirname(__dirname) + "/app/");
-
-var Provider = require('./provider');
-var utils = require('./support/utils');
 
 /**
  * The package.json object.
@@ -54,6 +52,7 @@ class Application
         this._providers = [];
     }
 
+
     /**
      * Initial setup of the server.
      * @returns Application
@@ -70,16 +69,15 @@ class Application
 
     /**
      * Start the application server.
+     * @param listening function, optional
      * @returns Application
      */
-    server()
+    server(listening)
     {
         this.event.emit('application.server', this);
 
-        // Boot google chrome if developing locally.
-        if (this.env == GLOBAL.ENV_LOCAL) {
-            cp.exec(`open /Applications/Google\\ Chrome.app ${utils.url()}`, function(err){});
-        }
+        listening(this);
+
         return this;
     };
 

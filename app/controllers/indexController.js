@@ -13,7 +13,7 @@ module.exports = function(Controller)
         return {
             index: function(request,response)
             {
-                return response.view('index').and(globals);
+                return response.view('index').use(globals);
             }
         }
 

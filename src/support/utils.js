@@ -66,6 +66,21 @@ module.exports = {
     },
 
     /**
+     * When building an element, spreads the object into attribute values.
+     * @param object
+     * @returns {string}
+     */
+    spreadAttributes: function(object)
+    {
+        return Object.keys(object).map(function(key){
+            var value = object[key];
+            if (value) {
+                return `${key}="${object[key]}"`;
+            }
+        }).join(" ");
+    },
+
+    /**
      * Given a string or functions, return an array of functions for the express router.
      * @param values
      * @returns {Array}
@@ -91,6 +106,22 @@ module.exports = {
         });
 
         return out;
+    },
+
+    /**
+     * Reach into the configuration.
+     * @param key string
+     * @param defaultValue mixed
+     * @returns {*}
+     */
+    conf(key,defaultValue)
+    {
+        var app = require('../application').instance;
+
+        if (app.config[key]) {
+            return app.config[key];
+        }
+        return defaultValue;
     },
 
     /**

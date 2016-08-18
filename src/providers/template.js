@@ -12,17 +12,21 @@ module.exports = function(Provider)
 {
     Provider.create('templateProvider', function() {
 
-        var _fileTemplate = {
-            link: ejs.compile('<link id="<%=attributes.id%>" rel="stylesheet" type="text/css" href="<%= attributes.src %>"/>'),
-            script: ejs.compile('<script id="<%=attributes.id%>" type="text/javascript" src="<%= attributes.src %>"></script>'),
-            meta: ejs.compile('<meta name="<%=name%>" content="<%=attributes.value%>"/>')
-        };
-
-        var _jsonProperties = ['name','element','attributes'];
-
         return function(app)
         {
             var config = app.config;
+            var utils = app.utils;
+
+            var styles = {
+                close: ejs.compile("<<%-element%> <%-attributes%>><%-text%></<%-element%>>"),
+                open: ejs.compile("<<%-element%> <%-attributes%>/>")
+            };
+
+            var elementStyles = {
+                link: styles.open,
+                script: styles.close,
+                meta: styles.open,
+            };
 
             /**
              * The Template class, for building HTML documents.
@@ -32,75 +36,77 @@ module.exports = function(Provider)
             {
                 /**
                  * Constructor
-                 * @param title string
+                 * @param view View
                  */
-                constructor(title)
+                constructor(view)
                 {
-                    this.title          = title;
-                    this.user           = null;
-                    this.description    = "";
-                    this.bodyClass      = [];
-                    this.scripts        = [];
-                    this.styles         = [];
-                    this.metas          = [];
+                    this._view = view;
+                    this._assets = [];
+                    this.title = "Untitled";
+                    this.bodyClass = [];
 
-                    this.meta('viewport','width=device-width');
                     this.meta('generator','ExpressMVC v.'+app.version);
 
-                    if (app.env === "local" && config.livereload) {
-                        this.script("livereload", config.livereload);
-                    }
-
-                    Template.defaults(this);
+                    Template.defaults.call(this, view);
                 }
 
-                setUser(user)
+                element(type, attrs, order)
                 {
-                    if (user) {
-                        this.user = user;
-                        this.meta('user', user._id);
-                    }
-
-                    return this;
-                }
-
-
-                script(name,src)
-                {
-                    this.scripts.push(new TemplateFile("script",name, src));
-                    return this;
-                }
-
-                style(name,src)
-                {
-                    this.styles.push(new TemplateFile("link",name,src));
-                    return this;
-                }
-
-                meta(key,value)
-                {
-                    this.metas.push(new TemplateFile("meta",key,{key:key,value:value}));
+                    new TemplateElement(type, attrs, order).addTo(this);
                     return this;
                 }
 
                 /**
-                 * Return the <head> string output.
+                 * Queue a script.
+                 * @param name string id
+                 * @param src string
+                 * @returns {Template}
+                 */
+                script(name,src)
+                {
+                    return this.element('script', {id:name,type:"text/javascript",src:src}, 2);
+                }
+
+                /**
+                 * Queue a stylesheet.
+                 * @param name string id
+                 * @param href string
+                 * @returns {Template}
+                 */
+                style(name,href)
+                {
+                    return this.element('link', {id:name, type:"text/css", rel:"stylesheet", href:href}, 1);
+                }
+
+                /**
+                 * Add metadata.
+                 * @param key string
+                 * @param value string
+                 * @returns {Template}
+                 */
+                meta(key,value)
+                {
+                    return this.element('meta', {name:key, content:value}, 0);
+                }
+
+                /**
+                 * Get any assets of the given element(s).
+                 * @param arr Array optional
                  * @returns {string}
                  */
-                head()
+                get(arr)
                 {
-                    var template = this;
-                    var out = [];
-                    var order = arguments.length ? arguments : ['metas','scripts','styles'];
-
-                    for (var i=0; i<order.length; i++) {
-                        template[order[i]].forEach(function(file) {
-                            out.push(file instanceof TemplateFile ? file.render() : file);
-                        });
-                    }
-
-                    return out.join("\n");
+                    this._assets.sort(function(a,b) {
+                        return a.order === b.order ? 0 : (a.order > b.order ? 1:-1);
+                    });
+                    return this._assets.map(function(asset) {
+                        if (Array.isArray(arr) && arr.indexOf(asset.element) == -1) {
+                            return "";
+                        }
+                        return asset.render();
+                    }).join("\n");
                 }
+
 
                 /**
                  * Named constructor.
@@ -124,70 +130,66 @@ module.exports = function(Provider)
             };
 
 
-
             /**
-             * Template file class.
-             * Used for script,style and meta tags.
+             * Template element class.
+             * For adding common stuff to the template.
              */
-            class TemplateFile
+            class TemplateElement
             {
-                constructor(element, name, attr)
+                /**
+                 * Constructor.
+                 * @param element string link|script|meta
+                 * @param attributes object
+                 * @param order number
+                 */
+                constructor(element,attributes,order)
                 {
-                    this.element    = element;
-                    this.name       = name;
-                    this.template   = _fileTemplate[element] || null;
-                    this.attributes = typeof attr == "string" ? {src:attr} :  attr;
-                    if (! this.attributes.id) {
-                        this.attributes.id = element+"_"+name;
-                    }
-
-                    if (this.exists) {
-                        this.attributes.src += "?m="+fs.statSync(this.publicPath).mtime.getTime();
-                    }
-
+                    this.element = element.toLowerCase();
+                    this.template = elementStyles[this.element] ? elementStyles[this.element] : styles.close;
+                    this.attributes = attributes;
+                    this.text = "";
+                    this.order = order || 0;
+                    if (this.element == 'script') this.mtime('src');
+                    if (this.element == 'link') this.mtime('href');
                 }
 
                 /**
-                 * Return the attributes src public path.
+                 * If a file exists on the server, add the mtime to it.
+                 * @param attr string
+                 * @returns {TemplateElement}
+                 */
+                mtime(attr)
+                {
+                    var publicPath = app.publicPath(this.attributes[attr]);
+                    if (this.attributes[attr] && fs.existsSync(publicPath)) {
+                        var mtime = fs.statSync(this.publicPath).mtime.getTime();
+                        this.attributes[attr] += "m="+mtime;
+                    }
+                    return this;
+                }
+
+                /**
+                 * Render the element string.
                  * @returns {string}
-                 */
-                get publicPath()
-                {
-                    return app.publicPath(this.attributes.src);
-                }
-
-                /**
-                 * If a file, check if it exists.
-                 * @returns {boolean}
-                 */
-                get exists()
-                {
-                    return this.attributes.src && fs.existsSync(this.publicPath);
-                }
-
-                /**
-                 * Return a JSON object for the template.
-                 * @returns {Array}
-                 */
-                toJSON()
-                {
-                    var out = {};
-                    _jsonProperties.forEach(function(prop){
-                        out[prop] = this[prop];
-                    }.bind(this));
-                    return out;
-                }
-
-                /**
-                 * Render the template.
-                 * @returns {*}
                  */
                 render()
                 {
-                    if (! this.template) {
-                        return "";
-                    }
-                    return this.template(this.toJSON());
+                    return this.template({
+                        text: this.text,
+                        element: this.element,
+                        attributes: utils.spreadAttributes(this.attributes)
+                    })
+                }
+
+                /**
+                 * Add the element to the template.
+                 * @param template Template
+                 * @returns {TemplateElement}
+                 */
+                addTo(template)
+                {
+                    template._assets.push(this);
+                    return this;
                 }
             }
 

@@ -16,7 +16,8 @@ module.exports = function(Provider)
         {
             var db = app.db;
             var utils = app.utils;
-            var modelPath = app.rootPath('models/');
+            var conf = utils.conf;
+            var modelPath = app.rootPath(conf('models_path',' models') + "/");
             var blueprints = {};
 
             class ModelFactory {
