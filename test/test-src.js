@@ -1,10 +1,8 @@
-var ExpressMVC = require('../index');
-var chai = require('chai');
-var expect = chai.expect;
-var rootPath = __dirname+"/../app/";
 var path = require('path');
+var ExpressMVC = require('../src/tests');
+var rootPath = ExpressMVC.testRootPath;
+var app = ExpressMVC.testApp();
 
-var app = ExpressMVC.init(rootPath, ENV_TEST);
 /**
  * Test the application configuration.
  */
@@ -88,12 +86,12 @@ describe('application', function()
         expect(app.View).to.be.a('function');
     });
     it('should have a router class', function(){
-        expect(app).to.have.property('Router');
-        expect(app.Router).to.be.a('object');
+        expect(app).to.have.property('router');
+        expect(app.router).to.be.a('object');
     });
     it('should have a list of routes', function(){
-        var list = app.Router.list();
+        var list = app.router.list();
         expect(list).to.be.an('array');
         expect(list.length).to.be.above(0);
-    })
+    });
 });

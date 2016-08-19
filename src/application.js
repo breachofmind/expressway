@@ -40,8 +40,6 @@ class Application
      */
     constructor(config, env)
     {
-        Application.instance = this;
-
         this.booted   = false;
         this.config   = config;
         this.version  = npmPackage.version;
@@ -61,12 +59,14 @@ class Application
      */
     bootstrap()
     {
-        Provider.loadAll(this);
+        if (! this.booted)
+        {
+            Provider.loadAll(this);
 
-        this.event.emit('application.bootstrap', this);
+            this.event.emit('application.bootstrap', this);
 
-        this.booted = true;
-
+            this.booted = true;
+        }
         return this;
     }
 
@@ -96,6 +96,20 @@ class Application
     }
 
     /**
+     * Reach into the configuration.
+     * @param key string
+     * @param defaultValue mixed
+     * @returns {*}
+     */
+    conf(key,defaultValue)
+    {
+        if (this.config[key]) {
+            return this.config[key];
+        }
+        return defaultValue;
+    }
+
+    /**
      * Named constructor.
      * @param config object
      * @param env string
@@ -103,9 +117,6 @@ class Application
      */
     static create(config,env)
     {
-        if (Application.instance) {
-            return Application.instance;
-        }
         return new Application(config,env);
     }
 
@@ -130,6 +141,15 @@ class Application
     }
 
     /**
+     * Destroy the application and connections.
+     * @returns void
+     */
+    destruct()
+    {
+        this.event.emit('application.destruct');
+    }
+
+    /**
      * Get a provider by name.
      * Providers can have configurations or objects attached to them.
      * @param providerName string
@@ -140,12 +160,5 @@ class Application
         return Provider.get(providerName);
     }
 }
-
-/**
- * The Application singleton object.
- * @type {Application}
- */
-Application.instance = null;
-
 
 module.exports = Application;

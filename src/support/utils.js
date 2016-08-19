@@ -24,17 +24,6 @@ module.exports = {
     },
 
     /**
-     * Return a url string.
-     * @param uri string
-     * @returns {string}
-     */
-    url: function(uri)
-    {
-        var app = require('../application').instance;
-        return app.url(uri);
-    },
-
-    /**
      * Encode a string to base64.
      * @param string
      * @returns {string}
@@ -82,12 +71,12 @@ module.exports = {
 
     /**
      * Given a string or functions, return an array of functions for the express router.
+     * @param app Application
      * @param values
      * @returns {Array}
      */
-    getRouteFunctions: function(values)
+    getRouteFunctions: function(app,values)
     {
-        var app = require('../application').instance;
         var dispatch = app.ControllerFactory.dispatch;
         var out = [];
 
@@ -106,22 +95,6 @@ module.exports = {
         });
 
         return out;
-    },
-
-    /**
-     * Reach into the configuration.
-     * @param key string
-     * @param defaultValue mixed
-     * @returns {*}
-     */
-    conf(key,defaultValue)
-    {
-        var app = require('../application').instance;
-
-        if (app.config[key]) {
-            return app.config[key];
-        }
-        return defaultValue;
     },
 
     /**

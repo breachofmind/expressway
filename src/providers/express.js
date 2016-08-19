@@ -26,7 +26,6 @@ module.exports = function(Provider)
         return function(app)
         {
             var utils = app.utils;
-            var conf = utils.conf;
             var config = app.config;
 
             app._middlewares = [];
@@ -61,7 +60,7 @@ module.exports = function(Provider)
                  */
                 function localeMiddleware (app)
                 {
-                    app.express.use(locale(conf('lang_support', ['en_US'])));
+                    app.express.use(locale(app.conf('lang_support', ['en_US'])));
 
                     return function (request,response,next)
                     {
@@ -78,8 +77,8 @@ module.exports = function(Provider)
                  */
                 function staticContentMiddleware (app)
                 {
-                    if (conf('static_path')) {
-                        express.static(conf('static_path'))
+                    if (app.conf('static_path')) {
+                        express.static(app.conf('static_path'))
                     }
                 },
 
@@ -91,7 +90,7 @@ module.exports = function(Provider)
                 {
                     app.express.use(bodyParser.json());
                     app.express.use(bodyParser.urlencoded({extended:true}));
-                    app.express.use(cookieParser(conf('appKey', "keyboard cat")));
+                    app.express.use(cookieParser(app.conf('appKey', "keyboard cat")));
                 },
 
                 /**
@@ -101,7 +100,7 @@ module.exports = function(Provider)
                 function sessionMiddleware (app)
                 {
                     return session ({
-                        secret: conf('appKey', 'keyboard cat'),
+                        secret: app.conf('appKey', 'keyboard cat'),
                         saveUninitialized: false,
                         resave: false,
                         store: new MongoStore({
@@ -149,8 +148,8 @@ module.exports = function(Provider)
             {
                 app.express = express();
 
-                app.express.set('view engine', conf('view_engine', 'ejs'));
-                app.express.set('views', app.rootPath(conf('views_path', 'resources/views')));
+                app.express.set('view engine', app.conf('view_engine', 'ejs'));
+                app.express.set('views', app.rootPath(app.conf('views_path', 'resources/views')));
 
                 // Install the default middleware.
                 middleware.forEach(function(func)
@@ -174,8 +173,8 @@ module.exports = function(Provider)
                     app.logger.info(`Starting %s server v.%s on %s (%s)...`,
                         app.env,
                         app.version,
-                        conf('url'),
-                        utils.url());
+                        app.conf('url'),
+                        app.url());
                 });
             }
 

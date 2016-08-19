@@ -16,6 +16,7 @@ module.exports = function(Provider)
     Provider.create('cliProvider', function(){
 
         this.requires('loggerProvider');
+
         this.runIn(ENV_CLI);
 
         return function(app)

@@ -16,8 +16,7 @@ module.exports = function(Provider)
         {
             var db = app.db;
             var utils = app.utils;
-            var conf = utils.conf;
-            var modelPath = app.rootPath(conf('models_path',' models') + "/");
+            var modelPath = app.rootPath(app.conf('models_path',' models') + "/");
             var blueprints = {};
 
             class ModelFactory {
@@ -151,7 +150,7 @@ module.exports = function(Provider)
 
                         out['id'] = model._id;
                         out['_title'] = out[self.title];
-                        out['_url'] = utils.url(`api/v1/${self.name.toLowerCase()}/${model._id}`);
+                        out['_url'] = app.url(`api/v1/${self.name.toLowerCase()}/${model._id}`);
 
                         return out;
                     }

@@ -1,3 +1,6 @@
+var ExpressMVC = require('../src/tests');
+var rootPath = ExpressMVC.testRootPath;
+//var app = ExpressMVC.testApp();
 
 
 //describe('REST', function(){

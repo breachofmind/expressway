@@ -17,7 +17,7 @@ module.exports = function(Provider)
         ]);
 
         // CLI doesn't need permissions.
-        this.runIn([ENV_LOCAL,ENV_DEV,ENV_PROD]);
+        this.runIn([ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST]);
 
         return function(app)
         {
@@ -42,6 +42,8 @@ module.exports = function(Provider)
                     });
                     // Attach the gate object to the application.
                     app.gate = new Gate(permissions);
+
+                    app.event.emit('gate.loaded', app.gate);
 
                     app.logger.debug('[Gate] Loaded permissions: %d', models.length);
                 });

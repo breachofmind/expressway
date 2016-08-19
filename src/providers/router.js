@@ -27,7 +27,7 @@ module.exports = function(Provider)
             var appRoutes = require(app.rootPath('config/routes'));
 
             // Attach the router class to the application.
-            app.Router = new Router();
+            app.router = new Router();
 
             /**
              * Route class.
@@ -42,7 +42,7 @@ module.exports = function(Provider)
             {
                 this.verb = verb;
                 this.url = url;
-                this.methods = utils.getRouteFunctions(methods);
+                this.methods = utils.getRouteFunctions(app,methods);
                 this.order = routes.length;
                 this.controller = typeof methods == 'string' ? methods : null;
 
@@ -104,7 +104,7 @@ module.exports = function(Provider)
 
             // After express is loaded, add the routes to it.
             app.event.on('application.bootstrap', function(app) {
-                appRoutes.call(app.Router, app, app.Template);
+                appRoutes.call(app.router, app, app.Template);
             });
         }
     });

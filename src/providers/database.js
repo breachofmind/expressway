@@ -27,6 +27,11 @@ module.exports = function(Provider)
                 app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
             });
 
+            app.event.on('application.destruct', function(){
+                app.db.connection.close();
+                app.logger.debug('[Database] Connection closed.');
+            });
+
             app.db.connect(app.config.db);
         }
     });
