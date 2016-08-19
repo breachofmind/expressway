@@ -2,9 +2,10 @@
 
 // Environment constants.
 GLOBAL.ENV_LOCAL = 'local';
-GLOBAL.ENV_DEV = 'development';
-GLOBAL.ENV_PROD = 'production';
-GLOBAL.ENV_CLI = 'cli';
+GLOBAL.ENV_DEV   = 'development';
+GLOBAL.ENV_PROD  = 'production';
+GLOBAL.ENV_CLI   = 'cli';
+GLOBAL.ENV_TEST  = 'test';
 
 var path     = require('path');
 var events   = require('events');
@@ -41,6 +42,7 @@ class Application
     {
         Application.instance = this;
 
+        this.booted   = false;
         this.config   = config;
         this.version  = npmPackage.version;
         this.event    = new events.EventEmitter();
@@ -62,6 +64,8 @@ class Application
         Provider.loadAll(this);
 
         this.event.emit('application.bootstrap', this);
+
+        this.booted = true;
 
         return this;
     }

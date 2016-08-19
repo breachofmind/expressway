@@ -104,6 +104,6 @@ module.exports = {
 
         Provider.modules(config.providers);
 
-        return Application.create(config,env).bootstrap();
+        return Application.create(config,env);
     }
 };

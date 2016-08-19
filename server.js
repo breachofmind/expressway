@@ -1,9 +1,9 @@
 var ExpressMVC = require('./index');
 var cp = require('child_process');
 
-var app = ExpressMVC.init(__dirname + "/app/");
+var app = ExpressMVC.init(__dirname + "/app/").bootstrap();
 
-app.server(function() {
+app.bootstrap().server(function() {
 
     // Boot google chrome if developing locally.
     if (app.env == ENV_LOCAL) {

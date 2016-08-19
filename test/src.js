@@ -1,31 +1,40 @@
-var test = require('unit.js'),
-    should = require('should'),
-    assert = require('assert'),
-    request = require('supertest');
-
 var ExpressMVC = require('../index');
+var chai = require('chai');
+var expect = chai.expect;
+var chaiHttp = require('chai-http');
+var should = chai.should();
 
-var app = ExpressMVC.Application.create();
-var config = app.config;
+chai.use(chaiHttp);
 
+var app = ExpressMVC.init(__dirname+"/../app", ENV_CLI);
 /**
  * Test the application configuration.
  */
-describe('configuration', function()
+describe('config', function()
 {
-    it('is an object', function(){
-        test.object(config);
+    it('should be a function in the module', function(){
+        var config = require('../app/config/config');
+        expect(config).to.be.a('function');
     });
-    it('has valid port', function(){
-        test.number(config.port)
-            .isBetween(1,9000);
+    it('should be an object in the app', function(){
+        expect(app.config).to.be.an('object');
     });
-    it('has correct env', function(){
-        test.string(app.environment)
-            .match((it)=> {
-                return it==="local" || it==="uat" || it==="prod" || it==="sit";
-            })
+    it('should have valid port', function(){
+        expect(app.config.port).to.be.within(0,9000);
+    });
+    it('should have valid environment string', function(){
+        var environments = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_CLI,ENV_TEST];
+        expect(environments).to.include(app.env);
+    });
+    it('should have an array of providers', function(){
+        expect(app.config.providers).to.be.an('array');
+    });
+    it('should have same environment as given', function(){
+        expect(app.config.environment).to.equal(ENV_LOCAL);
+        expect(app.env).to.equal(ENV_CLI);
     })
+
+
 });
 
 /**
@@ -33,79 +42,15 @@ describe('configuration', function()
  */
 describe('application', function()
 {
-    it('bootstraps', function(){
-        test.object(app);
-    })
-});
-
-
-describe('template', function()
-{
-    var template = ExpressMVC.Template.create('New title');
-
-    it('is constructor and instance', function(){
-        test.function(ExpressMVC.Template).hasName('Template');
-        test.object(template).isInstanceOf(ExpressMVC.Template);
+    it('should be an instance of an Application', function(){
+        expect(app).to.be.an.instanceOf(ExpressMVC.Application);
     });
-    it('constructor sets title', function(){
-        test.string(template.title).is('New title');
+    it('should parse the package.json', function(){
+        expect(app._package).to.be.an('object');
+        expect(app.version).to.equal(app._package.version);
     });
-    it('generates head string', function(){
-        test.string(template.head()).isNotEmpty();
-    })
-});
-
-
-
-describe('controller', function()
-{
-    /**
-     * The controller action to test.
-     * @param controller
-     * @returns {{index: index, object: Object}}
-     */
-    var ctrl = function(controller)  {
-
-        // For testing purposes
-        if (controller) {
-            controller.bind('id', function(value, request,response) {
-                request.params.id = "new-"+value;
-            });
-        }
-
-
-        return {
-            index: function (request,response,next) {
-                return "String";
-            },
-
-            object: function(request,response,next) {
-                return {object:"Object"};
-            }
-        }
-    };
-
-
-    var instance = ExpressMVC.Controller.create('testController', ctrl);
-
-    it('is constructor', function(){
-        test.function(ExpressMVC.Controller).hasName('ControllerFactory');
-    });
-    it('is instance', function(){
-        test.object(instance).isInstanceOf(ExpressMVC.Controller);
-        test.object(ExpressMVC.Controller.find('testController')).isIdenticalTo(instance);
-        test.value(ExpressMVC.Controller.find('NotThereController')).is(null);
-    });
-    it('removes construct method', function(){
-        test.bool(instance.has('construct')).isFalse();
-        test.function(instance.use('construct')).hasName('errorMethod');
-    });
-    it('binds parameters', function(){
-        test.object(instance._bindings);
-        test.function(instance._bindings['id']);
-    });
-    it('attaches methods', function(){
-        test.bool(instance.has('index')).isTrue();
-        test.function(ExpressMVC.Controller.find('testController').methods['index']).isIdenticalTo(instance.use('index'));
+    it('should not be booted yet', function(){
+        expect(app.booted).to.equal(false);
+        expect(app._providers).to.have.length(0);
     })
 });

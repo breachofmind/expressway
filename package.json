@@ -43,9 +43,7 @@
     "winston": "^2.2.0"
   },
   "devDependencies": {
-    "assert": "^1.4.1",
-    "should": "^9.0.0",
-    "supertest": "^1.2.0",
-    "unit.js": "^2.0.0"
+    "chai": "^3.5.0",
+    "chai-http": "^3.0.0"
   }
 }
