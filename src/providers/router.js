@@ -16,7 +16,7 @@ module.exports = function(Provider)
             'expressProvider'
         ]);
 
-        this.runIn([ENV_LOCAL,ENV_DEV,ENV_PROD]);
+        this.runIn([ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST]);
 
         return function(app)
         {
@@ -51,8 +51,16 @@ module.exports = function(Provider)
                 }
 
                 routes.push(this);
+
+                // Adds it to the express server.
                 app.express[verb].apply(app.express, [url].concat(this.methods));
-                app.logger.debug('[Router] #%d: %s - %s (%d Middleware)', this.order, verb.toUpperCase(), url, this.methods.length);
+
+                app.logger.debug('[Router] #%d: %s - %s (%d Middleware)',
+                    this.order,
+                    verb.toUpperCase(),
+                    url,
+                    this.methods.length
+                );
             }
 
             /**

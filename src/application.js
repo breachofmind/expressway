@@ -80,7 +80,7 @@ class Application
     {
         this.event.emit('application.server', this);
 
-        listening(this);
+        if (typeof listening == 'function') listening(this);
 
         return this;
     };
@@ -92,7 +92,7 @@ class Application
      */
     publicPath(filepath)
     {
-        return this.rootPath(`../${this.config.static_uri}/${filepath}`);
+        return this.rootPath(`../${this.config.static_path}/${filepath}`);
     }
 
     /**
@@ -116,7 +116,7 @@ class Application
      */
     static rootPath(filepath)
     {
-        return path.normalize(rootPath+"/"+filepath);
+        return path.normalize(rootPath+"/"+(filepath||""));
     }
 
     /**

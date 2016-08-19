@@ -19,9 +19,15 @@ module.exports = function(Provider)
         {
             app.db = mongoose;
 
-            app.db.connect(app.config.db);
+            app.db.connection.on('error', function(err){
+                app.logger.error('[Database] Connection error: %s', err);
+            });
 
-            app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
+            app.db.connection.on('open', function(){
+                app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
+            });
+
+            app.db.connect(app.config.db);
         }
     });
 };

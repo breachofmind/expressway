@@ -14,7 +14,6 @@ module.exports = function(Provider)
 
         return function(app)
         {
-            var config = app.config;
             var utils = app.utils;
 
             var styles = {
@@ -50,6 +49,13 @@ module.exports = function(Provider)
                     Template.defaults.call(this, view);
                 }
 
+                /**
+                 * Queue an element.
+                 * @param type string link|script|etc...
+                 * @param attrs object
+                 * @param order number
+                 * @returns {Template}
+                 */
                 element(type, attrs, order)
                 {
                     new TemplateElement(type, attrs, order).addTo(this);

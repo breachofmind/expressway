@@ -39,11 +39,20 @@ module.exports = function(Provider)
             var conf = app.utils.conf;
             var logPath = app.rootPath(conf('logs_path', 'logs')) + "/";
 
+            function getConsoleLevel()
+            {
+                switch (app.env) {
+                    case ENV_TEST: return 'error';
+                    case ENV_CLI: return 'warn';
+                    default: return conf('debug') == true ? 'debug' : 'info';
+                }
+            }
+
             var logger = new winston.Logger({
                 levels: appLevels.levels,
                 transports: [
                     new winston.transports.Console({
-                        level: (conf('debug') == true ? 'debug' : 'info'),
+                        level: getConsoleLevel(),
                         colorize:true
                     }),
                     new winston.transports.File({

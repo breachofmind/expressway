@@ -71,7 +71,7 @@ class Provider
      */
     runIn(environments)
     {
-        this.environments = this.dependencies.concat(environments);
+        this.environments = this.environments.concat(environments);
         return this;
     }
 

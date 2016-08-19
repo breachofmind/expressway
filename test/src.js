@@ -1,12 +1,10 @@
 var ExpressMVC = require('../index');
 var chai = require('chai');
 var expect = chai.expect;
-var chaiHttp = require('chai-http');
-var should = chai.should();
+var rootPath = __dirname+"/../app/";
+var path = require('path');
 
-chai.use(chaiHttp);
-
-var app = ExpressMVC.init(__dirname+"/../app", ENV_CLI);
+var app = ExpressMVC.init(rootPath, ENV_TEST);
 /**
  * Test the application configuration.
  */
@@ -28,10 +26,11 @@ describe('config', function()
     });
     it('should have an array of providers', function(){
         expect(app.config.providers).to.be.an('array');
+        expect(app.config.providers[0]).to.be.a('function');
     });
     it('should have same environment as given', function(){
         expect(app.config.environment).to.equal(ENV_LOCAL);
-        expect(app.env).to.equal(ENV_CLI);
+        expect(app.env).to.equal(ENV_TEST);
     })
 
 
@@ -49,8 +48,52 @@ describe('application', function()
         expect(app._package).to.be.an('object');
         expect(app.version).to.equal(app._package.version);
     });
+    it('should have rootpath that we gave it', function(){
+        expect(app.rootPath()).to.equal(path.normalize(rootPath));
+        expect(app.rootPath('config')).to.equal(path.normalize(rootPath+'config'));
+    });
     it('should not be booted yet', function(){
         expect(app.booted).to.equal(false);
-        expect(app._providers).to.have.length(0);
+        expect(app._providers).to.be.empty;
+    });
+
+    // Bootstrap
+    it('should bootstrap', function(){
+        expect(app.bootstrap()).to.be.instanceOf(ExpressMVC.Application);
+        expect(app.booted).to.equal(true);
+    });
+    it('should have providers after bootstrap', function(){
+        expect(app._providers).to.not.be.empty;
+        // Providers should be added to the index by name, though not loaded.
+        expect(Object.keys(ExpressMVC.Provider.objects).length).to.equal(app.config.providers.length);
+        // Some providers are only loaded based on the environment.
+        expect(app._providers.length).to.be.below(app.config.providers.length);
+    });
+    it('should have open database connection', function(){
+        expect(app.db).to.be.an('object');
+        expect(app.db.connection.readyState).to.equal(1); // connected
+    });
+    it('should have attached model factory class', function(){
+        expect(app).to.have.property('ModelFactory');
+        expect(app.ModelFactory).to.be.a('function');
+    });
+    it('should have attached controller factory class', function(){
+        expect(app).to.have.property('ControllerFactory');
+        expect(app.ControllerFactory).to.be.a('function');
+    });
+    it('should have template and view classes', function(){
+        expect(app).to.have.property('Template');
+        expect(app.Template).to.be.a('function');
+        expect(app).to.have.property('View');
+        expect(app.View).to.be.a('function');
+    });
+    it('should have a router class', function(){
+        expect(app).to.have.property('Router');
+        expect(app.Router).to.be.a('object');
+    });
+    it('should have a list of routes', function(){
+        var list = app.Router.list();
+        expect(list).to.be.an('array');
+        expect(list.length).to.be.above(0);
     })
 });
