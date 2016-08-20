@@ -1,18 +1,21 @@
 "use strict";
+var Provider = require('express-mvc').Provider;
 
-module.exports = function(Provider)
+class <%=name%>Provider extends Provider
 {
-    Provider.create('<%=name%>', function() {
+    constructor()
+    {
+        super("<%=name%>");
 
-        // Provider setup...
         this.order = 0;
-        this.requires(['loggerProvider']);
-        this.environments = [ENV_CLI];
+        this.requires('logger');
+        this.inside(ENV_CLI);
+    }
 
-        // Return the registration function...
-        return function(app){
-
-            // Codez
-        }
-    });
+    register(app)
+    {
+        // Codez
+    }
 }
+
+module.exports = new <%=name%>Provider();

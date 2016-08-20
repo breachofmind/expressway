@@ -26,10 +26,10 @@ class DatabaseProvider extends Provider
 
         app.db.connection.on('open', function(){
             app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
+            app.event.emit('database.connected', app);
         });
 
         app.event.on('application.destruct', function(){
-            app.db.connection.models = {};
             app.db.disconnect();
             app.logger.debug('[Database] Connection closed.');
         });

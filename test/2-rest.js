@@ -1,16 +1,28 @@
 var ExpressMVC = require('../src/tests');
 var rootPath = ExpressMVC.testRootPath;
-//var app = ExpressMVC.testApp();
+var app = ExpressMVC.testApp;
 
-//app.bootstrap();
-//
-//describe('REST', function(){
-//
-//    describe('restController.fetchAll', function(){
-//        it('should return a JSON')
-//
-//    })
-//});
+describe('REST', function(){
+
+    var url = app.url;
+
+    describe('restController.index', function(){
+
+        it('should return a JSON', function(done) {
+            chai.request(app.url('api/v1')).get('/')
+                .end(function(err, res){
+                    res.should.have.status(200);
+                    res.should.be.json;
+                    res.body.should.be.an('object');
+                    done();
+                });
+        })
+
+    })
+});
+
+
+
 
 //describe('REST', function(){
 //    var url = "http://localhost:8081/api/v1/";

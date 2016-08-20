@@ -146,7 +146,10 @@ class Application
      */
     destruct()
     {
+        this.booted = false;
+        this._providers = [];
         this.event.emit('application.destruct');
+        this.event.removeAllListeners();
     }
 
     /**

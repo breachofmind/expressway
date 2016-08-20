@@ -1,7 +1,7 @@
 var path = require('path');
 var ExpressMVC = require('../src/tests');
 var rootPath = ExpressMVC.testRootPath;
-var app = ExpressMVC.testApp();
+var app = ExpressMVC.testApp;
 
 /**
  * Test the application configuration.
@@ -96,5 +96,3 @@ describe('application', function()
         expect(list.length).to.be.above(0);
     });
 });
-
-app.destruct();

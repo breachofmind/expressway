@@ -106,9 +106,15 @@ class RouterProvider extends Provider
             }
         }
 
+        function notFoundMiddleware(request,response,next)
+        {
+            return response.smart(response.view('error/404'),404);
+        }
+
         // After express is loaded, add the routes to it.
         app.event.on('application.bootstrap', function(app) {
             appRoutes.call(app.router, app, app.Template);
+            app.express.use(notFoundMiddleware);
         });
     }
 }

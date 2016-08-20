@@ -177,6 +177,8 @@ class ExpressProvider extends Provider
                     app.version,
                     app.conf('url'),
                     app.url());
+
+                app.event.emit('express.listening', app.express);
             });
         }
 
