@@ -62,7 +62,7 @@ var applicationProviders = {};
     'gate'
 
 ].map(function(name) {
-    applicationProviders[name] = require('./src/providers/' + name);
+    require('./src/providers/' + name);
 });
 
 /**
@@ -84,13 +84,6 @@ module.exports = {
     Provider: Provider,
 
     /**
-     * System providers to use in your application.
-     * Or, substitute with your own.
-     * @type object
-     */
-    Providers: applicationProviders,
-
-    /**
      * Initialize the application and bootstrap.
      * @param rootPath string
      * @param env string, optional
@@ -100,10 +93,8 @@ module.exports = {
     {
         Application.setRootPath(rootPath);
 
-        var config = require (Application.rootPath('config/config')) (applicationProviders);
+        var config = require(Application.rootPath('config/config')) (Provider.get());
 
-        Provider.modules(config.providers);
-
-        return Application.create(config,env);
+        return new Application(config,env);
     }
 };

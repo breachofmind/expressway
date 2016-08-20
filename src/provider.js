@@ -2,6 +2,8 @@
 
 var noop = function(){};
 
+var objects = {};
+
 /**
  * Provider class.
  * For adding or modifying functionality to the application.
@@ -12,22 +14,27 @@ class Provider
     /**
      * Create an instance of a provider.
      * @param name string
-     * @param boot func
      */
-    constructor(name, boot)
+    constructor(name)
     {
-        this.name = name;
-        this.active = true;
-        this.loaded = false;
-        this.dependencies = [];
-        this.environments = [];
-        this.order = 1;
+        this.name           = name;
+        this.active         = true;
+        this.loaded         = false;
+        this.dependencies   = [];
+        this.environments   = [];
+        this.order          = 1;
 
-        var register = boot.call(this);
-        this._register = typeof register == 'function' ? register : noop;
+        objects[this.name] = this;
+    }
 
-        Provider.queue.push(this);
-        Provider.objects[name] = this;
+    /**
+     * Stub for provider extensions.
+     * @param app Application
+     * @returns {null}
+     */
+    register(app)
+    {
+        return null;
     }
 
     /**
@@ -69,7 +76,7 @@ class Provider
      * @param environments array|string
      * @returns Provider
      */
-    runIn(environments)
+    inside(environments)
     {
         this.environments = this.environments.concat(environments);
         return this;
@@ -99,7 +106,7 @@ class Provider
         app.event.emit('provider.loading', this);
 
         this.loadDependencies(app);
-        this._register.call(this,app);
+        this.register(app);
         this.loaded = true;
 
         app._providers.push(this.name);
@@ -111,67 +118,42 @@ class Provider
     /**
      * Load all the providers.
      * Returns an array of the loaded providers in the order they were loaded.
+     * @param providers array
      * @param app Application
      * @returns {array}
      */
-    static loadAll(app)
+    static boot(providers,app)
     {
-        Provider.queue.sort(function(a,b) {
-            return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
+        providers.sort(ascending);
+
+        providers.forEach(function(provider){
+            if (provider instanceof Provider) provider.load(app);
         });
-        Provider.queue.forEach(function(provider){
-            provider.load(app);
-        });
-        app.event.emit('provider.registered', app, Provider.objects);
+        app.event.emit('provider.registered', app, objects);
 
         return app._providers;
     }
 
     /**
-     * Runs the module functions, which creates the provider instances.
-     * @param arr array<function>
-     * @returns {Number}
-     */
-    static modules(arr)
-    {
-        arr.forEach(function(module) {
-            if (typeof module == 'function') module(Provider);
-        });
-        return arr.length;
-    }
-
-    /**
-     * Named constructor.
-     * @param name string unique provider name
-     * @param register function
-     * @returns {Provider}
-     */
-    static create(name,register)
-    {
-        return new Provider(name,register);
-    }
-
-    /**
-     * Get a provider by name.
+     * Get a provider by name or get all providers.
      * @param name string
-     * @returns {Provider|null}
+     * @returns {Provider|{}|undefined}
      */
     static get(name)
     {
-        return Provider.objects[name] || null;
+        return arguments.length ? objects[name] : objects;
     }
 }
 
 /**
- * The queue of providers to load.
- * @type {Array}
+ * Sort by ascending order.
+ * @param a
+ * @param b
+ * @returns {number}
  */
-Provider.queue = [];
+function ascending(a,b) {
+    return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
+}
 
-/**
- * An index of providers by name.
- * @type {{}}
- */
-Provider.objects = {};
 
 module.exports = Provider;

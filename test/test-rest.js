@@ -2,6 +2,15 @@ var ExpressMVC = require('../src/tests');
 var rootPath = ExpressMVC.testRootPath;
 //var app = ExpressMVC.testApp();
 
+//app.bootstrap();
+//
+//describe('REST', function(){
+//
+//    describe('restController.fetchAll', function(){
+//        it('should return a JSON')
+//
+//    })
+//});
 
 //describe('REST', function(){
 //    var url = "http://localhost:8081/api/v1/";

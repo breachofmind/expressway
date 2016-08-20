@@ -1,141 +1,147 @@
 "use strict";
 
-var program = require('commander'),
-    cp      = require('child_process'),
-    ejs     = require('ejs'),
-    fs      = require('fs'),
-    _string = require('lodash/string');
+var program  = require('commander'),
+    cp       = require('child_process'),
+    ejs      = require('ejs'),
+    fs       = require('fs'),
+    _string  = require('lodash/string'),
+    Provider = require('../provider');
 
 /**
  * Provides a Command Line interface module.
  * @author Mike Adamczyk <mike@bom.us>
- * @param Provider
  */
-module.exports = function(Provider)
+class CLIProvider extends Provider
 {
-    Provider.create('cliProvider', function(){
+    constructor()
+    {
+        super('cli');
 
         this.requires('loggerProvider');
+        this.inside(ENV_CLI);
+    }
 
-        this.runIn(ENV_CLI);
+    register(app)
+    {
+        var actions = {};
 
-        return function(app)
+        var cli = program.version(app.version);
+
+        /**
+         * Standard function for creating app classes from templates.
+         * @param type string controller|model|provider
+         * @returns {Function}
+         */
+        function createTemplate(type)
         {
-            var actions = {};
+            return function(name) {
+                var templateFile = __dirname + `/../templates/${type}.template`;
+                var destDir = app.rootPath(`${type}s`);
+                var destFile = `${destDir}/${_string.camelCase(name)}.js`;
 
-            var cli = program.version(app.version);
-
-            /**
-             * Standard function for creating app classes from templates.
-             * @param type string controller|model|provider
-             * @returns {Function}
-             */
-            function createTemplate(type)
-            {
-                return function(name) {
-                    var templateFile = __dirname + `/../templates/${type}.template`;
-                    var destDir = app.rootPath(`${type}s`);
-                    var destFile = `${destDir}/${_string.camelCase(name)}.js`;
-
-                    if (!fs.existsSync(destDir)){
-                        fs.mkdirSync(destDir);
-                    }
-
-                    if (! name || name=="") {
-                        throw new Error("Specify a name for the "+type);
-                    }
-                    if (fs.existsSync(destFile)) {
-                        throw ("File exists: "+destFile);
-                    }
-                    var template = ejs.compile(fs.readFileSync(templateFile, 'utf8').toString());
-                    var str = template({
-                        name: name,
-                        _: _string
-                    });
-                    fs.writeFileSync(destFile,str);
+                if (!fs.existsSync(destDir)){
+                    fs.mkdirSync(destDir);
                 }
-            }
 
-
-            function CLI ()
-            {
-                this.logger = app.logger;
-
-                // Create a controller from the template.
-                this.controller = createTemplate('controller');
-
-                // Create a model from the template.
-                this.model = createTemplate('model');
-
-                // Create a provider from the template.
-                this.provider = createTemplate('provider');
-
-                /**
-                 * Register an action.
-                 * @param name string
-                 * @param func
-                 */
-                this.action = function(name,func)
-                {
-                    cli.command(name).action(func);
-                    actions[name] = func;
-                };
-
-                /**
-                 * Set multiple actions.
-                 * @param obj
-                 */
-                this.actions = function(obj)
-                {
-                    for (let name in obj)
-                    {
-                        this.action(name, obj[name]);
-                    }
-                };
-
-                /**
-                 * Run and process the cli arguments.
-                 * @returns void
-                 */
-                this.run = function()
-                {
-                    cli.parse(process.argv);
-                };
-
-                /**
-                 * Execute a cli command and print the response to the console.
-                 * @param command string
-                 * @param args array
-                 * @returns void
-                 */
-                this.exec = function(command,args)
-                {
-                    var process = cp.spawn(command,args);
-                    process.stdout.on('data', function(data) {
-                        console.log(data.toString());
-                    });
+                if (! name || name=="") {
+                    throw new Error("Specify a name for the "+type);
                 }
+                if (fs.existsSync(destFile)) {
+                    throw ("File exists: "+destFile);
+                }
+                var template = ejs.compile(fs.readFileSync(templateFile, 'utf8').toString());
+                var str = template({
+                    name: name,
+                    _: _string
+                });
+                fs.writeFileSync(destFile,str);
             }
-
-            app.CLI = new CLI();
-
-            app.CLI.action('controller', function(env) {
-                app.CLI.controller(env);
-                process.exit();
-            });
-
-
-            app.CLI.action('model', function(env) {
-                app.CLI.model(env);
-                process.exit();
-            });
-
-
-            app.CLI.action('provider', function(env) {
-                app.CLI.provider(env);
-                process.exit();
-            });
         }
 
-    });
-};
+
+        /**
+         * The CLI class.
+         * @constructor
+         */
+        function CLI ()
+        {
+            this.logger = app.logger;
+
+            // Create a controller from the template.
+            this.controller = createTemplate('controller');
+
+            // Create a model from the template.
+            this.model = createTemplate('model');
+
+            // Create a provider from the template.
+            this.provider = createTemplate('provider');
+
+            /**
+             * Register an action.
+             * @param name string
+             * @param func
+             */
+            this.action = function(name,func)
+            {
+                cli.command(name).action(func);
+                actions[name] = func;
+            };
+
+            /**
+             * Set multiple actions.
+             * @param obj
+             */
+            this.actions = function(obj)
+            {
+                for (let name in obj)
+                {
+                    this.action(name, obj[name]);
+                }
+            };
+
+            /**
+             * Run and process the cli arguments.
+             * @returns void
+             */
+            this.run = function()
+            {
+                cli.parse(process.argv);
+            };
+
+            /**
+             * Execute a cli command and print the response to the console.
+             * @param command string
+             * @param args array
+             * @returns void
+             */
+            this.exec = function(command,args)
+            {
+                var process = cp.spawn(command,args);
+                process.stdout.on('data', function(data) {
+                    console.log(data.toString());
+                });
+            }
+        }
+
+        app.CLI = new CLI();
+
+        app.CLI.action('controller', function(env) {
+            app.CLI.controller(env);
+            process.exit();
+        });
+
+
+        app.CLI.action('model', function(env) {
+            app.CLI.model(env);
+            process.exit();
+        });
+
+
+        app.CLI.action('provider', function(env) {
+            app.CLI.provider(env);
+            process.exit();
+        });
+    }
+}
+
+module.exports = new CLIProvider();

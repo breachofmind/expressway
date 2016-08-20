@@ -1,20 +1,23 @@
 "use strict";
+var Provider = require('../../index').Provider;
 
-module.exports = function(Provider)
+class TemplateDefaultsProvider extends Provider
 {
-    Provider.create('templateDefaults', function() {
+    constructor()
+    {
+        super('templateDefaults');
 
-        // Provider setup...
-        this.requires(['templateProvider']);
+        this.requires('template');
+    }
 
-        // Return the registration function...
-        return function(app){
+    register(app)
+    {
+        app.Template.defaults = function(view)
+        {
+            this.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
+            this.meta('viewport','width=device-width');
+        };
+    }
+}
 
-            app.Template.defaults = function(view)
-            {
-                this.style('foundation', "https://cdnjs.cloudflare.com/ajax/libs/foundation/6.2.3/foundation-flex.min.css");
-                this.meta('viewport','width=device-width');
-            };
-        }
-    });
-};
+module.exports = new TemplateDefaultsProvider();

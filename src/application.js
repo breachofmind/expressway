@@ -48,7 +48,18 @@ class Application
         this.rootPath = Application.rootPath;
         this.utils    = utils;
 
+        /**
+         * The NPM package.json.
+         * @type {*|Object}
+         * @private
+         */
         this._package = npmPackage;
+
+        /**
+         * Loaded providers.
+         * @type {Array} of strings
+         * @private
+         */
         this._providers = [];
     }
 
@@ -61,7 +72,7 @@ class Application
     {
         if (! this.booted)
         {
-            Provider.loadAll(this);
+            Provider.boot(this.config.providers, this);
 
             this.event.emit('application.bootstrap', this);
 
@@ -107,17 +118,6 @@ class Application
             return this.config[key];
         }
         return defaultValue;
-    }
-
-    /**
-     * Named constructor.
-     * @param config object
-     * @param env string
-     * @returns {Application}
-     */
-    static create(config,env)
-    {
-        return new Application(config,env);
     }
 
     /**

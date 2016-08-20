@@ -24,7 +24,8 @@ describe('config', function()
     });
     it('should have an array of providers', function(){
         expect(app.config.providers).to.be.an('array');
-        expect(app.config.providers[0]).to.be.a('function');
+        expect(app.config.providers[0]).to.be.a('object');
+        expect(app.config.providers[0]).to.be.an.instanceOf(ExpressMVC.Provider);
     });
     it('should have same environment as given', function(){
         expect(app.config.environment).to.equal(ENV_LOCAL);
@@ -63,7 +64,7 @@ describe('application', function()
     it('should have providers after bootstrap', function(){
         expect(app._providers).to.not.be.empty;
         // Providers should be added to the index by name, though not loaded.
-        expect(Object.keys(ExpressMVC.Provider.objects).length).to.equal(app.config.providers.length);
+        expect(Object.keys(ExpressMVC.Provider.get()).length).to.equal(app.config.providers.length);
         // Some providers are only loaded based on the environment.
         expect(app._providers.length).to.be.below(app.config.providers.length);
     });
@@ -95,3 +96,5 @@ describe('application', function()
         expect(list.length).to.be.above(0);
     });
 });
+
+app.destruct();

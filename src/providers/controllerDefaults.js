@@ -1,20 +1,23 @@
 "use strict";
 
+var Provider = require('../provider');
 var restController = require('../controllers/restController'),
     localeController = require('../controllers/langController');
+
 
 /**
  * Provides some defaults for controllers.
  * @author Mike Adamczyk <mike@bom.us>
- * @param Provider
  */
-module.exports = function(Provider)
+class ControllerDefaultsProvider extends Provider
 {
-    Provider.create('controllerDefaultsProvider', function() {
+    constructor()
+    {
+        super('controllerDefaults');
 
         this.requires([
-            'controllerProvider',
-            'urlProvider'
+            'controller',
+            'url'
         ]);
 
         this.REST = {
@@ -45,9 +48,7 @@ module.exports = function(Provider)
                 })
             }
         };
+    }
+}
 
-        return function() {};
-    });
-};
-
-
+module.exports = new ControllerDefaultsProvider();

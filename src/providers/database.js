@@ -1,38 +1,41 @@
 "use strict";
-
-var mongoose = require('mongoose');
-
+var Provider     = require('../provider');
+var mongoose     = require('mongoose');
 mongoose.Promise = require('bluebird');
 
 /**
  * Provides the MongoDB database connection.
  * @author Mike Adamczyk <mike@bom.us>
- * @param Provider
  */
-module.exports = function(Provider)
+class DatabaseProvider extends Provider
 {
-    Provider.create('databaseProvider', function() {
+    constructor()
+    {
+        super('database');
 
-        this.requires('loggerProvider');
+        this.requires('logger');
+    }
 
-        return function(app)
-        {
-            app.db = mongoose;
+    register(app)
+    {
+        app.db = mongoose;
 
-            app.db.connection.on('error', function(err){
-                app.logger.error('[Database] Connection error: %s', err);
-            });
+        app.db.connection.on('error', function(err){
+            app.logger.error('[Database] Connection error: %s', err);
+        });
 
-            app.db.connection.on('open', function(){
-                app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
-            });
+        app.db.connection.on('open', function(){
+            app.logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
+        });
 
-            app.event.on('application.destruct', function(){
-                app.db.connection.close();
-                app.logger.debug('[Database] Connection closed.');
-            });
+        app.event.on('application.destruct', function(){
+            app.db.connection.models = {};
+            app.db.disconnect();
+            app.logger.debug('[Database] Connection closed.');
+        });
 
-            app.db.connect(app.config.db);
-        }
-    });
-};
+        app.db.connect(app.config.db);
+    }
+}
+
+module.exports = new DatabaseProvider();
