@@ -51,7 +51,7 @@ module.exports = function(app)
             return next();
         }
         var value = request.params.model;
-        var blueprint = Model.get(value);
+        var blueprint = Model.bySlug(value);
 
         if (! blueprint) {
             return response.api({error:`Model "${value}" doesn't exist.`}, 404);
@@ -92,17 +92,19 @@ module.exports = function(app)
          */
         index: function(request,response)
         {
-            var blueprints = Model.all();
+            var blueprints = Model.get();
             var json = {
                 message: "Express MVC API v1",
                 currentUser: request.user,
                 index: {}
             };
-            Object.keys(blueprints).forEach(function(slug) {
-                if (blueprints[slug].expose == false && request.user) {
-                    json.index[blueprints[slug].name] = app.url('api/v1/'+slug);
+            Object.keys(blueprints).forEach(function(name) {
+                var blueprint = blueprints[name];
+                if (blueprint.expose == false && request.user) {
+                    json.index[blueprint.name] = app.url('api/v1/'+blueprint.slug);
                 }
             });
+
             app.event.emit('rest.index', json.index);
 
             return json;

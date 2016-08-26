@@ -27,9 +27,11 @@ class AuthProvider extends mvc.Provider
     {
         var Model = app.ModelFactory;
 
-        if (! Model.get('user')) {
+        if (! Model.has('User')) {
             throw ('User model is required to use basic Auth functionality.');
         }
+
+        var User = Model.object('User');
 
         /**
          * A helper class for authentication.
@@ -67,7 +69,7 @@ class AuthProvider extends mvc.Provider
 
             passport.deserializeUser(function(id, done)
             {
-                Model.User.findById(id, function(err, user) {
+                User.findById(id, function(err, user) {
                     done(err, user);
                 });
             });
@@ -75,7 +77,7 @@ class AuthProvider extends mvc.Provider
 
             passport.use(new Strategy(function(username,password,done)
             {
-                Model.User.findOne({ email: username }, function (err, user) {
+                User.findOne({ email: username }, function (err, user) {
 
                     app.logger.log('access', "Login attempt: '%s'", username);
 

@@ -2,6 +2,50 @@
 var Provider = require('../provider');
 
 /**
+ * The gate class.
+ * @constructor
+ */
+class Gate
+{
+    /**
+     * Constructor.
+     * @param permissions array
+     */
+    constructor(permissions)
+    {
+        this.permissions = permissions;
+    }
+
+    /**
+     * Check if the gate has the permission stored.
+     * @param key
+     * @returns {*|boolean}
+     */
+    hasPermission(key)
+    {
+        return this.permissions.hasOwnProperty(key);
+    }
+
+    /**
+     * Check if a user has this permission.
+     * @param user User model
+     * @param object string
+     * @param method string
+     * @returns {boolean}
+     */
+    check(user,object,method)
+    {
+        var key = `${object}.${method}`;
+        // If the permission doesn't exist, then default is true.
+        if (! this.hasPermission(key)) return true;
+
+        // TODO
+        // return user.permissions.indexOf(key) > -1;
+        return true;
+    }
+}
+
+/**
  * Provides a gate that checks user permissions.
  * @author Mike Adamczyk <mike@bom.us>
  */
@@ -26,7 +70,7 @@ class GateProvider extends Provider
     {
         var permissions = {};
 
-        if (! app.ModelFactory.has('permission')) {
+        if (! app.ModelFactory.has('Permission')) {
             throw ("Gate provider requires the Permission model");
         }
 
@@ -35,7 +79,7 @@ class GateProvider extends Provider
          */
         function getPermissions(Factory)
         {
-            var Permission = Factory.Permission;
+            var Permission = Factory.object('Permission');
 
             // Load permissions into memory.
             Permission.find().exec().then(function(models) {
@@ -50,50 +94,6 @@ class GateProvider extends Provider
 
                 app.logger.debug('[Gate] Loaded permissions: %d', models.length);
             });
-        }
-
-        /**
-         * The gate class.
-         * @constructor
-         */
-        class Gate
-        {
-            /**
-             * Constructor.
-             * @param permissions array
-             */
-            constructor(permissions)
-            {
-                this.permissions = permissions;
-            }
-
-            /**
-             * Check if the gate has the permission stored.
-             * @param key
-             * @returns {*|boolean}
-             */
-            hasPermission(key)
-            {
-                return this.permissions.hasOwnProperty(key);
-            }
-
-            /**
-             * Check if a user has this permission.
-             * @param user User model
-             * @param object string
-             * @param method string
-             * @returns {boolean}
-             */
-            check(user,object,method)
-            {
-                var key = `${object}.${method}`;
-                // If the permission doesn't exist, then default is true.
-                if (! this.hasPermission(key)) return true;
-
-                // TODO
-                // return user.permissions.indexOf(key) > -1;
-                return true;
-            }
         }
 
         // When the models are created, get the permissions.

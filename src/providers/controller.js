@@ -270,6 +270,7 @@ class ControllerProvider extends mvc.Provider
 
         var factory = new ControllerFactory(app);
 
+        // Expose the factory class.
         mvc.Controller = factory;
         app.ControllerFactory = factory;
 
