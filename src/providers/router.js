@@ -42,6 +42,18 @@ class Router
     }
 
     /**
+     * The default not found 404 handler.
+     * Overwrite with a custom function if needed.
+     * @param request
+     * @param response
+     * @param next
+     */
+    notFound(request,response,next)
+    {
+        return response.smart(response.view('error/404'),404);
+    }
+
+    /**
      * Create a new route.
      * @param verb string
      * @param url string
@@ -144,15 +156,10 @@ class RouterProvider extends mvc.Provider
         // Attach the router class to the application.
         app.router = new Router(app);
 
-        function notFoundMiddleware(request,response,next)
-        {
-            return response.smart(response.view('error/404'),404);
-        }
-
         // After express is loaded, add the routes to it.
         app.event.on('application.bootstrap', function(app) {
             routes.call(app.router, app, app.Template);
-            app.express.use(notFoundMiddleware);
+            app.express.use(app.router.notFound);
         });
     }
 }

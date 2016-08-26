@@ -29,13 +29,11 @@ module.exports = function(app)
         if (request.Model && value) {
             request.Object = request.Model.findOne({_id: value});
         }
-        next();
     });
 
     this.query('p', function(value,request,response,next)
     {
         request.query.filter = request.blueprint.paging(utils.fromBase64(value));
-        next();
     });
 
 

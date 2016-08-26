@@ -5,8 +5,6 @@
  */
 module.exports = function(app)
 {
-    var lang = app.locale;
-
     return {
         index: function(request,response)
         {
@@ -17,7 +15,7 @@ module.exports = function(app)
 
             return {
                 locale: locale,
-                keys: lang.getLocale(locale)
+                keys: app.locale.getLocale(locale)
             };
         }
     }

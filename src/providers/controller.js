@@ -122,7 +122,7 @@ class Controller
     {
         return this.middleware(function parameterMiddleware(request,response,next) {
             if (request.params.hasOwnProperty(parameter)) {
-                return handler(request.params[parameter], request,response,next);
+                handler(request.params[parameter], request,response,next);
             }
             return next();
         });
@@ -138,7 +138,7 @@ class Controller
     {
         return this.middleware(function queryMiddleware(request,response,next) {
             if (request.query.hasOwnProperty(parameter)) {
-                return handler(request.query[parameter], request,response,next);
+                handler(request.query[parameter], request,response,next);
             }
             return next();
         });

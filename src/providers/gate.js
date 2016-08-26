@@ -9,10 +9,12 @@ class Gate
 {
     /**
      * Constructor.
+     * @param app Application
      * @param permissions array
      */
-    constructor(permissions)
+    constructor(app,permissions)
     {
+        this.app = app;
         this.permissions = permissions;
     }
 
@@ -77,7 +79,7 @@ class GateProvider extends Provider
         /**
          * Stores the permission index.
          */
-        function getPermissions(Factory)
+        function getPermissions(app,Factory)
         {
             var Permission = Factory.object('Permission');
 
@@ -97,7 +99,7 @@ class GateProvider extends Provider
         }
 
         // When the models are created, get the permissions.
-        app.event.on('models.built', getPermissions)
+        app.event.on('models.loaded', getPermissions)
     }
 }
 

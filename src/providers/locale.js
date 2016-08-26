@@ -191,6 +191,8 @@ class LocaleProvider extends Provider
             }
         }
 
+        app.locale = store;
+
         // When each view is created, add the template function.
         app.event.on('view.created', function(view,request) {
             view.data.lang = lang(request);

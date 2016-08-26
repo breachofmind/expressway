@@ -17,6 +17,7 @@ class ControllerDefaultsProvider extends Provider
 
         this.requires([
             'controller',
+            'locale',
             'url'
         ]);
 

@@ -240,7 +240,7 @@ class ModelProvider extends Provider
             return modelPath + file;
         }));
 
-        app.event.emit('models.loaded',app);
+        app.event.emit('models.loaded',app,factory);
     }
 }
 

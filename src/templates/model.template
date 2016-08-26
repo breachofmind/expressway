@@ -1,21 +1,19 @@
-module.exports = function(Model, app) {
+var ExpressMVC = require('express-mvc');
 
-    return Model.create("<%=_.capitalize(name)%>", function Blueprint()
-    {
-        this.title = 'id';
-        this.expose = true;
-        this.guarded = [];
-        this.appends = [];
-        this.labels = {};
+module.exports = ExpressMVC.Model.create('<%=_.capitalize(name)%>', function Blueprint(app)
+{
+    this.title      = 'id';
+    this.expose     = false;
+    this.guarded    = [];
+    this.appends    = [];
+    this.labels     = {};
+    this.populate   = [];
 
+    this.schema = {
+        created_at:  { type: Date, default: Date.now },
+        modified_at: { type: Date, default: Date.now }
+    };
 
-        // Set the schema for this model.
-        this.schema = {
-            created_at:     { type: Date, default: Date.now },
-            modified_at:    { type: Date, default: Date.now }
-        }
+    this.methods = {}
 
-        // Set the model methods.
-        this.methods = {}
-    });
-};
+});
