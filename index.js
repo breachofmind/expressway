@@ -43,27 +43,27 @@ var Application = require('./src/application');
 
 var Provider = require('./src/provider');
 
-var applicationProviders = {};
-[
-    'logger',
-    'url',
-    'cli',
-    'seeder',
-    'database',
+var utils = require('./src/support/utils');
+
+var applicationProviders = [
     'auth',
+    'cli',
     'controller',
     'controllerDefaults',
-    'model',
-    'template',
-    'view',
-    'locale',
+    'database',
     'express',
+    'gate',
+    'locale',
+    'logger',
+    'model',
     'router',
-    'gate'
+    'seeder',
+    'template',
+    'url',
+    'view'
+];
 
-].map(function(name) {
-    require('./src/providers/' + name);
-});
+
 
 /**
  * The Express MVC application.
@@ -83,6 +83,8 @@ module.exports = {
      */
     Provider: Provider,
 
+    utils: utils,
+
     /**
      * Initialize the application and bootstrap.
      * @param rootPath string
@@ -92,6 +94,10 @@ module.exports = {
     init: function(rootPath,env)
     {
         Application.setRootPath(rootPath);
+
+        applicationProviders.map(function(name) {
+            require('./src/providers/' + name);
+        });
 
         var config = require(Application.rootPath('config/config')) (Provider.get());
 

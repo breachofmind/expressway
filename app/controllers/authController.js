@@ -1,78 +1,81 @@
 "use strict";
+var Controller = require('../../index').Controller;
 
-module.exports = function(Controller)
+module.exports = Controller.create('authController', function(app)
 {
-    return Controller.create('authController', function(app)
-    {
-        return {
-            /**
-             * GET /login
-             *
-             * Display the login form.
-             */
-            login: function(request,response)
-            {
-                if (request.user) {
-                    response.redirect('/');
-                }
-                return response.view('login')
-                    .set({
-                        title: "Login"
-                    })
-                    .use({
-                        message: request.flash('message') || null
+    return {
+        /**
+         * GET /login
+         *
+         * Display the login form.
+         */
+        login: function(request,response)
+        {
+            if (request.user) {
+                response.redirect('/');
+            }
+            return response.view('login')
+                .set({
+                    title: "Login"
+                })
+                .use({
+                    message: request.flash('message') || null
                 });
-            },
+        },
 
-            /**
-             * GET /logout
-             *
-             * Logs a user out and redirects to the login page.
-             */
-            logout: function(request,response)
+        /**
+         * GET /logout
+         *
+         * Logs a user out and redirects to the login page.
+         */
+        logout: function(request,response)
+        {
+            if (request.user) {
+                app.logger.access('User logging out: %s', request.user.id);
+            }
+            request.logout();
+            request.flash('message', 'auth.logged_out');
+            response.redirect('/login');
+        },
+
+        /**
+         * POST /login
+         *
+         * Authenticates a username and password.
+         * POSTing as ajax will return a response in JSON format.
+         */
+        authenticate: function(request,response,next)
+        {
+            var isAjax = request.ajax;
+
+            app.passport.authenticate('local', function(err,user,info)
             {
-                if (request.user) {
-                    app.logger.access('User logging out: %s', request.user.id);
+                if (err) return next(err);
+
+                if (! user) {
+                    request.flash('message', info.message);
+                    return isAjax ? response.smart({success:false, error:info.message}) : response.redirect('/login');
                 }
-                request.logout();
-                request.flash('message', 'auth.logged_out');
-                response.redirect('/login');
-            },
 
-            /**
-             * POST /login
-             *
-             * Authenticates a username and password.
-             * POSTing as ajax will return a response in JSON format.
-             */
-            authenticate: function(request,response,next)
-            {
-                var isAjax = request.ajax;
+                request.logIn(user, function(err) {
 
-                app.passport.authenticate('local', function(err,user,info)
-                {
-                    if (err) return next(err);
-
-                    if (! user) {
+                    if (err) {
                         request.flash('message', info.message);
                         return isAjax ? response.smart({success:false, error:info.message}) : response.redirect('/login');
                     }
 
-                    request.logIn(user, function(err) {
+                    return response.smart(isAjax ? {success:true, user:user, redirect:"/admin"} : response.redirect('/'), 200);
+                });
 
-                        if (err) {
-                            request.flash('message', info.message);
-                            return isAjax ? response.smart({success:false, error:info.message}) : response.redirect('/login');
-                        }
+            })(request,response,next);
 
-                        return response.smart(isAjax ? {success:true, user:user, redirect:"/admin"} : response.redirect('/'), 200);
-                    });
+            return true;
+        },
 
-                })(request,response,next);
-
-                return true;
-            },
+        test: function(request,response,next)
+        {
+            console.log('auth test');
+            next();
         }
-    });
-}
-
+    }
+});

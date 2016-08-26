@@ -1,7 +1,5 @@
-"use strict";
-module.exports = function(Controller, app)
-{
-    var defaults = app.get('controllerDefaults');
+var ExpressMVC = require('../../index');
+var Controller = ExpressMVC.Controller;
+var defaults = ExpressMVC.Provider.get('controllerDefaults');
 
-    return Controller.create('langController', defaults.Locales.controller);
-};
+module.exports = Controller.create('langController', defaults.Locales.controller);

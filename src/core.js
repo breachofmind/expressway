@@ -75,6 +75,17 @@ module.exports = function Core (app)
         };
 
         /**
+         * Set the controller name and method.
+         * @param name
+         * @param method
+         */
+        request.setController = function(name,method)
+        {
+            request.controller.name = name;
+            request.controller.method = method;
+        };
+
+        /**
          * Return the name of the request controller name and method.
          * @returns {string}
          */

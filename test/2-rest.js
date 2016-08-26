@@ -2,20 +2,23 @@ var ExpressMVC = require('../src/tests');
 var rootPath = ExpressMVC.testRootPath;
 var app = ExpressMVC.testApp;
 
-describe('REST', function(){
+function http(uri, then) {
+    chai.request(app.url('api/v1')).get(uri).end(function(err,res) {
+        then(err,res);
+    })
+}
 
-    var url = app.url;
+describe('REST', function(){
 
     describe('restController.index', function(){
 
         it('should return a JSON', function(done) {
-            chai.request(app.url('api/v1')).get('/')
-                .end(function(err, res){
-                    res.should.have.status(200);
-                    res.should.be.json;
-                    res.body.should.be.an('object');
-                    done();
-                });
+            http('/', function(err,res) {
+                res.should.have.status(200);
+                res.should.be.json;
+                res.body.should.be.an('object');
+                done();
+            });
         })
 
     })

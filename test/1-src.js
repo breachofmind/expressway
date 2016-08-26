@@ -78,7 +78,7 @@ describe('application', function()
     });
     it('should have attached controller factory class', function(){
         expect(app).to.have.property('ControllerFactory');
-        expect(app.ControllerFactory).to.be.a('function');
+        expect(app.ControllerFactory).to.be.a('object');
     });
     it('should have template and view classes', function(){
         expect(app).to.have.property('Template');

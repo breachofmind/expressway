@@ -1,6 +1,7 @@
 "use strict";
 var _ = require('lodash');
-var Provider = require('../provider');
+var mvc = require('../../index');
+var Provider = mvc.Provider;
 
 /**
  * Provides mongoose model blueprints.
@@ -159,15 +160,6 @@ class ModelProvider extends Provider
                 }
             }
 
-            /**
-             * Named constructor.
-             * @param name string
-             * @param boot function
-             * @returns {ModelFactory}
-             */
-            static create(name, boot) {
-                return new ModelFactory(name,boot);
-            }
 
             /**
              * Load all application models.
@@ -227,6 +219,8 @@ class ModelProvider extends Provider
 
         // Attach the factory class to the application.
         app.ModelFactory = ModelFactory;
+
+        mvc.Model = ModelFactory;
     }
 }
 

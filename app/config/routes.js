@@ -11,10 +11,8 @@ module.exports = function(app,Template)
         '/login' : 'authController.authenticate'
     });
 
-    var defaults = app.get('controllerDefaults');
-
-    defaults.REST.routes(this);
-    defaults.Locales.routes(this);
+    app.get('controllerDefaults').REST.routes(this);
+    app.get('controllerDefaults').Locales.routes(this);
 
     // Application routes.
     this.get({

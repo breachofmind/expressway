@@ -3,13 +3,13 @@
 var passport = require('passport'),
     Strategy = require('passport-local').Strategy,
     crypto   = require('crypto'),
-    Provider = require('../provider');
+    mvc      = require('../../index');
 
 /**
  * Provides basic authentication with passport.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class AuthProvider extends Provider
+class AuthProvider extends mvc.Provider
 {
     constructor()
     {

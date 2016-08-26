@@ -1,269 +1,283 @@
 "use strict";
-var Provider = require('../provider');
+var mvc = require('../../index');
+var utils = mvc.utils;
+
+/**
+ * The controller factory class.
+ * Assists with storing and building controllers.
+ *
+ * @author Mike Adamczyk <mike@bom.us>
+ */
+class ControllerFactory
+{
+    /**
+     * Constructor.
+     * @param app Application
+     */
+    constructor(app)
+    {
+        this.app = app;
+        this.controllers = {};
+    }
+
+    /**
+     * Load a file or file array.
+     * @param files string|array
+     * @returns object
+     */
+    load(files)
+    {
+        if (! Array.isArray(files)) files = [files];
+
+        files.forEach(function(file)
+        {
+            var controller = require(file);
+            if (controller instanceof Controller) {
+                this.controllers[controller.name] = controller;
+                this.app.logger.debug('[Controller] Loaded: %s', controller.name);
+            }
+
+        }.bind(this));
+
+        return this.controllers;
+    }
+
+    /**
+     * Create a new controller instance.
+     * @param name string
+     * @param boot function
+     * @returns {Controller}
+     */
+    create(name, boot)
+    {
+        return new Controller(name, boot, this);
+    }
+
+    /**
+     * Check if a controller has been registered in the index.
+     * @param name string
+     * @returns {boolean}
+     */
+    has(name)
+    {
+        return this.controllers.hasOwnProperty(name);
+    }
+
+    /**
+     * Get a controller from the index.
+     * @param name string
+     * @returns {Controller}
+     */
+    get(name)
+    {
+        if (this.has(name)) {
+            return this.controllers[name];
+        }
+        throw(`Controller ${name} does not exist`);
+    }
+
+    /**
+     * Dispatch a controller and method.
+     * @param name string controller name
+     * @param method string method name
+     * @returns {array}
+     */
+    dispatch(name,method)
+    {
+        return this.get(name).dispatch(method);
+    }
+}
+
+/**
+ * Controller class.
+ * Binds data with the view in an organized way.
+ *
+ * @author Mike Adamczyk <mike@bom.us>
+ */
+class Controller
+{
+    /**
+     * Constructor.
+     * @param name string - unique controller name
+     * @param boot function
+     * @param factory ControllerFactory
+     */
+    constructor(name, boot, factory)
+    {
+        this._middleware = [];
+        this._factory = factory;
+        this._app = factory.app;
+
+        this.name = name;
+        this.methods = boot.call(this, this._app);
+    }
+
+    /**
+     * Bind a parameter to a middleware.
+     * @param parameter string
+     * @param handler function
+     * @returns Controller
+     */
+    bind(parameter,handler)
+    {
+        return this.middleware(function parameterMiddleware(request,response,next) {
+            if (request.params.hasOwnProperty(parameter)) {
+                return handler(request.params[parameter], request,response,next);
+            }
+            return next();
+        });
+    }
+
+    /**
+     * Bind a GET query to a middleware.
+     * @param parameter string
+     * @param handler function
+     * @returns Controller
+     */
+    query(parameter,handler)
+    {
+        return this.middleware(function queryMiddleware(request,response,next) {
+            if (request.query.hasOwnProperty(parameter)) {
+                return handler(request.query[parameter], request,response,next);
+            }
+            return next();
+        });
+    }
+
+    /**
+     * Attach middleware to a method or to all methods.
+     * Normally called in the boot function when declaring a controller.
+     * This needs to occur only after all controllers have been loaded, in the
+     * event that a controller method is used as middleware (like indexController.index)
+     *
+     * @param method string|function|array
+     * @param stack function|array
+     * @returns {Controller}
+     */
+    middleware(method, stack)
+    {
+        this._app.event.once('controllers.loaded', function(app) {
+            // Assign middleware to all methods.
+            if (stack == undefined) {
+                this._middleware = this._middleware.concat(utils.getRouteFunctions(method, this._factory));
+
+                // Assign middleware to a single method.
+            } else if (typeof method == 'string') {
+                this._middleware.push({method: method, middleware: utils.getRouteFunctions(stack, this._factory)})
+            }
+        }.bind(this));
+
+        return this;
+    }
+
+    /**
+     * Finds middleware required for this route.
+     * @param method string
+     * @param action function
+     * @returns {array}
+     * @private
+     */
+    _getMiddleware(method, action)
+    {
+        var out = this._middleware.reduce(function(memo,value)
+        {
+            // A single function applies to all methods.
+            if (typeof value == 'function') {
+                memo.push(value);
+
+            // Controller method middleware, which could be an array.
+            } else if (typeof value == 'object' && value.method == method) {
+                memo = memo.concat(value.middleware);
+            }
+            return memo;
+        },[]);
+
+        // The last middleware in the stack is the actual request.
+        out.push(action);
+
+        return out;
+    }
+
+    /**
+     * Check if this controller has a method.
+     * @param method string
+     * @returns {*|boolean}
+     */
+    has(method)
+    {
+        return this.methods.hasOwnProperty(method);
+    }
+
+    /**
+     * Use a particular method on this controller.
+     * @param method string
+     * @returns {*}
+     */
+    use(method)
+    {
+        if (this.has(method)) {
+            return this.methods[method];
+        }
+        throw(`Controller "${this.name}" does not contain method "${method}"`);
+    }
+
+    /**
+     * Dispatches the middleware and route stack.
+     * Returns an array suitable for use with express. ie, router.get(urlpattern, array)
+     * @param method string
+     * @returns {array}
+     */
+    dispatch(method)
+    {
+        var action = this.use(method);
+        var name = this.name;
+
+        function routeRequest(request,response,next)
+        {
+            request.setController(name,method);
+
+            if (response.headersSent) {
+                return null;
+            }
+            return response.smart( action(request,response,next) );
+        }
+        return this._getMiddleware(method, routeRequest);
+    }
+
+}
 
 /**
  * Provides the controller functionality and class creation.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ControllerProvider extends Provider
+class ControllerProvider extends mvc.Provider
 {
     constructor()
     {
         super('controller');
+
+        this.requires('url');
     }
 
+    /**
+     * Register the controller factory class with the app.
+     * @param app Application
+     */
     register(app)
     {
-        var utils = app.utils;
-        /**
-         * Path relative to your application that contains the controller declarations.
-         * @type {string}
-         */
+        // Where are the controller modules located?
         var controllerPath = app.rootPath(app.conf('controllers_path', 'controllers') + "/");
 
-        /**
-         * Controller factory class, for creating new controllers.
-         * @usage ControllerFactory.create('controllerName', function(app){...})
-         * @constructor
-         */
-        class ControllerFactory
-        {
-            /**
-             * Constructor
-             * @param setup function
-             */
-            constructor(setup)
-            {
-                this._bindings = {};
-                this._queryBindings = {};
-                this._middleware = [];
+        var factory = new ControllerFactory(app);
 
-                this.methods = setup.call(this,app);
-            }
+        mvc.Controller = factory;
+        app.ControllerFactory = factory;
 
-            /**
-             * Return an action. If doesn't exist, empty method.
-             * @param name string
-             * @returns {*|Function}
-             */
-            use(name)
-            {
-                return this.has(name)
-                    ? this.methods[name]
-                    : function errorMethod(request,response) { return false; }
-            }
+        factory.load(utils.getFileBaseNames(controllerPath).map(function(name) {
+            return controllerPath + name;
+        }));
 
-            /**
-             * Check if controller has the given method.
-             * @param name string
-             * @returns {boolean}
-             */
-            has(name)
-            {
-                return this.methods[name] ? true:false;
-            }
-
-            /**
-             * Associate certain methods on this controller with middleware.
-             * @param methods object {route: [middlewareFunction, ...]}
-             * @return ControllerFactory
-             */
-            middleware(methods)
-            {
-                // This middleware is assigned to all methods.
-                if (typeof methods == 'function') {
-                    this._middleware.push(methods);
-                    return this;
-                }
-                for (let methodName in methods)
-                {
-                    var middlewares = methods[methodName];
-                    if (! Array.isArray(middlewares)) {
-                        middlewares = [middlewares];
-                    }
-                    middlewares.forEach(function(middleware) {
-                        this._middleware.push({
-                            method: methodName,
-                            middleware: middleware
-                        });
-                    }.bind(this));
-                }
-                return this;
-            }
-
-            /**
-             * When a url parameter matches the given key, run a callback against it.
-             * @param parameter string
-             * @param callback function
-             * @returns {ControllerFactory}
-             */
-            bind(parameter, callback)
-            {
-                this._bindings[parameter] = callback;
-                return this;
-            }
-
-            /**
-             * When a url query parameter matches a given key, run a callback against it.
-             * @param key string
-             * @param callback
-             * @returns {ControllerFactory}
-             */
-            query(key, callback)
-            {
-                this._queryBindings[key] = callback;
-                return this;
-            }
-
-            /**
-             * Apply the bindings to parameters to the request.
-             * @param request
-             * @param response
-             */
-            applyBindings(request,response)
-            {
-                var objects = {
-                    params: this._bindings,
-                    query: this._queryBindings
-                };
-                for (var prop in objects) {
-                    if (! objects.hasOwnProperty(prop)) {
-                        continue;
-                    }
-                    var index = objects[prop];
-                    for (var key in request[prop])
-                    {
-                        if (! index.hasOwnProperty(key)) {
-                            continue;
-                        }
-                        index[key] (request[prop][key], request,response);
-                    }
-                }
-            }
-
-            /**
-             * Combine the route request with the middleware for Controller.dispatch.
-             * @param method string method requested
-             * @param routeRequest function
-             * @returns {*}
-             */
-            getMiddleware(method, routeRequest)
-            {
-                var out = this._middleware.reduce(function(memo,value)
-                {
-                    if (typeof value == 'function') {
-                        memo.push(value);
-                    } else if (typeof value == 'object' && value.method == method) {
-                        memo.push(value.middleware);
-                    }
-                    return memo;
-                },[]);
-
-                out.push(routeRequest);
-                return out;
-            }
-
-            /**
-             * Load the given files.
-             * @param items array
-             * @returns {*}
-             */
-            static load(items)
-            {
-                items.forEach(function(file) {
-
-                    var controller = require(controllerPath+"/"+file) (ControllerFactory, app);
-                    app.event.emit('load_controller', controller);
-                });
-
-                return ControllerFactory.controllers;
-            }
-
-            /**
-             * Create a new controller instance.
-             * @param name string
-             * @param setup function
-             * @returns {ControllerFactory}
-             */
-            static create(name, setup)
-            {
-                return ControllerFactory.controllers[name] = new ControllerFactory(setup);
-            }
-
-            /**
-             * Return a controller by name.
-             * @param name string
-             * @returns {*}
-             */
-            static get(name)
-            {
-                return ControllerFactory.controllers[name] || null;
-            }
-
-            /**
-             * Return all set controllers.
-             * @returns {{}}
-             */
-            static all()
-            {
-                return ControllerFactory.controllers;
-            }
-
-            /**
-             * Dispatch a controller.
-             * @param name string
-             * @param method string
-             * @returns {Function|Array}
-             */
-            static dispatch(name, method)
-            {
-                var controller = ControllerFactory.get(name);
-                var action = controller.use(method);
-
-                /**
-                 * Callback served to router.
-                 */
-                function routeRequest(request,response,next)
-                {
-                    request.controller.name = name;
-                    request.controller.method = method;
-
-                    // Do the deed.
-                    controller.applyBindings(request,response);
-
-                    if (response.headersSent) {
-                        return null;
-                    }
-                    return response.smart( action(request,response,next) );
-                }
-                return controller.getMiddleware(method, routeRequest)
-            }
-
-            /**
-             * Boot all created controllers.
-             * @returns void
-             */
-            static boot()
-            {
-                var files = utils.getFileBaseNames(controllerPath);
-
-                ControllerFactory.load(files);
-            }
-        }
-
-        /**
-         * Repository of controller objects.
-         * @type {{}}
-         */
-        ControllerFactory.controllers = {};
-
-        // Attach the factory to the application for use by other modules.
-        app.ControllerFactory = ControllerFactory;
-
-        app.event.on('provider.registered', function(app) {
-            ControllerFactory.boot();
-        });
-
+        app.event.emit('controllers.loaded',app);
     }
 }
 

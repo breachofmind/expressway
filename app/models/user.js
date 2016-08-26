@@ -1,6 +1,6 @@
 module.exports = function(Model,app)
 {
-    return Model.create('User', function Blueprint(){
+    return new Model('User', function Blueprint(){
 
         this.title = 'email';
         this.expose = false;

@@ -1,12 +1,127 @@
 "use strict";
+var mvc = require('../../index');
+var utils = mvc.utils;
 
-var Provider = require('../provider');
+const verbs = ['get','post','put','patch','delete','options'];
+
+
+/**
+ * Router class.
+ * A customized way to define routes for the application.
+ * @author Mike Adamczyk <mike@bom.us>
+ */
+class Router
+{
+    /**
+     * Constructor.
+     * @param app Application
+     */
+    constructor(app)
+    {
+        var self = this;
+
+        this.app = app;
+        this.routes = [];
+
+        // Set up the router methods.
+        verbs.forEach(function(verb){
+            self[verb] = route.call(this, verb);
+        });
+
+        // Common function for adding a route to each verb.
+        function route(verb)
+        {
+            // object is a hash: { url: [string, function] }
+            return function(object) {
+                Object.keys(object).forEach(function(url) {
+                    self.route(verb,url,object[url]);
+                });
+                return self;
+            }
+        }
+    }
+
+    /**
+     * Create a new route.
+     * @param verb string
+     * @param url string
+     * @param methods object
+     * @returns Router
+     */
+    route(verb,url,methods)
+    {
+        var stack = utils.getRouteFunctions(methods, mvc.Controller);
+
+        if (! stack.length) {
+            throw ("Route declaration missing handler: "+url);
+        }
+
+        this.routes.push( new Route(verb,url,stack,this).addTo(this.app) );
+
+        return this;
+    }
+
+    /**
+     * Return a list of routes as a string by index.
+     * @returns {Array}
+     */
+    list()
+    {
+        return this.routes.map(function(route) {
+            return `#${route.index} ${route.verb} ${route.url}`;
+        });
+    }
+}
+
+
+/**
+ * Route class.
+ * @author Mike Adamczyk <mike@bom.us>
+ */
+class Route
+{
+    /**
+     * Constructor
+     * @param verb string get|post|patch|delete...
+     * @param url string
+     * @param methods array
+     * @param router Router
+     */
+    constructor(verb,url,methods,router)
+    {
+        this._router = router;
+        this.verb    = verb.toLowerCase();
+        this.url     = url;
+        this.methods = methods;
+        this.index   = router.routes.length;
+    }
+
+    /**
+     * Add this route to Express.
+     * @param app Application
+     * @returns {Route}
+     */
+    addTo(app)
+    {
+        app.express[this.verb].apply(app.express, [this.url].concat(this.methods));
+
+        app.logger.debug('[Router] #%d: %s - %s (%d Middleware)',
+            this.index,
+            this.verb.toUpperCase(),
+            this.url,
+            this.methods.length
+        );
+
+        return this;
+    }
+}
+
 
 /**
  * Provides the router functionality.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class RouterProvider extends Provider
+class RouterProvider extends mvc.Provider
 {
     constructor()
     {
@@ -24,87 +139,10 @@ class RouterProvider extends Provider
 
     register(app)
     {
-        var utils = app.utils;
-
-        var routes = [];
-
-        var appRoutes = require(app.rootPath('config/routes'));
+        var routes = require(app.rootPath('config/routes'));
 
         // Attach the router class to the application.
-        app.router = new Router();
-
-        /**
-         * Route class.
-         * Creating a new route will attach it to the express router.
-         *
-         * @param verb string get|post|put|delete...
-         * @param url string
-         * @param methods array|string
-         * @constructor
-         */
-        function Route(verb,url,methods)
-        {
-            this.verb = verb;
-            this.url = url;
-            this.methods = utils.getRouteFunctions(app,methods);
-            this.order = routes.length;
-            this.controller = typeof methods == 'string' ? methods : null;
-
-            if (! this.methods.length) {
-                throw ("Route declaration missing handler: "+url);
-            }
-
-            routes.push(this);
-
-            // Adds it to the express server.
-            app.express[verb].apply(app.express, [url].concat(this.methods));
-
-            app.logger.debug('[Router] #%d: %s - %s (%d Middleware)',
-                this.order,
-                verb.toUpperCase(),
-                url,
-                this.methods.length
-            );
-        }
-
-        /**
-         * The router class to export.
-         * @constructor
-         */
-        function Router()
-        {
-            this.get = route.call(this,'get');
-            this.post = route.call(this,'post');
-            this.put = route.call(this,'put');
-            this.patch = route.call(this,'patch');
-            this.delete = route.call(this,'delete');
-            this.options = route.call(this,'options');
-
-            /**
-             * Return a list of the routes created.
-             * @returns {object|array}
-             */
-            this.list = function(index)
-            {
-                return arguments.length ? routes[index] : routes;
-            };
-
-            /**
-             * Create a new route.
-             * @param verb string get|post|put|patch|delete|options
-             * @returns {Function}
-             */
-            function route(verb)
-            {
-                return function(object)
-                {
-                    for(let routeUrl in object) {
-                        new Route(verb, routeUrl, object[routeUrl]);
-                    }
-                    return this;
-                }.bind(this);
-            }
-        }
+        app.router = new Router(app);
 
         function notFoundMiddleware(request,response,next)
         {
@@ -113,7 +151,7 @@ class RouterProvider extends Provider
 
         // After express is loaded, add the routes to it.
         app.event.on('application.bootstrap', function(app) {
-            appRoutes.call(app.router, app, app.Template);
+            routes.call(app.router, app, app.Template);
             app.express.use(notFoundMiddleware);
         });
     }

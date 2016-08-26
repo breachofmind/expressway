@@ -12,14 +12,9 @@ module.exports = function(app)
     var Model = app.ModelFactory;
     var utils = app.utils;
 
-    /**
-     * Assign the route middleware.
-     */
-    this.middleware({
-        update : apiAuthMiddleware,
-        create : apiAuthMiddleware,
-        trash  : apiAuthMiddleware
-    });
+    this.middleware('update', apiAuthMiddleware);
+    this.middleware('create', apiAuthMiddleware);
+    this.middleware('trash', apiAuthMiddleware);
 
     /**
      * Assign global middleware.
@@ -29,16 +24,18 @@ module.exports = function(app)
     /**
      * Resolve the id of the model with the object.
      */
-    this.bind('id', function(value,request)
+    this.bind('id', function(value,request,response,next)
     {
         if (request.Model && value) {
             request.Object = request.Model.findOne({_id: value});
         }
+        next();
     });
 
-    this.query('p', function(value,request)
+    this.query('p', function(value,request,response,next)
     {
         request.query.filter = request.blueprint.paging(utils.fromBase64(value));
+        next();
     });
 
 
@@ -81,7 +78,7 @@ module.exports = function(app)
         if (! request.user) {
             return response.api({error:`You are not authorized to perform this operation.`}, 401);
         }
-        next(request);
+        next();
     }
 
 

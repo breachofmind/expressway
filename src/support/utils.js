@@ -71,29 +71,30 @@ module.exports = {
 
     /**
      * Given a string or functions, return an array of functions for the express router.
-     * @param app Application
      * @param values
+     * @param factory ControllerFactory
      * @returns {Array}
      */
-    getRouteFunctions: function(app,values)
+    getRouteFunctions: function(values, factory)
     {
-        var dispatch = app.ControllerFactory.dispatch;
         var out = [];
 
-        if (! Array.isArray(values)) {
-            values = [values];
-        }
+        if (! Array.isArray(values)) values = [values];
+
         values.forEach(function(value)
         {
+            // "indexController.index"
+            // dispatch method should return an array of functions.
             if (typeof value == 'string') {
-                var parts = value.split(".",2);
-                out = out.concat(dispatch.apply(null, parts));
+                out = out.concat( factory.dispatch.apply(factory, value.split(".",2)) );
             }
+            // function(request,response,next) {...}
             if (typeof value == 'function') {
                 out.push(value);
             }
         });
 
+        // Return the stack of middleware and the route request.
         return out;
     },
 

@@ -2,7 +2,7 @@ var _ = require('lodash');
 
 module.exports = function(Model, app) {
 
-    return Model.create("Role", function Blueprint()
+    return new Model("Role", function Blueprint()
     {
         this.title = 'name';
         this.expose = false;

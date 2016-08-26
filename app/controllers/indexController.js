@@ -1,22 +1,30 @@
 "use strict";
-module.exports = function(Controller)
+var Controller = require('../../index').Controller;
+
+module.exports = Controller.create('indexController', function(app)
 {
-    return Controller.create('indexController', function(app)
-    {
-        // Specify your global variables or controller bindings up here.
-        // These should not change for each request.
-        var globals = {
-            message: "Enjoy yourself"
-        };
+    var globals = {
+        variable: "Hello, World"
+    };
 
-        // Return your controller methods here.
-        return {
-            index: function(request,response)
-            {
-                return response.view('index').use(globals);
-            }
-        }
-
+    // Add middleware to controller methods.
+    // This will add middleware to all methods.
+    this.middleware(function(request,response,next) {
+        next();
     });
-};
 
+    // This will add middleware to a single method.
+    this.middleware('index', 'indexController.test');
+
+
+    // Return your controller methods here.
+    return {
+        index: function(request,response,next) {
+            return response.view('index').use(globals);
+        },
+
+        test: function(request,response,next) {
+            next();
+        }
+    }
+});
