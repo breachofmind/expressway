@@ -74,7 +74,7 @@ describe('application', function()
     });
     it('should have attached model factory class', function(){
         expect(app).to.have.property('ModelFactory');
-        expect(app.ModelFactory).to.be.a('function');
+        expect(app.ModelFactory).to.be.a('object');
     });
     it('should have attached controller factory class', function(){
         expect(app).to.have.property('ControllerFactory');
