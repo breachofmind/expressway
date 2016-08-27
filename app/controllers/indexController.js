@@ -24,7 +24,6 @@ module.exports = Controller.create('indexController', function(app)
         },
 
         test: function(request,response,next) {
-            console.log('test');
             next();
         }
     }

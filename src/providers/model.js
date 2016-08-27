@@ -4,16 +4,27 @@ var mvc = require('../../index');
 var Provider = mvc.Provider;
 var utils = mvc.utils;
 
-class ModelFactory
+/**
+ * Model factory class.
+ * Assists with creating blueprints of models
+ * and links them to their ORM (mongoose, in this case)
+ *
+ * @param app Application
+ * @constructor
+ */
+function ModelFactory(app)
 {
-    constructor(app)
-    {
-        this.app = app;
-        this.models = {};
-        this.types = app.db.Schema.Types;
-    }
+    var models = {};
+    var db = app.db;
 
-    load(files)
+    this.types = db.Schema.Types;
+
+    /**
+     * Load model files.
+     * @param files array|string
+     * @returns {{}}
+     */
+    this.load = function(files)
     {
         if (! Array.isArray(files)) files = [files];
 
@@ -21,57 +32,88 @@ class ModelFactory
         {
             var model = require(file);
             if (model instanceof Model) {
-                this.models[model.name] = model;
-                this.app.logger.debug('[Model] Loaded: %s', model.name);
+                models[model.name] = model;
+                app.logger.debug('[Model] Loaded: %s', model.name);
+
+                return true;
             }
 
-        }.bind(this));
+            throw (file+" does not contain an instance of a Model");
+        });
 
-        return this.models;
-    }
+        return models;
+    };
 
-    create(name,boot)
+    /**
+     * Create new Model instance.
+     * @param name string
+     * @param boot function
+     * @returns {Model}
+     */
+    this.create = function(name,boot)
     {
-        return new Model(name, boot, this);
-    }
+        return new Model(name, boot);
+    };
 
-    has(name)
+    /**
+     * Check if the factory has the given model name.
+     * @param name string
+     * @returns {boolean}
+     */
+    this.has = function(name)
     {
-        return this.models.hasOwnProperty(name);
-    }
+        return models.hasOwnProperty(name);
+    };
 
-    get(name)
+    /**
+     * Retrieve a model instance or all models.
+     * @param name string
+     * @returns {object|Model}
+     */
+    this.get = function(name)
     {
         if (! arguments.length) {
-            return this.models;
+            return models;
         }
-        return this.has(name) ? this.models[name] : null;
-    }
+        return this.has(name) ? models[name] : null;
+    };
 
-    object(name)
+    /**
+     * Returns a Model's mongoose model.
+     * @param name string
+     * @returns {null}
+     */
+    this.object = function(name)
     {
         return this.has(name) ? this.get(name).model : null;
-    }
+    };
 
-    bySlug(slug)
+    /**
+     * Return a Model instance by the slug name.
+     * Useful for use in getting a model in a URL string.
+     * @param slug string
+     * @returns {*}
+     */
+    this.bySlug = function(slug)
     {
-        for (let name in this.models) {
-            if (this.models[name].slug === slug) {
-                return this.models[name];
+        for (let name in models) {
+            if (models[name].slug === slug) {
+                return models[name];
             }
         }
         return null;
-    }
-}
+    };
 
-class Model
-{
-    constructor(name,boot,factory)
+    /**
+     * The Model class.
+     * @param name string
+     * @param boot function
+     * @constructor
+     */
+    function Model(name,boot)
     {
-        this._schema = null;
-        this._factory = factory;
-        this._app = factory.app;
-        this._db = factory.app.db;
+        var self    = this;
+        var schema  = null;
 
         this.name     = name;
         this.slug     = _.snakeCase(name);
@@ -84,131 +126,124 @@ class Model
         this.labels   = {};
         this.key      = "id";
         this.sort     = 1;
+        this.model    = null;
 
-        boot.call(this, this._app);
+        Object.defineProperties(this, {
 
-        this.build();
-    }
+            /**
+             * Get the sorting range.
+             * @returns {{}}
+             */
+            range: {
+                get: function() {
+                    var out = {}; out[self.key] = self.sort;
+                    return out;
+                }
+            },
 
-    build()
-    {
-        this._setJsonMethod();
-        this.model = this._db.model(this.name, this._schema);
+            /**
+             * Set the model schema.
+             * @param object
+             */
+            schema: {
+                get: function() {
+                    return schema;
+                },
+                set: function(object) {
+                    self.fillable = Object.keys(object);
+                    schema = new db.Schema(object);
+                }
+            },
 
-        return this;
-    }
+            /**
+             * Set the schema methods.
+             * @param object
+             */
+            methods: {
+                get: function() {
+                    return schema.methods;
+                },
+                set: function(object) {
+                    schema.methods = object;
+                }
+            },
 
-    /**
-     * Get the sorting range.
-     * @returns {{}}
-     */
-    get range()
-    {
-        var out = {}; out[this.key] = this.sort;
-        return out;
-    }
+            /**
+             * Return the key type for sorting.
+             * @returns {*}
+             */
+            keyType: {
+                get: function() {
+                    return schema.tree[self.key].type;
+                }
+            }
 
-    /**
-     * Set the model schema.
-     * @param object
-     */
-    set schema(object) {
-        this.fillable = Object.keys(object);
-        this._schema = new this._db.Schema(object);
-    }
+        });
 
-    /**
-     * Get the model schema.
-     * @returns {*}
-     */
-    get schema() {
-        return this._schema;
-    }
-
-    /**
-     * Set the schema methods.
-     * @param object
-     */
-    set methods(object) {
-        this._schema.methods = object;
-    }
-
-    /**
-     * Get the schema methods.
-     * @returns {*}
-     */
-    get methods() {
-        return this._schema.methods;
-    }
-
-    /**
-     * Get the datatype for this key.
-     * @returns {*}
-     */
-    get keyType() {
-        return this._schema.tree[this.key].type;
-    }
-
-    /**
-     * Return an object for a filter query.
-     * @param value string from ?p
-     * @returns {{}}
-     */
-    paging(value)
-    {
-        var q = {};
-        q[this.key] = this.sort == 1
-            ? {$gt:value}
-            : {$lt:value};
-        return q;
-    }
-
-    /**
-     * Sets the schema json output.
-     * @private
-     * @returns void
-     */
-    _setJsonMethod()
-    {
-        var self = this;
-
-        this.methods.toJSON = function()
+        /**
+         * Sets the schema json output.
+         * @returns void
+         */
+        function setJsonMethod()
         {
-            var out = {};
-            var model = this;
-
-            self.fillable.forEach(function(column)
+            this.methods.toJSON = function()
             {
-                // Skip fields that are in the guarded column.
-                if (self.guarded.indexOf(column) > -1) {
-                    return;
-                }
-                return out[column] = model[column];
-            });
+                var out = {};
+                var model = this;
 
-            // The developer can append other columns to the output.
-            self.appends.forEach(function(column)
-            {
-                if (typeof column == 'function') {
-                    var arr = column(model,self);
-                    if (arr) {
-                        return out[arr[0]] = arr[1];
+                self.fillable.forEach(function(column)
+                {
+                    // Skip fields that are in the guarded column.
+                    if (self.guarded.indexOf(column) > -1) {
+                        return;
                     }
-                }
-                if (typeof model[column] == "function") {
-                    return out[column] = model[column] ();
-                }
-            });
+                    return out[column] = model[column];
+                });
 
-            out['id'] = model._id;
-            out['_title'] = out[self.title];
-            out['_url'] = self._app.url(`api/v1/${self.name.toLowerCase()}/${model._id}`);
+                // The developer can append other columns to the output.
+                self.appends.forEach(function(column)
+                {
+                    if (typeof column == 'function') {
+                        var arr = column(model,self);
+                        if (arr) {
+                            return out[arr[0]] = arr[1];
+                        }
+                    }
+                    if (typeof model[column] == "function") {
+                        return out[column] = model[column] ();
+                    }
+                });
 
-            return out;
+                out['id'] = model._id;
+                out['_title'] = out[self.title];
+                out['_url'] = app.url(`api/v1/${self.name.toLowerCase()}/${model._id}`);
+
+                return out;
+            }
         }
-    }
 
+
+        /**
+         * Return an object for a filter query.
+         * @param value string from ?p
+         * @returns {{}}
+         */
+        this.paging = function(value)
+        {
+            var q = {};
+            q[this.key] = this.sort == 1
+                ? {$gt:value}
+                : {$lt:value};
+            return q;
+        };
+
+        // Constructor
+        boot.call(this, app);
+        setJsonMethod.call(this);
+        this.model = db.model(this.name, schema);
+    }
 }
+
 
 /**
  * Provides mongoose model blueprints.

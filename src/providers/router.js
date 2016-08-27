@@ -2,44 +2,33 @@
 var mvc = require('../../index');
 var utils = mvc.utils;
 
-const verbs = ['get','post','put','patch','delete','options'];
-
+const VERBS = ['get','post','put','patch','delete','options'];
 
 /**
  * Router class.
  * A customized way to define routes for the application.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class Router
+function Router(app)
 {
-    /**
-     * Constructor.
-     * @param app Application
-     */
-    constructor(app)
-    {
-        var self = this;
+    var router = this;
+    var routes = [];
 
-        this.app = app;
-        this.routes = [];
+    // Verb method setup.
+    // Exposed to developer in routes.js config.
+    VERBS.map(function(verb) {
+        router[verb] = (function(verb){
 
-        // Set up the router methods.
-        verbs.forEach(function(verb){
-            self[verb] = route.call(this, verb);
-        });
-
-        // Common function for adding a route to each verb.
-        function route(verb)
-        {
             // object is a hash: { url: [string, function] }
             return function(object) {
                 Object.keys(object).forEach(function(url) {
-                    self.route(verb,url,object[url]);
+                    var stack = utils.getRouteFunctions(object[url], mvc.Controller);
+                    new Route(verb,url,stack);
                 });
-                return self;
+                return router;
             }
-        }
-    }
+        })(verb);
+    });
 
     /**
      * The default not found 404 handler.
@@ -48,73 +37,41 @@ class Router
      * @param response
      * @param next
      */
-    notFound(request,response,next)
+    this.notFound = function(request,response,next)
     {
         return response.smart(response.view('error/404'),404);
-    }
-
-    /**
-     * Create a new route.
-     * @param verb string
-     * @param url string
-     * @param methods object
-     * @returns Router
-     */
-    route(verb,url,methods)
-    {
-        var stack = utils.getRouteFunctions(methods, mvc.Controller);
-
-        if (! stack.length) {
-            throw ("Route declaration missing handler: "+url);
-        }
-
-        this.routes.push( new Route(verb,url,stack,this).addTo(this.app) );
-
-        return this;
-    }
+    };
 
     /**
      * Return a list of routes as a string by index.
      * @returns {Array}
      */
-    list()
+    this.list = function()
     {
-        return this.routes.map(function(route) {
-            return `#${route.index} ${route.verb} ${route.url}`;
+        return routes.map(function(route) {
+            return `#${route.index}\t${route.verb.toUpperCase()}\t${route.url}`;
         });
-    }
-}
+    };
 
-
-/**
- * Route class.
- * @author Mike Adamczyk <mike@bom.us>
- */
-class Route
-{
     /**
-     * Constructor
-     * @param verb string get|post|patch|delete...
-     * @param url string
-     * @param methods array
-     * @param router Router
+     * Route class.
+     * @constructor
      */
-    constructor(verb,url,methods,router)
+    function Route(verb,url,methods)
     {
-        this._router = router;
+        if (! methods.length) {
+            throw ("Route declaration missing handler: "+url);
+        }
+
         this.verb    = verb.toLowerCase();
         this.url     = url;
         this.methods = methods;
-        this.index   = router.routes.length;
-    }
+        this.index   = routes.length;
 
-    /**
-     * Add this route to Express.
-     * @param app Application
-     * @returns {Route}
-     */
-    addTo(app)
-    {
+        routes.push(this);
+
+        // Add the route to express.
+        // ie, app.express.get("/url", function(){...}, function(){...})
         app.express[this.verb].apply(app.express, [this.url].concat(this.methods));
 
         app.logger.debug('[Router] #%d: %s - %s (%d Middleware)',
@@ -123,8 +80,6 @@ class Route
             this.url,
             this.methods.length
         );
-
-        return this;
     }
 }
 
@@ -146,7 +101,6 @@ class RouterProvider extends mvc.Provider
             'express'
         ]);
 
-        this.inside([ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST]);
     }
 
     register(app)

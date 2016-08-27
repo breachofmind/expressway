@@ -17,7 +17,8 @@ class CLIProvider extends Provider
     {
         super('cli');
 
-        this.requires('loggerProvider');
+        this.requires('logger');
+
         this.inside(ENV_CLI);
     }
 

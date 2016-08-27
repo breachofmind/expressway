@@ -26,6 +26,13 @@ cli.actions({
     test: function() {
         app.logger.info('Testing...');
         cli.exec('mocha', ['test']);
+    },
+
+    routes: function() {
+        app.router.list().forEach(function(route) {
+            console.log(route);
+        });
+        process.exit(1);
     }
 });
 

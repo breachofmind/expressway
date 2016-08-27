@@ -37,7 +37,7 @@ class ExpressProvider extends Provider
              * The core middleware.
              * @param app
              */
-                function coreMiddleware(app)
+            function coreMiddleware(app)
             {
                 return core(app);
             },
@@ -47,7 +47,7 @@ class ExpressProvider extends Provider
              * from an ajax request.
              * @param app
              */
-                function ajaxMiddleware(app)
+            function ajaxMiddleware(app)
             {
                 return function(request,response,next)
                 {
@@ -60,7 +60,7 @@ class ExpressProvider extends Provider
              * Adds localization support.
              * @param app
              */
-                function localeMiddleware (app)
+            function localeMiddleware (app)
             {
                 app.express.use(locale(app.conf('lang_support', ['en_US'])));
 
@@ -77,7 +77,7 @@ class ExpressProvider extends Provider
              * Serves static content, if configured.
              * @param app
              */
-                function staticContentMiddleware (app)
+            function staticContentMiddleware (app)
             {
                 if (app.conf('static_path')) {
                     express.static(app.conf('static_path'))
@@ -88,7 +88,7 @@ class ExpressProvider extends Provider
              * Parses the body response.
              * @param app
              */
-                function bodyParserMiddleware(app)
+            function bodyParserMiddleware(app)
             {
                 app.express.use(bodyParser.json());
                 app.express.use(bodyParser.urlencoded({extended:true}));
@@ -99,7 +99,7 @@ class ExpressProvider extends Provider
              * Sets up the session middleware.
              * @param app
              */
-                function sessionMiddleware (app)
+            function sessionMiddleware (app)
             {
                 return session ({
                     secret: app.conf('appKey', 'keyboard cat'),
@@ -115,7 +115,7 @@ class ExpressProvider extends Provider
              * Adds flash message support.
              * @param app
              */
-                function flashMiddleware(app)
+            function flashMiddleware(app)
             {
                 app.express.use(flash());
             },
@@ -124,7 +124,7 @@ class ExpressProvider extends Provider
              * Adds CSRF protection.
              * @param app
              */
-                function csrfMiddleware (app)
+            function csrfMiddleware (app)
             {
                 app.express.use(csrf());
 
