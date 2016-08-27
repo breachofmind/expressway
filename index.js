@@ -53,6 +53,7 @@ var applicationProviders = [
     'database',
     'express',
     'gate',
+    'gulp',
     'locale',
     'logger',
     'model',
@@ -62,8 +63,6 @@ var applicationProviders = [
     'url',
     'view'
 ];
-
-
 
 /**
  * The Express MVC application.

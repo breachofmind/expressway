@@ -103,7 +103,18 @@ class Application
      */
     publicPath(filepath)
     {
-        return this.rootPath(`../${this.config.static_path}/${filepath}`);
+        return this.path('static_path', 'public') + (filepath || "");
+    }
+
+    /**
+     * Return a path relative to the rootPath.
+     * @param conf string key from the config, ie resources_path
+     * @param defaultPath string
+     * @returns {string}
+     */
+    path(conf,defaultPath)
+    {
+        return this.rootPath(this.conf(conf,defaultPath)) + "/";
     }
 
     /**

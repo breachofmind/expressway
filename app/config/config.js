@@ -15,6 +15,7 @@ module.exports = function(system)
         view_engine: "ejs",
         lang_support: ['en','en_US'],
 
+        resources_path:   "resources",
         views_path:       "resources/views",
         controllers_path: "controllers",
         models_path:      "models",
@@ -34,6 +35,7 @@ module.exports = function(system)
             system.database,
             system.express,
             system.gate,
+            system.gulp,
             system.locale,
             system.logger,
             system.model,
