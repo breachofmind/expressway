@@ -110,5 +110,17 @@ module.exports = {
         return files.map(function(file) {
             return path.basename(file,".js");
         });
+    },
+
+    /**
+     * Return the complete path to the modules in a directory.
+     * @param dir string
+     * @returns {array}
+     */
+    getModules: function(dir)
+    {
+        return this.getFileBaseNames(dir).map(function(name) {
+            return dir + name;
+        })
     }
 };

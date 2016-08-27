@@ -271,9 +271,7 @@ class ModelProvider extends Provider
         mvc.Model = factory;
         app.ModelFactory = factory;
 
-        factory.load(utils.getFileBaseNames(modelPath).map(function(file) {
-            return modelPath + file;
-        }));
+        factory.load(utils.getModules(modelPath));
 
         app.event.emit('models.loaded',app,factory);
     }

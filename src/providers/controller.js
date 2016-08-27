@@ -264,9 +264,7 @@ class ControllerProvider extends mvc.Provider
         mvc.Controller = factory;
         app.ControllerFactory = factory;
 
-        factory.load(utils.getFileBaseNames(controllerPath).map(function(name) {
-            return controllerPath + name;
-        }));
+        factory.load(utils.getModules(controllerPath));
 
         app.event.emit('controllers.loaded',app);
     }
