@@ -1,8 +1,11 @@
 "use strict";
 var Controller = require('../../index').Controller;
+var csrf = require('csurf');
 
 module.exports = Controller.create('authController', function(app)
 {
+    this.middleware(csrf());
+
     return {
         /**
          * GET /login
@@ -71,11 +74,5 @@ module.exports = Controller.create('authController', function(app)
 
             return true;
         },
-
-        test: function(request,response,next)
-        {
-            console.log('auth test');
-            next();
-        }
     }
 });

@@ -98,7 +98,7 @@ module.exports = function(app)
             };
             Object.keys(blueprints).forEach(function(name) {
                 var blueprint = blueprints[name];
-                if (blueprint.expose == false && request.user) {
+                if ((blueprint.expose == false && request.user) || blueprint.expose == true) {
                     json.index[blueprint.name] = app.url('api/v1/'+blueprint.slug);
                 }
             });

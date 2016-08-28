@@ -1,15 +1,15 @@
 "use strict";
 
-var core = require('../core'),
-    express = require('express'),
-    locale = require('locale'),
-    bodyParser = require('body-parser'),
-    session = require('express-session'),
-    csrf = require('csurf'),
-    flash = require('connect-flash'),
+var core         = require('../core'),
+    express      = require('express'),
+    locale       = require('locale'),
+    bodyParser   = require('body-parser'),
+    session      = require('express-session'),
+    csrf         = require('csurf'),
+    flash        = require('connect-flash'),
     cookieParser = require('cookie-parser'),
-    Provider = require('../provider'),
-    MongoStore = require('connect-mongo')(session);
+    Provider     = require('../provider'),
+    MongoStore   = require('connect-mongo')(session);
 
 /**
  * Provides the express server and core middleware.
@@ -27,7 +27,6 @@ class ExpressProvider extends Provider
 
     register(app)
     {
-        var utils = app.utils;
         var config = app.config;
 
         app._middlewares = [];
@@ -118,27 +117,6 @@ class ExpressProvider extends Provider
             function flashMiddleware(app)
             {
                 app.express.use(flash());
-            },
-
-            /**
-             * Adds CSRF protection.
-             * @param app
-             */
-            function csrfMiddleware (app)
-            {
-                app.express.use(csrf());
-
-                // Attach the csrf token to the <head>.
-                app.event.on('view.created', function(view,request){
-                    view.template.meta('csrf-token', request.csrfToken());
-                });
-
-                return function (err, request, response, next) {
-                    if (err.code !== 'EBADCSRFTOKEN') {
-                        return next();
-                    }
-                    return response.smart(response.view('error/403'), 403);
-                };
             }
         ];
 

@@ -49,6 +49,8 @@ class GulpProvider extends mvc.Provider
 {
     constructor()
     {
+        super('gulp');
+
         this.inside([ENV_CLI]);
     }
 
@@ -57,3 +59,5 @@ class GulpProvider extends mvc.Provider
         mvc.Gulper = new Gulper(app);
     }
 }
+
+module.exports = new GulpProvider();

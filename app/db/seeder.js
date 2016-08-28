@@ -1,6 +1,6 @@
 module.exports = function(Seeder,app)
 {
-    var seeder = Seeder.create('installation');
+    var seeder = new Seeder('installation');
 
     seeder.reset = true;
 
@@ -19,18 +19,19 @@ module.exports = function(Seeder,app)
     });
 
     var seeds = {
-        user: seeder.add('user', 'users.csv'),
-        permissions: seeder.add('permission', permissions, function(row,i) {
+        user: seeder.add('User', 'users.csv'),
+        media: seeder.add('Media', 'media.csv'),
+        permissions: seeder.add('Permission', permissions, function(row,i) {
             roles[0].permissions.push(row._id);
             return row;
         }),
-        roles: seeder.add('role', roles)
+        roles: seeder.add('Role', roles)
     };
 
     seeder.run().then(function(){
 
-        seeder.get('user').data[0].roles = [
-            seeder.get('role').data[0]._id
+        seeder.get('User').data[0].roles = [
+            seeder.get('Role').data[0]._id
         ];
 
 
