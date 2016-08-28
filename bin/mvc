@@ -7,7 +7,7 @@ var ExpressMVC = require('../index');
 
 var app = ExpressMVC.init(__dirname+"/../app/", ENV_CLI).bootstrap();
 
-var cli = app.CLI;
+var cli = app.cli;
 
 /**
  * Your actions are set up in an object.

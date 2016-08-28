@@ -1,20 +1,76 @@
 var env = require('./env');
 
+/**
+ * Main configuration file for the application.
+ * @param system object
+ */
 module.exports = function(system)
 {
     return {
-        // The environment
+        /**
+         * The global environment setting.
+         * @type string ENV_LOCAL|ENV_DEV|ENV_PROD|ENV_CLI|ENV_TEST
+         */
         environment: env.environment || ENV_LOCAL,
-        appKey:      "",
-        debug:       env.debug || true,
-        db:          env.db || "mongodb://localhost/expressmvc",
-        url:         env.url || "http://localhost",
-        port:        env.port | 8081,
-        proxy:       env.proxy || null,
-        limit:       10000,
+
+        /**
+         * The unique application key.
+         * @type string
+         */
+        appKey: "",
+
+        /**
+         * Debug setting.
+         * @type boolean
+         */
+        debug: env.debug || true,
+
+        /**
+         * The database credentials.
+         * @type string
+         */
+        db: env.db || "mongodb://localhost/expressmvc",
+
+        /**
+         * The server url.
+         * @type string
+         */
+        url: env.url || "http://localhost",
+
+        /**
+         * The server port.
+         * @type number
+         */
+        port: env.port | 8081,
+
+        /**
+         * The server proxy url, if using a proxy.
+         * @type string|null
+         */
+        proxy: env.proxy || null,
+
+        /**
+         * Limit of records to return in the API.
+         * @type number
+         */
+        limit: 10000,
+
+        /**
+         * View engine used by Express.
+         * @type string ejs|pug|jade|hbs...
+         */
         view_engine: "ejs",
+
+        /**
+         * Supported languages.
+         * @type array<string>
+         */
         lang_support: ['en','en_US'],
 
+        /**
+         * Folders relative to the application path.
+         * @type string
+         */
         resources_path:   "resources",
         views_path:       "resources/views",
         controllers_path: "controllers",
@@ -24,6 +80,10 @@ module.exports = function(system)
         static_path:      "public",
         logs_path:        "logs",
 
+        /**
+         * The application provider array.
+         * @type array
+         */
         providers: [
 
             // Default system providers.

@@ -21,7 +21,8 @@ class DatabaseProvider extends Provider
         app.db = mongoose;
 
         app.db.connection.on('error', function(err){
-            app.logger.error('[Database] Connection error: %s', err);
+            app.logger.error('[Database] Connection error: %s', err.message);
+            process.exit(0);
         });
 
         app.db.connection.on('open', function(){

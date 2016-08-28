@@ -246,7 +246,10 @@ class ControllerProvider extends mvc.Provider
     {
         super('controller');
 
-        this.requires('url');
+        this.requires([
+            'url',
+            'model'
+        ]);
     }
 
     /**

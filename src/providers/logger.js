@@ -41,11 +41,15 @@ class LoggerProvider extends Provider
         var fileMaxSize = 1000 * 1000 * 10; // 10MB
         var logPath = app.rootPath(app.conf('logs_path', 'logs')) + "/";
 
+        /**
+         * Decide which level to report based on the environment.
+         * @returns {string}
+         */
         function getConsoleLevel()
         {
             switch (app.env) {
-                case ENV_TEST: return 'error';
-                case ENV_CLI: return 'warn';
+                case ENV_TEST: return 'warn';
+                case ENV_CLI: return 'info';
                 default: return app.conf('debug') == true ? 'debug' : 'info';
             }
         }
@@ -64,8 +68,6 @@ class LoggerProvider extends Provider
                 })
             ]
         });
-
-        if (typeof app.config.logger == 'function') app.config.logger.call(logger, winston);
 
         // Attach to the application.
         app.logger = logger;
