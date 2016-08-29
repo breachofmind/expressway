@@ -1,18 +1,13 @@
-var ExpressMVC = require('express-mvc');
+"use strict";
 
-module.exports = ExpressMVC.Controller.create('<%=name%>', function(app)
+var mvc = require('express-mvc');
+
+module.exports = mvc.Controller.create('<%=name%>', function(app)
 {
-    // Add middleware to controller methods.
-    // This will add middleware to all methods.
-    this.middleware(function(request,response,next) {
-        next();
-    });
-
-    // Return your controller methods here.
     return {
-        index: function(request,response,next) {
-
-            // Codez
+        index: function(request,response,next)
+        {
+            //
         },
     }
 });

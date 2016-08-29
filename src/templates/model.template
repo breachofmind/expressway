@@ -1,6 +1,8 @@
-var ExpressMVC = require('express-mvc');
+"use strict";
 
-module.exports = ExpressMVC.Model.create('<%=_.capitalize(name)%>', function Blueprint(app)
+var mvc = require('express-mvc');
+
+module.exports = mvc.Model.create('<%=name%>', function Blueprint(app)
 {
     this.title      = 'id';
     this.expose     = false;
@@ -8,6 +10,7 @@ module.exports = ExpressMVC.Model.create('<%=_.capitalize(name)%>', function Blu
     this.appends    = [];
     this.labels     = {};
     this.populate   = [];
+    this.managed    = false;
 
     this.schema = {
         created_at:  { type: Date, default: Date.now },

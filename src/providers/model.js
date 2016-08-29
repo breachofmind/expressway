@@ -1,8 +1,8 @@
 "use strict";
-var _ = require('lodash');
-var mvc = require('../../index');
+var _        = require('lodash');
+var mvc      = require('../../index');
 var Provider = mvc.Provider;
-var utils = mvc.utils;
+var utils    = mvc.utils;
 
 /**
  * Model factory class.
@@ -112,21 +112,92 @@ function ModelFactory(app)
      */
     function Model(name,boot)
     {
-        var self    = this;
-        var schema  = null;
+        var self = this;
+        var schema = null;
 
-        this.name     = name;
-        this.slug     = _.snakeCase(name);
-        this.title    = "id";
-        this.expose   = true;
-        this.guarded  = [];
+        /**
+         * The model name.
+         * @type {string}
+         */
+        this.name = name;
+
+        /**
+         * The model name as a slug, useful for URL's.
+         * @type {string}
+         */
+        this.slug = _.snakeCase(name);
+
+        /**
+         * The title property of the model.
+         * Defaults to the 'id' property.
+         * @type {string}
+         */
+        this.title = "id";
+
+        /**
+         * Expose this model to the public API?
+         * If false, user will need to log in to see this model in the API.
+         * @type {boolean}
+         */
+        this.expose = true;
+
+        /**
+         * Is this model owned by a user?
+         * If a property is specified (ie, user_id or author_id),
+         * the user will need a special permission to manage other models of this type.
+         * Otherwise, they may only manage their own models of this type.
+         * @type {boolean|string}
+         */
+        this.managed = false;
+
+        /**
+         * Guarded properties, which are not displayed as JSON.
+         * @type {Array}
+         */
+        this.guarded = [];
+
+        /**
+         * Fillable properties, which are displayed as JSON.
+         * @type {Array}
+         */
         this.fillable = [];
-        this.appends  = [];
+
+        /**
+         * Properties or functions that are appended to the JSON output.
+         * @type {Array}
+         */
+        this.appends = [];
+
+        /**
+         * Properties that should be populated as references (MongoDB)
+         * @type {Array}
+         */
         this.populate = [];
-        this.labels   = {};
-        this.key      = "id";
-        this.sort     = 1;
-        this.model    = null;
+
+        /**
+         * Labels for properties (optional)
+         * @type {{}}
+         */
+        this.labels = {};
+
+        /**
+         * Sorting key, for range-based pagination.
+         * @type {string}
+         */
+        this.key = "id";
+
+        /**
+         * Sorting direction, for range-based pagination.
+         * @type {number} 1|-1
+         */
+        this.sort = 1;
+
+        /**
+         * The ORM Model.
+         * @type {null|Model}
+         */
+        this.model = null;
+
 
         Object.defineProperties(this, {
 
@@ -240,6 +311,8 @@ function ModelFactory(app)
         // Constructor
         boot.call(this, app);
         setJsonMethod.call(this);
+
+        // Assign the ORM model.
         this.model = db.model(this.name, schema);
     }
 }

@@ -1,21 +1,29 @@
 "use strict";
 
-var Provider = require('express-mvc').Provider;
+var mvc = require('express-mvc');
 
-class <%=name%>Provider extends Provider
+class <%=name%>Provider extends mvc.Provider
 {
     constructor()
     {
-        super("<%=name%>");
+        super("<%= name.toLowerCase() %>");
 
         this.order = 0;
-        this.requires('logger');
+
+        this.requires([
+            'logger'
+        ]);
+
         this.inside(ENV_CLI);
     }
 
+    /**
+     * Register any classes or instances with the application.
+     * @returns void
+     */
     register(app)
     {
-        // Codez
+        //
     }
 }
 
