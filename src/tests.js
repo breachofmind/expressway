@@ -7,7 +7,7 @@ GLOBAL.should = chai.should();
 
 GLOBAL.chai.use(GLOBAL.chaiHttp);
 
-ExpressMVC.testRootPath = __dirname+"/../app/";
+ExpressMVC.testRootPath = __dirname+"/../demo/app/";
 ExpressMVC.testApp = ExpressMVC.init(ExpressMVC.testRootPath, ENV_TEST);
 
 module.exports = ExpressMVC;

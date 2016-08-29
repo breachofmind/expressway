@@ -2,6 +2,7 @@
 
 var winston = require('winston');
 var Provider = require('../provider');
+var fs = require('fs');
 
 /**
  * Provides the winston logger.
@@ -40,7 +41,12 @@ class LoggerProvider extends Provider
 
         var fileMaxSize = 1000 * 1000 * 10; // 10MB
         var logPath = app.rootPath(app.conf('logs_path', 'logs')) + "/";
+        var logFile = logPath + "server.log";
 
+        if (! fs.existsSync(logPath)) {
+            fs.mkdirSync(logPath);
+            fs.writeFileSync(logFile,"");
+        }
         /**
          * Decide which level to report based on the environment.
          * @returns {string}
@@ -63,7 +69,7 @@ class LoggerProvider extends Provider
                 }),
                 new winston.transports.File({
                     level: 'access',
-                    filename: logPath + "server.log",
+                    filename: logFile,
                     maxsize: fileMaxSize
                 })
             ]

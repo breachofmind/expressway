@@ -31,7 +31,7 @@ function login(then)
 
             agent
                 .post('login')
-                .send({username: "mike@bom.us", password: "pwd!118", _csrf:token})
+                .send({username: "test@bom.us", password: "password", _csrf:token})
                 .then(function(res) {
                     then(res,agent);
                 })

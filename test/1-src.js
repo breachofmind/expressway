@@ -9,7 +9,7 @@ var app = ExpressMVC.testApp;
 describe('config', function()
 {
     it('should be a function in the module', function(){
-        var config = require('../app/config/config');
+        var config = require(rootPath + 'config/config');
         expect(config).to.be.a('function');
     });
     it('should be an object in the app', function(){

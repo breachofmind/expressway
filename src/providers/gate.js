@@ -3,49 +3,64 @@ var Provider = require('../provider');
 
 /**
  * The gate class.
+ * Checks user permissions via policies.
  * @constructor
  */
-class Gate
+function Gate(app, permissions)
 {
+    Object.defineProperty(this, 'permissions', {
+        get: function() {
+            return permissions;
+        }
+    });
+
+    var policies = [];
+
     /**
-     * Constructor.
-     * @param app Application
-     * @param permissions array
+     * Add a gate to the queue.
+     * @param policy function
+     * @returns Gate
      */
-    constructor(app,permissions)
+    this.policy = function(policy)
     {
-        this.app = app;
-        this.permissions = permissions;
-    }
+        if (typeof policy == 'function') {
+            policies.push(policy);
+        }
+        return this;
+    };
 
     /**
      * Check if the gate has the permission stored.
      * @param key
      * @returns {*|boolean}
      */
-    hasPermission(key)
+    this.contains = function(key)
     {
-        return this.permissions.hasOwnProperty(key);
-    }
+        return permissions.indexOf(key) > -1;
+    };
 
     /**
-     * Check if a user has this permission.
+     * Check if a user has permission.
      * @param user User model
      * @param object string
-     * @param method string
+     * @param action string
      * @returns {boolean}
      */
-    check(user,object,method)
+    this.check = function(user,object,action)
     {
-        var key = `${object}.${method}`;
-        // If the permission doesn't exist, then default is true.
-        if (! this.hasPermission(key)) return true;
-
-        // TODO
-        // return user.permissions.indexOf(key) > -1;
+        for (let i=0; i<policies.length; i++)
+        {
+            var passed = policies[i].call(this,user,object,action);
+            if (typeof passed === 'boolean') {
+                return passed;
+            }
+        }
         return true;
-    }
+    };
 }
+
+
+
 
 /**
  * Provides a gate that checks user permissions.
@@ -70,36 +85,52 @@ class GateProvider extends Provider
 
     register(app)
     {
-        var permissions = {};
-
-        if (! app.ModelFactory.has('Permission')) {
-            throw ("Gate provider requires the Permission model");
-        }
+        // Permission index.
+        var permissions = buildPermissions();
 
         /**
          * Stores the permission index.
+         * This comes from basic CRUD operations for each model.
          */
-        function getPermissions(app,Factory)
+        function buildPermissions()
         {
-            var Permission = Factory.object('Permission');
-
-            // Load permissions into memory.
-            Permission.find().exec().then(function(models) {
-                models.forEach(function(model){
-                    // Stored in dot syntax. ie, user.edit, user.create
-                    permissions[model.object+"."+model.method] = model.id;
-                });
-                // Attach the gate object to the application.
-                app.gate = new Gate(permissions);
-
-                app.event.emit('gate.loaded', app.gate);
-
-                app.logger.debug('[Gate] Loaded permissions: %d', models.length);
+            var items = ['superuser'];
+            var crud = ['create','read','update','delete'];
+            app.ModelFactory.each(function(model) {
+                crud.map(function(action){ items.push(`${model.name}.${action}`); });
+                if (model.managed) {
+                    items.push(`${model.name}.manage`);
+                }
             });
+            return items;
         }
 
-        // When the models are created, get the permissions.
-        app.event.on('models.loaded', getPermissions)
+
+        app.gate = new Gate(app, permissions);
+
+        // Does the user have a superuser status?
+        app.gate.policy(function(user,object,action)
+        {
+            if (user.is('superuser')) {
+                return true;
+            }
+        });
+
+        // Model object policies.
+        app.gate.policy(function(user,object,action)
+        {
+            if (object instanceof app.ModelFactory.Model) {
+                var key = `${object.name}.${action}`;
+                // If the permission doesn't exist, allow by default.
+                if (! this.contains(key)) {
+                    return true;
+                }
+                // TODO object.managed
+
+                // Does the user have the permission?
+                return user.permissions().indexOf(key) > -1;
+            }
+        });
     }
 }
 

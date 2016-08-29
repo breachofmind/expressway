@@ -1,7 +1,7 @@
-var ExpressMVC = require('./index');
+var mvc = require('./index');
 var cp = require('child_process');
 
-var app = ExpressMVC.init(__dirname + "/app/");
+var app = mvc.init(__dirname + "/demo/app/");
 
 app.bootstrap().server(function() {
 

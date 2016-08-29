@@ -79,6 +79,18 @@ function ModelFactory(app)
     };
 
     /**
+     * Perform a callback against each stored model.
+     * @param callback function
+     * @returns {Array}
+     */
+    this.each = function(callback)
+    {
+        return Object.keys(models).map(function(name) {
+            callback(models[name]);
+        });
+    };
+
+    /**
      * Returns a Model's mongoose model.
      * @param name string
      * @returns {null}
@@ -315,8 +327,9 @@ function ModelFactory(app)
         // Assign the ORM model.
         this.model = db.model(this.name, schema);
     }
-}
 
+    this.Model = Model;
+}
 
 /**
  * Provides mongoose model blueprints.
