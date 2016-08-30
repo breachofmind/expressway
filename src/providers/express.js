@@ -79,7 +79,8 @@ class ExpressProvider extends Provider
             function staticContentMiddleware (app)
             {
                 if (app.conf('static_path')) {
-                    express.static(app.conf('static_path'))
+                    app.logger.debug('[Express] Using static path: %s', app.path('static_path'));
+                    express.static(app.path('static_path'));
                 }
             },
 
@@ -150,7 +151,8 @@ class ExpressProvider extends Provider
         {
             app.express.listen(config.port, function()
             {
-                app.logger.info(`Starting %s server v.%s on %s (%s)...`,
+                app.logger.info('[Express] Using root path: %s', app.rootPath());
+                app.logger.info(`[Express] Starting %s server v.%s on %s (%s)...`,
                     app.env,
                     app.version,
                     app.conf('url'),
