@@ -16,7 +16,8 @@ class LocaleProvider extends Provider
 
         this.requires([
             'logger',
-            'view'
+            'view',
+            'express'
         ]);
     }
 
@@ -197,6 +198,14 @@ class LocaleProvider extends Provider
         app.event.on('view.created', function(view,request) {
             view.data.lang = lang(request);
         });
+
+        // Add the helper function to the request object.
+        app.get('express').middlewareStack.push(function localeMiddleware(app) {
+            return function(request,response,next) {
+                request.lang = lang(request);
+                next();
+            }
+        })
     }
 }
 

@@ -22,7 +22,10 @@ class ExpressProvider extends Provider
         super('express');
 
         this.order = 10;
-        this.requires('view');
+        this.requires([
+            'view',
+            'url'
+        ]);
 
         this.middlewareStack = [
             /**

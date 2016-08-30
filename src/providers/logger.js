@@ -78,6 +78,10 @@ class LoggerProvider extends Provider
         // Attach to the application.
         app.logger = logger;
 
+        app.event.on('application.bootstrap', function(){
+            app.logger.debug('[Application] booting...');
+        });
+
         app.event.on('provider.loaded', function(provider) {
             app.logger.debug('[Provider] Loaded: %s', provider.name);
         });
