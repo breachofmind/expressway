@@ -357,6 +357,15 @@ class ModelProvider extends Provider
         mvc.Model = factory;
         app.ModelFactory = factory;
 
+        /**
+         * alias to Return the Model object.
+         * @param name string
+         * @returns {null}
+         */
+        mvc.model = function(name) {
+            return factory.object(name);
+        };
+
         factory.load(utils.getModules(modelPath));
 
         app.event.emit('models.loaded',app,factory);
