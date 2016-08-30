@@ -173,7 +173,7 @@ class TemplateProvider extends Provider
                 var publicPath = app.publicPath( _.trim(this.attributes[attr],"/") );
                 if (this.attributes[attr] && fs.existsSync(publicPath)) {
                     var mtime = fs.statSync(publicPath).mtime.getTime();
-                    this.attributes[attr] += "m="+mtime;
+                    this.attributes[attr] += "?m="+mtime;
                 }
                 return this;
             }
