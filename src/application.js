@@ -103,7 +103,7 @@ class Application
      */
     publicPath(filepath)
     {
-        return this.path('static_path', 'public') + (filepath || "");
+        return this.path('static_path', '../public') + (filepath || "");
     }
 
     /**

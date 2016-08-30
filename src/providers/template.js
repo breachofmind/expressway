@@ -3,6 +3,7 @@
 var Provider = require('../provider');
 var ejs = require('ejs');
 var fs = require('fs');
+var _ = require('lodash');
 
 /**
  * Provides the Template class.
@@ -169,9 +170,9 @@ class TemplateProvider extends Provider
              */
             mtime(attr)
             {
-                var publicPath = app.publicPath(this.attributes[attr]);
+                var publicPath = app.publicPath( _.trim(this.attributes[attr],"/") );
                 if (this.attributes[attr] && fs.existsSync(publicPath)) {
-                    var mtime = fs.statSync(this.publicPath).mtime.getTime();
+                    var mtime = fs.statSync(publicPath).mtime.getTime();
                     this.attributes[attr] += "m="+mtime;
                 }
                 return this;

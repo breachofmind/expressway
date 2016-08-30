@@ -17,7 +17,7 @@ function Gulper(app)
         js:     app.path('resources_path', 'resources') + "js",
         lib:    app.path('resource_path', 'resources') + "js/vendor",
         views:  app.path('views_path', 'resources/views'),
-        npm:    app.rootPath('node_modules'),
+        npm:    app.rootPath('../node_modules'),
     };
 
     /**
