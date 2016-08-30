@@ -80,7 +80,7 @@ class ExpressProvider extends Provider
             {
                 if (app.conf('static_path')) {
                     app.logger.debug('[Express] Using static path: %s', app.path('static_path'));
-                    app.express.static(app.path('static_path'));
+                    return express.static(app.path('static_path'));
                 }
             },
 
