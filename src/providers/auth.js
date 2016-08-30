@@ -12,7 +12,8 @@ var passport = require('passport'),
  */
 function Auth(app)
 {
-    var User = app.ModelFactory.object('User');
+    var auth = this;
+    var User = mvc.model('User');
 
     /**
      * Encrypt a password with a salt.
@@ -79,19 +80,18 @@ function Auth(app)
                     return done(null, false, { message: 'auth.err_incorrect_password' });
                 }
 
-
                 app.logger.log('access', "Login successful: '%s' %s", username, user.id);
 
                 return done(null, user);
             });
         });
 
-        passport.serializeUser(this.serializeUser);
+        passport.serializeUser(auth.serializeUser);
 
-        passport.deserializeUser(this.deserializeUser);
+        passport.deserializeUser(auth.deserializeUser);
 
         // Pass this function to the app bootstrap event.
-        return function() {
+        return function passportMiddleware(app) {
             passport.use(strategy);
             app.express.use(passport.initialize());
             app.express.use(passport.session());
@@ -128,7 +128,9 @@ class AuthProvider extends mvc.Provider
 
         app.Auth = new Auth(app);
 
-        app.event.on('application.bootstrap', app.Auth.bootstrap());
+        app.get('express').middlewareStack.push(app.Auth.bootstrap());
+
+        //app.event.on('application.bootstrap', );
 
         // Attach the authenticated user to the view for use in templates.
         app.event.on('view.created', function(view,request){

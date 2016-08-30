@@ -23,15 +23,8 @@ class ExpressProvider extends Provider
 
         this.order = 10;
         this.requires('view');
-    }
 
-    register(app)
-    {
-        var config = app.config;
-
-        app._middlewares = [];
-
-        var middleware = [
+        this.middlewareStack = [
             /**
              * The core middleware.
              * @param app
@@ -119,7 +112,15 @@ class ExpressProvider extends Provider
             {
                 app.express.use(flash());
             }
-        ];
+        ]
+    }
+
+    register(app)
+    {
+        var config = app.config;
+        var self = this;
+
+        app._middlewares = [];
 
         /**
          * Called before the server starts.
@@ -133,7 +134,7 @@ class ExpressProvider extends Provider
             app.express.set('views', app.rootPath(app.conf('views_path', 'resources/views')));
 
             // Install the default middleware.
-            middleware.forEach(function(func)
+            self.middlewareStack.forEach(function(func)
             {
                 app.logger.debug('[Express] Adding Application Middleware: %s', func.name);
                 app._middlewares.push(func.name);
