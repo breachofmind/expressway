@@ -1,7 +1,7 @@
 var path = require('path');
-var ExpressMVC = require('../src/tests');
-var rootPath = ExpressMVC.testRootPath;
-var app = ExpressMVC.testApp;
+var testkit = require('../src/testkit');
+var mvc = testkit.mvc;
+var app = testkit.app;
 
 /**
  * Test the application configuration.
@@ -9,7 +9,7 @@ var app = ExpressMVC.testApp;
 describe('config', function()
 {
     it('should be a function in the module', function(){
-        var config = require(rootPath + 'config/config');
+        var config = require(testkit.rootPath + 'config/config');
         expect(config).to.be.a('function');
     });
     it('should be an object in the app', function(){
@@ -24,8 +24,10 @@ describe('config', function()
     });
     it('should have an array of providers', function(){
         expect(app.config.providers).to.be.an('array');
-        expect(app.config.providers[0]).to.be.a('object');
-        expect(app.config.providers[0]).to.be.an.instanceOf(ExpressMVC.Provider);
+        app.config.providers.forEach(function(provider) {
+            expect(provider).to.be.a('object');
+            expect(provider).to.be.an.instanceOf(mvc.Provider);
+        })
     });
     it('should have same environment as given', function(){
         expect(app.config.environment).to.equal(ENV_LOCAL);
@@ -41,15 +43,15 @@ describe('config', function()
 describe('application', function()
 {
     it('should be an instance of an Application', function(){
-        expect(app).to.be.an.instanceOf(ExpressMVC.Application);
+        expect(app).to.be.an.instanceOf(mvc.Application);
     });
     it('should parse the package.json', function(){
         expect(app._package).to.be.an('object');
         expect(app.version).to.equal(app._package.version);
     });
     it('should have rootpath that we gave it', function(){
-        expect(app.rootPath()).to.equal(path.normalize(rootPath));
-        expect(app.rootPath('config')).to.equal(path.normalize(rootPath+'config'));
+        expect(app.rootPath()).to.equal(path.normalize(testkit.rootPath));
+        expect(app.rootPath('config')).to.equal(path.normalize(testkit.rootPath+'config'));
     });
     it('should not be booted yet', function(){
         expect(app.booted).to.equal(false);
@@ -58,13 +60,13 @@ describe('application', function()
 
     // Bootstrap
     it('should bootstrap', function(){
-        expect(app.bootstrap()).to.be.instanceOf(ExpressMVC.Application);
+        expect(app.bootstrap()).to.be.instanceOf(mvc.Application);
         expect(app.booted).to.equal(true);
     });
     it('should have providers after bootstrap', function(){
         expect(app._providers).to.not.be.empty;
         // Providers should be added to the index by name, though not loaded.
-        expect(Object.keys(ExpressMVC.Provider.get()).length).to.equal(app.config.providers.length);
+        expect(Object.keys(mvc.Provider.get()).length).to.equal(app.config.providers.length);
         // Some providers are only loaded based on the environment.
         expect(app._providers.length).to.be.below(app.config.providers.length);
     });

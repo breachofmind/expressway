@@ -117,10 +117,12 @@ module.exports = function(app)
         {
             return request.Object.populate(request.blueprint.populate).exec().then(function(data) {
 
-                return response.api(data,200,{
+                var meta = {
                     labels: request.blueprint.labels,
                     model: request.blueprint.name
-                });
+                };
+
+                return response.api(data, (! data ? 404 : 200), meta);
 
             }, function(err) {
 
