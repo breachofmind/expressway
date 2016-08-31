@@ -45,13 +45,14 @@ function Gate(app, permissions)
      * @param user User model
      * @param object string
      * @param action string
+     * @param args mixed - optional
      * @returns {boolean}
      */
-    this.check = function(user,object,action)
+    this.check = function(user,object,action,args)
     {
         for (let i=0; i<policies.length; i++)
         {
-            var passed = policies[i].call(this,user,object,action);
+            var passed = policies[i].call(this,user,object,action,args);
             if (typeof passed === 'boolean') {
                 return passed;
             }
