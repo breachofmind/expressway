@@ -97,7 +97,7 @@ class GateProvider extends Provider
             var items = ['superuser'];
             var crud = ['create','read','update','delete'];
             app.ModelFactory.each(function(model) {
-                crud.map(function(action){ items.push(`${model.name}.${action}`); });
+                crud.map(function(action){ items.push(`${model.name.toLowerCase()}.${action}`); });
                 if (model.managed) {
                     items.push(`${model.name}.manage`);
                 }
@@ -105,32 +105,7 @@ class GateProvider extends Provider
             return items;
         }
 
-
         app.gate = new Gate(app, permissions);
-
-        // Does the user have a superuser status?
-        app.gate.policy(function(user,object,action)
-        {
-            if (user.is('superuser')) {
-                return true;
-            }
-        });
-
-        // Model object policies.
-        app.gate.policy(function(user,object,action)
-        {
-            if (object instanceof app.ModelFactory.Model) {
-                var key = `${object.name}.${action}`;
-                // If the permission doesn't exist, allow by default.
-                if (! this.contains(key)) {
-                    return true;
-                }
-                // TODO object.managed
-
-                // Does the user have the permission?
-                return user.permissions().indexOf(key) > -1;
-            }
-        });
     }
 }
 

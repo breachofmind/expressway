@@ -13,7 +13,7 @@ var passport = require('passport'),
 function Auth(app)
 {
     var auth = this;
-    var User = mvc.model('User');
+    var User = mvc.Model.get('User');
 
     /**
      * Encrypt a password with a salt.
@@ -46,7 +46,7 @@ function Auth(app)
      */
     this.deserializeUser = function(id,done)
     {
-        User.findById(id, function(err, user) {
+        User.model.findById(id).populate(User.populate).exec(function(err, user) {
             done(err, user);
         });
     };
@@ -59,7 +59,7 @@ function Auth(app)
     {
         var strategy = new Strategy(function(username, password, done)
         {
-            User.findOne({ email: username }, function (err, user) {
+            User.model.findOne({ email: username }).populate(User.populate).exec(function (err, user) {
 
                 app.logger.log('access', "Login attempt: '%s'", username);
 
