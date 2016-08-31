@@ -98,7 +98,7 @@ class GateProvider extends Provider
             var items = ['superuser'];
             var crud = ['create','read','update','delete'];
             app.ModelFactory.each(function(model) {
-                crud.map(function(action){ items.push(`${model.name.toLowerCase()}.${action}`); });
+                crud.map(function(action){ items.push(`${model.name}.${action}`); });
                 if (model.managed) {
                     items.push(`${model.name}.manage`);
                 }
