@@ -24,6 +24,7 @@ function Gate(app, permissions)
     this.policy = function(policy)
     {
         if (typeof policy == 'function') {
+            app.logger.debug("[Gate] Adding Policy: %s", policy.name);
             policies.push(policy);
         }
         return this;
