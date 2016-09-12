@@ -19,6 +19,8 @@ var msg = {
 
 };
 
+
+
 /**
  * Provides the Seeder helper.
  * @author Mike Adamczyk <mike@bom.us>
@@ -164,34 +166,21 @@ class SeederProvider extends mvc.Provider
                 this.blueprint = mvc.Model.get(name);
                 this.model = this.blueprint.model || null;
 
-                this._setup(datasource);
-                this._parent(parent);
+                this._setup(parent,datasource);
 
                 this._converter = new Converter({});
             }
 
-            _setup(datasource)
+            _setup(seeder, datasource)
             {
+                this.seeder = seeder;
+                this.reset = seeder.reset;
                 if (typeof datasource == 'string') {
-                    this.path = datasource;
+                    this.path = seeder.path + datasource;
                     return;
                 }
                 // datasource is an array of objects.
                 this.setData(datasource);
-            }
-
-            /**
-             * Set the parent seeder.
-             * @param seeder Seeder|null
-             * @returns Seeder|null
-             */
-            _parent(seeder)
-            {
-                this.seeder = seeder;
-                this.reset = seeder.reset;
-                if (this.path) {
-                    this.path = seeder.path + this.path;
-                }
             }
 
 
@@ -203,6 +192,7 @@ class SeederProvider extends mvc.Provider
                     results[i] = this.parse(results[i], i);
                 }
                 this.data = results;
+                this.seeder[this.name] = results;
                 this.parsed = true;
 
                 logger.info(msg.parsed, this.name, results.length);
