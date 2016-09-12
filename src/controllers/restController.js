@@ -36,6 +36,8 @@ module.exports = function(app)
         request.query.filter = request.blueprint.paging(utils.fromBase64(value));
     });
 
+    // Apply any user-defined middleware.
+    this.middleware(app.get('controllerDefaults').REST.middleware);
 
     /**
      * Special middleware to check if this is a model being requested.

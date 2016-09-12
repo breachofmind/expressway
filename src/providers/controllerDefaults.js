@@ -23,6 +23,7 @@ class ControllerDefaultsProvider extends Provider
 
         this.REST = {
             controller: restController,
+            middleware: null,
             routes: function(router)
             {
                 router.get({
@@ -42,6 +43,7 @@ class ControllerDefaultsProvider extends Provider
 
         this.Locales = {
             controller: localeController,
+            middleware: null,
             routes: function(router)
             {
                 router.get({
@@ -49,6 +51,8 @@ class ControllerDefaultsProvider extends Provider
                 })
             }
         };
+
+
     }
 }
 

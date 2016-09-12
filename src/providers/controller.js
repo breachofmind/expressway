@@ -142,10 +142,25 @@ function ControllerFactory(app)
          */
         this.middleware = function(method, stack)
         {
+            if (! method || !arguments.length) {
+                return this;
+            }
             app.event.once('controllers.loaded', function(app) {
-                // Assign middleware to all methods.
-                if (stack == undefined) {
-                    middleware = middleware.concat(utils.getRouteFunctions(method, factory));
+
+                if (typeof stack == 'undefined') {
+                    if (typeof method == 'object') {
+                        // Object has route: middlewares.
+                        Object.keys(method).forEach(function(route){
+                            let stack = method[route];
+                            middleware.push({method: route, middleware: utils.getRouteFunctions(stack, factory)})
+                        })
+
+                    } else if (typeof method == 'function') {
+                        // Assign middleware to all methods.
+                        middleware = middleware.concat(utils.getRouteFunctions(method, factory));
+                    }
+
+
 
                     // Assign middleware to a single method.
                 } else if (typeof method == 'string') {

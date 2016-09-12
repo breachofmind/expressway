@@ -123,6 +123,7 @@ class ExpressProvider extends Provider
         var config = app.config;
         var self = this;
 
+        app.express = express();
         app._middlewares = [];
 
         /**
@@ -131,8 +132,6 @@ class ExpressProvider extends Provider
          */
         function bootstrap(app)
         {
-            app.express = express();
-
             app.express.set('view engine', app.conf('view_engine', 'ejs'));
             app.express.set('views', app.rootPath(app.conf('views_path', 'resources/views')));
 

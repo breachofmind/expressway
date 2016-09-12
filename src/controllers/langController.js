@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Maintained controller that returns locale keys and values.
  * @param app
@@ -5,6 +7,9 @@
  */
 module.exports = function(app)
 {
+    // Apply any user-defined middleware.
+    this.middleware(app.get('controllerDefaults').Locales.middleware);
+
     return {
         index: function(request,response)
         {
