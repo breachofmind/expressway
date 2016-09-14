@@ -58,7 +58,7 @@ module.exports = function(app)
         }
 
         if (blueprint.expose == false && ! request.user) {
-            return response.api({error:`You must be logged in to view "${value}" models.`}, 401);
+            return response.api({error:`You must be logged in to view "${value}" models`}, 401);
         }
 
 
@@ -76,7 +76,7 @@ module.exports = function(app)
     function apiAuthMiddleware (request,response,next)
     {
         if (! request.user) {
-            return response.api({error:`You are not authorized to perform this operation.`}, 401);
+            return response.api({error:`You are not authorized to perform this operation`}, 401);
         }
         next();
     }
@@ -128,7 +128,7 @@ module.exports = function(app)
 
             }, function(err) {
 
-                return response.api({error:err},400);
+                return response.apiError(err);
             })
         },
 
@@ -191,13 +191,13 @@ module.exports = function(app)
                 }, function(err) {
 
                     // Model.find() error
-                    return response.api({error:err},400);
+                    return response.apiError(err);
                 });
 
             }, function(err) {
 
                 // Model.count() error
-                return response.api({error:err},400);
+                return response.apiError(err);
             });
         },
 
@@ -223,7 +223,7 @@ module.exports = function(app)
 
             }, function(err) {
 
-                return response.api({error:err},400);
+                return response.apiError(err);
             });
         },
 
@@ -248,7 +248,7 @@ module.exports = function(app)
 
                 }, function(err){
 
-                    return response.api({error:err},400);
+                    return response.apiError(err);
                 });
         },
 
@@ -267,7 +267,7 @@ module.exports = function(app)
 
             }, function(err) {
 
-                return response.api({error:err},400);
+                return response.apiError(err);
 
             });
         },
@@ -288,7 +288,7 @@ module.exports = function(app)
 
             }, function(err) {
 
-                return response.api({error:err},400);
+                return response.apiError(err);
 
             });
         }

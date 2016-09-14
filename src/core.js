@@ -167,6 +167,19 @@ module.exports = function Core (app)
         };
 
         /**
+         * Send an error response back.
+         * @param err
+         * @param status
+         */
+        response.apiError = function(err,status)
+        {
+            if (request.blueprint) {
+                err.message = request.lang('model.err_'+err.code, [request.blueprint.name]);
+            }
+            return response.api({error:err}, status || 400);
+        };
+
+        /**
          * Log a message for each request.
          */
         response.on('finish', function()

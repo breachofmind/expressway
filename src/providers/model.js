@@ -109,7 +109,7 @@ function ModelFactory(app)
     this.bySlug = function(slug)
     {
         for (let name in models) {
-            if (models[name].slug === slug) {
+            if (models.hasOwnProperty(name) && models[name].slug === slug) {
                 return models[name];
             }
         }
