@@ -176,7 +176,7 @@ module.exports = function Core (app)
             if (request.blueprint) {
                 err.message = request.lang('model.err_'+err.code, [request.blueprint.name]);
             }
-            return response.api({error:err}, status || 400);
+            return response.api(err, status || 400);
         };
 
         /**
