@@ -1,4 +1,4 @@
-# Express MVC v.0.5.0 (In development)
+# Expressway v.0.5.0 (In development)
 
 This is just a handy little starter framework. Includes:
 
@@ -10,17 +10,17 @@ This is just a handy little starter framework. Includes:
 - CRUD API and JSON response (if you want it!)
 - Range-based pagination in JSON API
 - User authentication and session storage
-- EJS templates, but ability to override with your own templating library
+- Fully customizable provider modules
 - CSV to JSON database seeding
 - CLI utility for custom actions
 - Locale support
-- Extension-ready using providers
+- Extension friendly
 
 ## Configuration
 
-See `/app` for a sample directory structure.
+See `/demo` for a sample directory structure.
 
-Inside `/app/config`, there should be these files:
+Inside `/demo/config`, there should be these files:
 
 - `config.js` - Global configuration for the application.
 - `env.js` - Environment configuration for the application. Be sure to add to your `.gitignore`.
@@ -32,9 +32,9 @@ This micro-framework was designed to be super easy to set up. Just require the o
 
 ```javascript
 
-var ExpressMVC = require('express-mvc');
+var expressway = require('expressway');
  
-var app = ExpressMVC.init(__dirname+"/app/");
+var app = expressway.init(__dirname+"/app/");
  
 app.server();
  
@@ -42,53 +42,65 @@ app.server();
 
 ## Providers
 
-This framework is heavily inspired by Taylor Otwell's __Laravel 5__ for PHP. __Providers__ are modules that provide most of the framework's functionality.
+This framework is heavily inspired by Taylor Otwell's [Laravel 5](https://github.com/laravel/laravel) for PHP. __Providers__ are modules that provide most of the framework's functionality.
 
-They can have dependencies, which makes them good for extensions. Or, they can be swapped out entirely to be replaced by your own implementation.
+They can have dependencies, which makes them good as extensions. Or, they can be swapped out entirely to be replaced by your own implementation.
 
 They can also be turned on or off, on an environment basis if need be.
 
 Providers have a specific format:
 
 ```javascript
-module.exports = function(Provider)
-{
-    Provider.create('myProvider', function() {
+var expressway = require('expressway');
 
-        // This part runs before the application is created.
-        
-        // Turn on or off.
-        this.active = true;
+class myProvider extends expressway.Provider
+{
+    constructor()
+    {
+        // Pass the provider name to the base class.
+        super("myProvider");
         
         // Change the load order.
         this.order = 0;
         
-        // Add dependencies.
-        this.requires(['loggerProvider']);
+        // Required dependencies.
+        this.requires([
+            'logger',
+            'express'
+        ]);
         
         // Choose which environments this provider is allowed to run in.
         // ENV_CLI|ENV_LOCAL|ENV_DEV|ENV_PROD
-        this.environments = [ENV_CLI];
+        this.inside([ENV_CLI]);
+        
+        // Add configurations to the provider instance.
+        this.customConfig = {};
+    }
+    
+    register(app)
+    {
+        // This parts runs during the application's bootstrap.
+        
+        // Attach stuff to the application instance.
+        app.MyClass = function(){}
+        
+        // Attach stuff to the expressway class.
+        expressway.ClassInstance = {};
+        
+        // Add events. This one will add data to all views.
+        app.event.on('view.created', function(view){
+            view.data.message = "Hello World"
+        })
+        
+        // This runs when the server starts.
+        app.event.on('application.server', function(app){
+            console.log('My provider is working');
+        })
+    }
+}
 
-        // Return the registration function...
-        return function(app){
-
-            // This parts runs during the application's bootstrap.
-            
-            // Attach stuff to the application instance.
-            app.MyClass = function(){}
-            
-            // Add events. This one will add data to all views.
-            app.event.on('view.created', function(view){
-                view.data.message = "Hello World"
-            })
-            
-            // This runs when the server starts.
-            app.event.on('application.server', function(app){
-                console.log('My provider is working');
-            })
-        }
-    });
+// Export the provider definition.
+module.exports = new myProvider();
 }
 ```
 
@@ -103,12 +115,17 @@ To use any of these, create a new controller and use the configuration from the 
 
 ```javascript
 // controllers/restController.js
-module.exports = function(Controller,app)
-{
-    var defaults = app.get('controllerDefaultsProvider');
+var expressway = require('expressway');
+var defaults = expressway.Provider.get('controllerDefaults');
 
-    return Controller.create('restController', defaults.REST.controller);
-};
+// Optional: add middleware to the routes.
+defaults.REST.middleware = {
+    index: function(request,response,next){
+        console.log("Welcome!");
+        next();
+    }
+}
+module.exports = expressway.Controller.create('restController', defaults.REST.controller);
 
 ```
 
@@ -118,7 +135,7 @@ And create your routes, or use the default ones using the same method above...
 // config/routes.js
 module.exports = function(app)
 {
-    var defaults = app.get('controllerDefaultsProvider');
+    var defaults = app.get('controllerDefaults');
     
     // Add the routes to your router.
     defaults.REST.routes(this);
@@ -137,7 +154,8 @@ Routes are handled in a simplified way. Using a controller: (controllerName.cont
 module.exports = function(app)
 {
     this.get({
-        '/url' : 'indexController.index',
+        '/url'     : 'indexController.index',
+        '/url/:id' : 'indexController.show',
     });
 }
 
@@ -160,30 +178,32 @@ module.exports = function(app)
 Adding middleware to controller routes can be done via the controller setup method:
 
 ```javascript
-// controllers/authController.js
-module.exports = function(Controller)
+// controllers/indexController.js
+var expressway = require('expressway');
+
+module.exports = expressway.Controller.create('indexController', function(app)
 {
-    return Controller.create('authController', function(app)
-    {
-        // Assign middleware to a controller method.
-        this.middleware({
-            update : apiAuthMiddleware,
-            create : apiAuthMiddleware,
-            trash  : apiAuthMiddleware
-        });
-                    
-        // Assign middleware to all controller methods.
-        this.middleware(modelMiddleware);
+    // Assign middleware to a controller method.
+    this.middleware({
+        update : apiAuthMiddleware,
+        create : apiAuthMiddleware,
+        trash  : apiAuthMiddleware
+    });
+                
+    // Assign middleware to all controller methods.
+    this.middleware(modelMiddleware);
+
+    return {...}
     }
-}
+});
 ```
 
 
 ### Locale support
 
-To use locales, create the `/app/lang` directory. Inside this directory, create sub-directories with the locale namespace, i.e. `en_us`.
+To use locales, create the `/resources/lang` directory (or provide your own directory from the `config.js` file). Inside this directory, create sub-directories with the locale namespace, i.e. `en_us`.
 
-You can separate your key/value pairs using .js files. For instance, creating an `index.js` file in `/app/lang/en_us`:
+You can separate your key/value pairs using .js files. For instance, creating an `index.js` file in `/resources/lang/en_us`:
 
 ```javascript
 module.exports = {
@@ -265,11 +285,11 @@ seeder.run().then(function(){
 Sometimes it's just useful to type a command to do something. To build a new controller or model:
 
 ```bash
-./bin/mvc controller myController
+./bin/mvc new controller myController
 
-./bin/mvc model myModel
+./bin/mvc new model myModel
 
-./bin/mvc provider myProvider
+./bin/mvc new provider myProvider
 ```
 
 A boilerplate is created from a template and added to your app's corresponding directory.

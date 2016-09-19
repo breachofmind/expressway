@@ -1,4 +1,4 @@
-var mvc         = require('express-mvc');
+var expressway  = require('expressway');
 var cheerio     = require('cheerio');
 var _           = require('lodash');
 GLOBAL.chai     = require('chai');
@@ -8,7 +8,7 @@ GLOBAL.should   = chai.should();
 
 GLOBAL.chai.use(GLOBAL.chaiHttp);
 
-var app = mvc.init(__dirname+"/../demo/app/", ENV_TEST);
+var app = expressway.init(__dirname+"/../demo/app/", ENV_TEST);
 
 /**
  * Testing kit that contains some helper methods.
@@ -18,7 +18,7 @@ var app = mvc.init(__dirname+"/../demo/app/", ENV_TEST);
 function TestingKit(app)
 {
     this.app = app;
-    this.mvc = mvc;
+    this.expressway = expressway;
     this.rootPath = app.rootPath();
 
     /**

@@ -1,8 +1,8 @@
 "use strict";
 
-var mvc = require('express-mvc');
+var expressway = require('expressway');
 
-module.exports = mvc.Controller.create('<%=name%>', function(app)
+module.exports = expressway.Controller.create('<%=name%>', function(app)
 {
     return {
         index: function(request,response,next)

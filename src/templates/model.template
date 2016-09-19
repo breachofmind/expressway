@@ -1,16 +1,16 @@
 "use strict";
 
-var mvc = require('express-mvc');
+var expressway = require('expressway');
 
-module.exports = mvc.Model.create('<%=name%>', function Blueprint(app)
+module.exports = expressway.Model.create('<%=name%>', function Blueprint(app)
 {
     this.title      = 'id';
     this.expose     = false;
     this.guarded    = [];
     this.appends    = [];
-    this.labels     = {};
     this.populate   = [];
     this.managed    = false;
+    this.labels     = {};
 
     this.schema = {
         created_at:  { type: Date, default: Date.now },

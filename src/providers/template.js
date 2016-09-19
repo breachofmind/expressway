@@ -48,7 +48,7 @@ class TemplateProvider extends Provider
                 this.title = "Untitled";
                 this.bodyClass = [];
 
-                this.meta('generator','ExpressMVC v.'+app.version);
+                this.meta('generator','Expressway v.'+app.version);
 
                 Template.defaults.call(this, view);
             }

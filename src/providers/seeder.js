@@ -3,7 +3,7 @@
 var Converter = require("csvtojson").Converter;
 var path = require('path');
 var Promise = require('bluebird');
-var mvc = require('../../index');
+var expressway = require('expressway');
 
 var msg = {
     running: "[Seeder] Running seeder: %s",
@@ -25,7 +25,7 @@ var msg = {
  * Provides the Seeder helper.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class SeederProvider extends mvc.Provider
+class SeederProvider extends expressway.Provider
 {
     constructor()
     {
@@ -163,7 +163,7 @@ class SeederProvider extends mvc.Provider
                 this.data = [];
                 this.models = [];
                 this.parse = parse || function(row,i) { return row; };
-                this.blueprint = mvc.Model.get(name);
+                this.blueprint = expressway.Model.get(name);
                 this.model = this.blueprint.model || null;
 
                 this._setup(parent,datasource);

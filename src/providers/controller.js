@@ -1,6 +1,6 @@
 "use strict";
-var mvc = require('../../index');
-var utils = mvc.utils;
+var expressway = require('expressway');
+var utils = expressway.utils;
 
 
 /**
@@ -255,7 +255,7 @@ function ControllerFactory(app)
  * Provides the controller functionality and class creation.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ControllerProvider extends mvc.Provider
+class ControllerProvider extends expressway.Provider
 {
     constructor()
     {
@@ -279,7 +279,7 @@ class ControllerProvider extends mvc.Provider
         var factory = new ControllerFactory(app);
 
         // Expose the factory class.
-        mvc.Controller = factory;
+        expressway.Controller = factory;
         app.ControllerFactory = factory;
 
         factory.load(utils.getModules(controllerPath));

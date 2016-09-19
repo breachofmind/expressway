@@ -1,8 +1,8 @@
 "use strict";
-var _        = require('lodash');
-var mvc      = require('../../index');
-var Provider = mvc.Provider;
-var utils    = mvc.utils;
+var _           = require('lodash');
+var expressway  = require('expressway');
+var Provider    = expressway.Provider;
+var utils       = expressway.utils;
 
 /**
  * Model factory class.
@@ -280,7 +280,8 @@ function ModelFactory(app)
                     if (self.guarded.indexOf(column) > -1) {
                         return;
                     }
-                    return out[column] = model[column];
+
+                    return out[column] = typeof model[column] == 'undefined' ? null : model[column];
                 });
 
                 // The developer can append other columns to the output.
@@ -299,7 +300,7 @@ function ModelFactory(app)
 
                 out['id'] = model._id;
                 out['_title'] = out[self.title];
-                out['_url'] = app.url(`api/v1/${self.name.toLowerCase()}/${model._id}`);
+                out['_url'] = app.url(`api/v1/${self.slug}/${model._id}`);
 
                 return out;
             }
@@ -354,7 +355,7 @@ class ModelProvider extends Provider
         var factory = new ModelFactory(app);
 
         // Expose the factory class.
-        mvc.Model = factory;
+        expressway.Model = factory;
         app.ModelFactory = factory;
 
         /**
@@ -362,7 +363,7 @@ class ModelProvider extends Provider
          * @param name string
          * @returns {null}
          */
-        mvc.model = function(name) {
+        expressway.model = function(name) {
             return factory.object(name);
         };
 

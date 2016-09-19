@@ -1,6 +1,6 @@
 "use strict";
 
-var mvc = require('../../index');
+var expressway = require('expressway');
 
 /**
  *
@@ -83,7 +83,7 @@ function Gulper(app)
  * Gulp helper.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class GulpProvider extends mvc.Provider
+class GulpProvider extends expressway.Provider
 {
     constructor()
     {
@@ -94,7 +94,7 @@ class GulpProvider extends mvc.Provider
 
     register(app)
     {
-        mvc.Gulper = new Gulper(app);
+        expressway.Gulper = new Gulper(app);
     }
 }
 

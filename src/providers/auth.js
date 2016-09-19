@@ -3,7 +3,7 @@
 var passport = require('passport'),
     Strategy = require('passport-local').Strategy,
     crypto   = require('crypto'),
-    mvc      = require('../../index');
+    expressway = require('expressway');
 
 /**
  * A helper class for authentication.
@@ -13,7 +13,7 @@ var passport = require('passport'),
 function Auth(app)
 {
     var auth = this;
-    var User = mvc.Model.get('User');
+    var User = expressway.Model.get('User');
 
     /**
      * Encrypt a password with a salt.
@@ -104,7 +104,7 @@ function Auth(app)
  * Provides basic authentication with passport.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class AuthProvider extends mvc.Provider
+class AuthProvider extends expressway.Provider
 {
     constructor()
     {

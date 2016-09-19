@@ -1,6 +1,6 @@
 "use strict";
-var mvc = require('../../index');
-var utils = mvc.utils;
+var expressway = require('expressway');
+var utils = expressway.utils;
 
 const VERBS = ['get','post','put','patch','delete','options'];
 
@@ -22,7 +22,7 @@ function Router(app)
             // object is a hash: { url: [string, function] }
             return function(object) {
                 Object.keys(object).forEach(function(url) {
-                    var stack = utils.getRouteFunctions(object[url], mvc.Controller);
+                    var stack = utils.getRouteFunctions(object[url], expressway.Controller);
                     new Route(verb,url,stack);
                 });
                 return router;
@@ -88,7 +88,7 @@ function Router(app)
  * Provides the router functionality.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class RouterProvider extends mvc.Provider
+class RouterProvider extends expressway.Provider
 {
     constructor()
     {

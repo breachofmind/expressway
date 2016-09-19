@@ -1,27 +1,28 @@
 {
-  "name": "express-mvc",
+  "name": "expressway",
   "version": "0.5.0",
-  "description": "An MVC stack for Express.js",
+  "description": "An MVC microframework for Node.js Express and impatient developers",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/breachofmind/express-mvc.git"
+    "url": "git+https://github.com/breachofmind/expressway.git"
   },
   "keywords": [
     "mvc",
     "express",
     "node",
-    "server"
+    "server",
+    "mongo"
   ],
   "author": "Mike Adamczyk <mike@bom.us>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/breachofmind/express-mvc/issues"
+    "url": "https://github.com/breachofmind/expressway/issues"
   },
-  "homepage": "https://github.com/breachofmind/express-mvc#readme",
+  "homepage": "https://github.com/breachofmind/expressway#readme",
   "dependencies": {
     "bluebird": "^3.4.1",
     "body-parser": "^1.15.0",

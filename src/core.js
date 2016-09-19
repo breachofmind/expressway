@@ -173,10 +173,24 @@ module.exports = function Core (app)
          */
         response.apiError = function(err,status)
         {
-            if (request.blueprint) {
-                err.message = request.lang('model.err_'+err.code, [request.blueprint.name]);
+            if (! err) err = {};
+            var out = err.toJSON ? err.toJSON() : err;
+            if (request.blueprint && err.code) {
+                out.message = request.lang('model.err_'+err.code, [request.blueprint.name]);
             }
-            return response.api(err, status || 400);
+            if (err.name == "ValidationError") {
+                out.message = request.lang('model.err_validation');
+                out.errors = Object.keys(err.errors).map(function(key) {
+                    var error = err.errors[key];
+                    var label = request.blueprint ? request.lang('model.'+request.blueprint.name+"_"+error.path) : error.path;
+                    return {
+                        kind: error.kind,
+                        path: error.path,
+                        message: request.lang('model.err_'+error.kind, [label])
+                    };
+                })
+            }
+            return response.api(out, status || 400);
         };
 
         /**

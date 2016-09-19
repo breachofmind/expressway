@@ -1,6 +1,6 @@
 var path = require('path');
 var testkit = require('../src/testkit');
-var mvc = testkit.mvc;
+var expressway = testkit.expressway;
 var app = testkit.app;
 
 /**
@@ -26,7 +26,7 @@ describe('config', function()
         expect(app.config.providers).to.be.an('array');
         app.config.providers.forEach(function(provider) {
             expect(provider).to.be.a('object');
-            expect(provider).to.be.an.instanceOf(mvc.Provider);
+            expect(provider).to.be.an.instanceOf(expressway.Provider);
         })
     });
     it('should have same environment as given', function(){
@@ -43,7 +43,7 @@ describe('config', function()
 describe('application', function()
 {
     it('should be an instance of an Application', function(){
-        expect(app).to.be.an.instanceOf(mvc.Application);
+        expect(app).to.be.an.instanceOf(expressway.Application);
     });
     it('should parse the package.json', function(){
         expect(app._package).to.be.an('object');
@@ -60,13 +60,13 @@ describe('application', function()
 
     // Bootstrap
     it('should bootstrap', function(){
-        expect(app.bootstrap()).to.be.instanceOf(mvc.Application);
+        expect(app.bootstrap()).to.be.instanceOf(expressway.Application);
         expect(app.booted).to.equal(true);
     });
     it('should have providers after bootstrap', function(){
         expect(app._providers).to.not.be.empty;
         // Providers should be added to the index by name, though not loaded.
-        expect(Object.keys(mvc.Provider.get()).length).to.equal(app.config.providers.length);
+        expect(Object.keys(expressway.Provider.get()).length).to.equal(app.config.providers.length);
         // Some providers are only loaded based on the environment.
         expect(app._providers.length).to.be.below(app.config.providers.length);
     });
