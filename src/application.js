@@ -6,6 +6,7 @@ GLOBAL.ENV_DEV   = 'development';
 GLOBAL.ENV_PROD  = 'production';
 GLOBAL.ENV_CLI   = 'cli';
 GLOBAL.ENV_TEST  = 'test';
+GLOBAL.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
 
 var path     = require('path');
 var events   = require('events');
