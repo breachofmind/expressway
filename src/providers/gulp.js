@@ -7,7 +7,7 @@ var expressway = require('expressway');
  * @param app Application
  * @constructor
  */
-function Gulper(app)
+function BigGulp(app)
 {
     var gulp;
 
@@ -15,6 +15,7 @@ function Gulper(app)
         build:  app.path('static_path', 'public'),
         scss:   app.path('resources_path', 'resources') + "scss",
         js:     app.path('resources_path', 'resources') + "js",
+        jsx:     app.path('resources_path', 'resources') + "jsx",
         lib:    app.path('resource_path', 'resources') + "js/vendor",
         views:  app.path('views_path', 'resources/views'),
         npm:    app.rootPath('../node_modules'),
@@ -94,7 +95,7 @@ class GulpProvider extends expressway.Provider
 
     register(app)
     {
-        expressway.Gulper = new Gulper(app);
+        expressway.BigGulp = new BigGulp(app);
     }
 }
 
