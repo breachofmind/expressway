@@ -76,9 +76,8 @@ class GateProvider extends Provider
 
         this.requires([
             'logger',
-            'database',
             'auth',
-            'model'
+            'orm'
         ]);
 
         // CLI doesn't need permissions.
@@ -87,6 +86,8 @@ class GateProvider extends Provider
 
     register(app)
     {
+        var ORM = app.get('orm');
+
         // Permission index.
         var permissions = buildPermissions();
 
@@ -98,7 +99,7 @@ class GateProvider extends Provider
         {
             var items = ['superuser'];
             var crud = ['create','read','update','delete'];
-            app.ModelFactory.each(function(model) {
+            ORM.each(function(model) {
                 crud.map(function(action){ items.push(`${model.name}.${action}`); });
                 if (model.managed) {
                     items.push(`${model.name}.manage`);

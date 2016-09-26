@@ -115,12 +115,13 @@ module.exports = {
     /**
      * Return the complete path to the modules in a directory.
      * @param dir string
+     * @param callback func, optional
      * @returns {array}
      */
-    getModules: function(dir)
+    getModules: function(dir,callback)
     {
         return this.getFileBaseNames(dir).map(function(name) {
-            return dir + name;
+            return callback ? callback(dir + name) : dir + name;
         })
     }
 };

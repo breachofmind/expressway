@@ -112,7 +112,7 @@ class AuthProvider extends expressway.Provider
 
         this.requires([
             'logger',
-            'model',
+            'orm',
             'express'
         ]);
 
@@ -120,9 +120,9 @@ class AuthProvider extends expressway.Provider
 
     register(app)
     {
-        var Model = app.ModelFactory;
+        var ORM = app.get('orm');
 
-        if (! Model.has('User')) {
+        if (! ORM.has('User')) {
             throw ('User model is required to use basic Auth functionality.');
         }
 

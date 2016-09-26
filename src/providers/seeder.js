@@ -33,8 +33,7 @@ class SeederProvider extends expressway.Provider
 
         this.requires([
             'logger',
-            'database',
-            'model'
+            'orm'
         ]);
     }
 

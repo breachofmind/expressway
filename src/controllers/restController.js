@@ -9,7 +9,7 @@ var _ = require('lodash');
  */
 module.exports = function(app)
 {
-    var Model = app.ModelFactory;
+    var Model = app.get('orm');
     var utils = app.utils;
 
     this.middleware('update', apiAuthMiddleware);
@@ -62,7 +62,7 @@ module.exports = function(app)
         }
 
 
-        request.Model = blueprint.model;
+        request.Model = blueprint;
         request.blueprint = blueprint;
         return next();
     }
@@ -92,14 +92,12 @@ module.exports = function(app)
          */
         index: function(request,response)
         {
-            var blueprints = Model.get();
             var json = {
-                message: "Express MVC API v1",
+                message: "Expressway API v1",
                 currentUser: request.user,
                 index: {}
             };
-            Object.keys(blueprints).forEach(function(name) {
-                var blueprint = blueprints[name];
+            Model.each(function(blueprint) {
                 if ((blueprint.expose == false && request.user) || blueprint.expose == true) {
                     json.index[blueprint.name] = app.url('api/v1/'+blueprint.slug);
                 }

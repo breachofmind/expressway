@@ -263,7 +263,7 @@ class ControllerProvider extends expressway.Provider
 
         this.requires([
             'url',
-            'model'
+            'orm'
         ]);
     }
 
