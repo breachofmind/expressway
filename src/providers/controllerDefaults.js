@@ -22,6 +22,8 @@ class ControllerDefaultsProvider extends Provider
         ]);
 
         this.REST = {
+            // Require logged in user to create/delete/update?
+            requireUser: true,
             controller: restController,
             middleware: null,
             routes: function(router)

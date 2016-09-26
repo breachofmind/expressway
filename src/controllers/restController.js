@@ -75,7 +75,7 @@ module.exports = function(app)
      */
     function apiAuthMiddleware (request,response,next)
     {
-        if (! request.user) {
+        if (! request.user && app.get('controllerDefaults').REST.requireUser) {
             return response.api({error:`You are not authorized to perform this operation`}, 401);
         }
         next();
@@ -214,12 +214,12 @@ module.exports = function(app)
                 .find(search.where)
                 .sort(search.sort)
                 .limit(search.limit || app.config.limit)
-                .populate(request.blueprint.populate)
+                .populate(search.populate || request.blueprint.populate)
                 .exec();
 
             return promise.then(function(data)
             {
-                return response.api(data,200);
+                return response.api(data,200, {search:search});
 
             }, function(err) {
 
