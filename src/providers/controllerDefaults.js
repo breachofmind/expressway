@@ -15,8 +15,9 @@ class ControllerDefaultsProvider extends Provider
     {
         super('controllerDefaults');
 
+        this.order = 0;
+
         this.requires([
-            'controller',
             'locale',
             'url'
         ]);

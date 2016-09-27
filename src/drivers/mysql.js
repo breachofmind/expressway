@@ -1,7 +1,7 @@
 "use strict";
 var Sequelize = require('sequelize');
 
-module.exports = function MysqlDriver (app, Model)
+module.exports = function MysqlDriver (app, BaseModel)
 {
     var db = new Sequelize(app.config.db, {});
 
@@ -11,7 +11,7 @@ module.exports = function MysqlDriver (app, Model)
      * The mysql Model class.
      * Uses the sequelize ORM api.
      */
-    class MysqlModel extends Model
+    class MysqlModel extends BaseModel
     {
         constructor(app) {
             super(app);
@@ -73,5 +73,5 @@ module.exports = function MysqlDriver (app, Model)
         }
     }
 
-    return MongoModel;
+    return MysqlModel;
 };

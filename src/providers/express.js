@@ -23,9 +23,12 @@ class ExpressProvider extends Provider
 
         this.order = 10;
         this.requires([
+            'logger',
             'view',
             'url'
         ]);
+
+        this.inject('Log');
 
         this.middlewareStack = [
             /**
@@ -75,7 +78,7 @@ class ExpressProvider extends Provider
             function staticContentMiddleware (app)
             {
                 if (app.conf('static_path')) {
-                    app.logger.debug('[Express] Using static path: %s', app.path('static_path'));
+                    app.get('Log').debug('[Express] Using static path: %s', app.path('static_path'));
                     return express.static(app.path('static_path'));
                 }
             },
@@ -118,13 +121,15 @@ class ExpressProvider extends Provider
         ]
     }
 
-    register(app)
+    register(app,logger)
     {
         var config = app.config;
         var self = this;
 
         app.express = express();
         app._middlewares = [];
+
+        app.register('Express', app.express);
 
         /**
          * Called before the server starts.
@@ -138,7 +143,7 @@ class ExpressProvider extends Provider
             // Install the default middleware.
             self.middlewareStack.forEach(function(func)
             {
-                app.logger.debug('[Express] Adding Application Middleware: %s', func.name);
+                logger.debug('[Express] Adding Application Middleware: %s', func.name);
                 app._middlewares.push(func.name);
                 var use = func(app);
                 if (use) app.express.use(use);
@@ -154,8 +159,8 @@ class ExpressProvider extends Provider
         {
             app.express.listen(config.port, function()
             {
-                app.logger.info('[Express] Using root path: %s', app.rootPath());
-                app.logger.info(`[Express] Starting %s server v.%s on %s (%s)...`,
+                logger.info('[Express] Using root path: %s', app.rootPath());
+                logger.info(`[Express] Starting %s server v.%s on %s (%s)...`,
                     app.env,
                     app.version,
                     app.conf('url'),

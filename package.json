@@ -1,6 +1,6 @@
 {
   "name": "expressway",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "An MVC microframework for Node.js Express and impatient developers",
   "main": "index.js",
   "scripts": {

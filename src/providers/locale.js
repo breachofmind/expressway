@@ -1,14 +1,15 @@
 "use strict";
 
+var expressway = require('expressway');
+var utils = expressway.utils;
 var glob = require('glob');
 var path = require('path');
-var Provider = require('../provider');
 
 /**
  * Provides Locale support.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class LocaleProvider extends Provider
+class LocaleProvider extends expressway.Provider
 {
     constructor()
     {
@@ -19,16 +20,17 @@ class LocaleProvider extends Provider
             'view',
             'express'
         ]);
+
+        this.inject('Log');
     }
 
-    register(app)
+    register(app,logger)
     {
         /**
          * The main key store.
          * @type {KeyStore}
          */
         var store = new KeyStore();
-        var utils = app.utils;
         var langPath = app.conf('locales_path', 'lang');
 
         // Load the language files.
@@ -168,7 +170,7 @@ class LocaleProvider extends Provider
                         store.setKey(localeName, file+"."+prop, lang[prop]);
                         index++;
                     }
-                    app.logger.debug("[Locale] Loaded File: %s.%s (%d keys)", localeName, file, index);
+                    logger.debug("[Locale] Loaded File: %s.%s (%d keys)", localeName, file, index);
                 });
             }
 

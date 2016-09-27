@@ -3,11 +3,11 @@
 var mongoose     = require('mongoose');
 mongoose.Promise = require('bluebird');
 
-module.exports = function MongoDriver (app, Model)
+module.exports = function MongoDriver (app, BaseModel)
 {
     var db = mongoose;
     var event = app.event;
-    var logger = app.logger;
+    var logger = app.get('Log');
 
     db.connection.on('error', function(err){
         logger.error('[Database] Connection error: %s', err.message);
@@ -32,7 +32,7 @@ module.exports = function MongoDriver (app, Model)
      * The mongo Model class.
      * Uses the Mongoose ORM api.
      */
-    class MongoModel extends Model
+    class MongoModel extends BaseModel
     {
         constructor(app) {
             super(app);
@@ -40,7 +40,7 @@ module.exports = function MongoDriver (app, Model)
 
         get(args) {
             return this._model.find(args).populate(this.populate).sort(this.range).exec().then(function(modelArray) {
-                return this.newCollection(modelArray);
+                return this.collection(modelArray);
             }.bind(this));
         }
 
@@ -54,6 +54,18 @@ module.exports = function MongoDriver (app, Model)
 
         count(args) {
             return this._model.count(args);
+        }
+
+        remove(args) {
+            return this._model.remove(args);
+        }
+
+        create(args) {
+            return this._model.create(args);
+        }
+
+        update(args) {
+            return this._model.update(args);
         }
 
         /**

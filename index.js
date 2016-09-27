@@ -1,89 +1,114 @@
 "use strict";
 
 /**
- * Express MVC
+ * Expressway MVC microframework
  * @author Mike Adamczyk <mike@bom.us>
  */
 
+// Environment constants.
+GLOBAL.ENV_LOCAL = 'local';
+GLOBAL.ENV_DEV   = 'development';
+GLOBAL.ENV_PROD  = 'production';
+GLOBAL.ENV_CLI   = 'cli';
+GLOBAL.ENV_TEST  = 'test';
+GLOBAL.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
+
+var path        = require('path');
+var Application = require('./src/application');
+var Provider    = require('./src/provider');
+var utils       = require('./src/support/utils');
+
+
+
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//@::::::::::'@@+'''''''@@@@:::::::::'#@@@@@@@@@@@:::::::::::::::@
-//@:::::::::@@#'''''''''++'@@#::;+@@@@@@@@@#####@@@::::::::::::::@
-//@:::::::'@@''''''''''''''''@@@@@@#''@@@########@@#:::::::::::::@
-//@::::::#@#+'''''''''''''''@@@''''''@@############@:::::::::::::@
-//@:::::#@++#''''''''''''+@@#'''''''@@#############@#::::::::::::@
-//@::::;@#++@''''''''''#@@+'''''''#@@@@@@@@######@@+:::::::::::::@
-//@::::@@+++#''''''''#@@''''''''+@@#@@@@@@@@@@##@@:::::::::::::::@
-//@:::#@+++++@'''''@@@@#'''''#@@#:::::::::'@@@@@+::::::::::::::::@
-//@:::@@+++++#+''#@@@@+#@@@@@+::::::::::::::::@@@::::::::::::::::@
-//@:::@+++++++@#@@@@;:::::::::::::::::::::::::::+@@::::::::::::::@
-//@::;@+++++++@@@@;:::::::::::::::::::::::::::::::+@+::::::::::::@
-//@::'@++++++@@@+:::::::@@@@@@@@@@@@@@@@#:::::::::::@@:::::::::::@
-//@::;@+++++@@@:::::::#@@`@@@@@@@@@@@@@@@@@+::::::::;;@#:::::::::@
-//@:::@++++#@@:::::'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+::@
-//@:::@#+++@@::,'@@@@@@+@@,...````````.'@@@@@@@@@@@@@@@@@@@@@#@::@
-//@:::@@++@@:'@@@@@@+:::@@;````:+,`````+@@@@@@@@@@@@@@#@@@@@@@@::@
-//@::::@++@'+@@@@+::::::@@#```'@@@````.@@@@@@@@@@@@@@,``..`@+@@::@
-//@::::@@@@:@@#,::::::::@@@.`.@.+@.````@@@@,;+##;,:@@.``````@@#::@
-//@::::@@@+:@@::::::::::@@@```+ :@`````@@@'@@@@@@@+@@..'```.@@'::@
-//@::::@@@,:@@::::::::::;@@;```@@.````;@@;@@;::::#@@@:@@@```@@@::@
-//@:::#@@@::@#:::::::::::@@@```..````.@@@,@@:::::::@@'@ #;``@@,@:@
-//@:::@@@'::@#:::::::::::#@@#.```````,@@@:@@+::::::;@@' #:`:@@:;@@
-//@:::@@@,::@@::::::::::::@@@#```````@@@::@@@@::::::@@`:+`.@@+::@@
-//@::@@@@:::#@::::::::::::'@@@@#,``,@@@@:::@;#@@::::@@@```'@@::::@
-//@:@@@@@@::;@:::::::::::::#@@@@@@@@@@#::::;@;;@#::@'@@@@@@@:::::@
-//@#@@@#@@@:::::::::::::::::;@@@@@@@@::::::::@@;@:@#:;@@@@+::::::@
-//@@@@@::@@@::::::::::::::::::::;::::::::::::::#@##::::,,::::::::@
-//@@@@::::@@#:::::::::::::::::::::::::::::::::::+':::::::::::::::@
-//@@@::::::@@':::::::::::::::::::::::::::::::::::::::::::::::::::@
-//@@+::::::;@@:::::::::::::::::::::::::::::::::::::::::::::::::::@
+//@          '@@+'''''''@@@@         '#@@@@@@@@@@@               @
+//@         @@#'''''''''++'@@#  ;+@@@@@@@@@#####@@@              @
+//@       '@@''''''''''''''''@@@@@@#''@@@########@@#             @
+//@      #@#+'''''''''''''''@@@''''''@@############@             @
+//@     #@++#''''''''''''+@@#'''''''@@#############@#            @
+//@    ;@#++@''''''''''#@@+'''''''#@@@@@@@@######@@+             @
+//@    @@+++#''''''''#@@''''''''+@@#@@@@@@@@@@##@@               @
+//@   #@+++++@'''''@@@@#'''''#@@#         '@@@@@+                @
+//@   @@+++++#+''#@@@@+#@@@@@+                @@@                @
+//@   @+++++++@#@@@@;                           +@@              @
+//@  ;@+++++++@@@@;                               +@+            @
+//@  '@++++++@@@+       @@@@@@@@@@@@@@@@#           @@           @
+//@  ;@+++++@@@       #@@`@@@@@@@@@@@@@@@@@+        ;;@#         @
+//@   @++++#@@     '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+  @
+//@   @#+++@@  ,'@@@@@@+@@,...````````.'@@@@@@@@@@@@@@@@@@@@@#@  @
+//@   @@++@@ '@@@@@@+   @@;```` +,`````+@@@@@@@@@@@@@@#@@@@@@@@  @
+//@    @++@'+@@@@+      @@#```'@@@````.@@@@@@@@@@@@@@,``..`@+@@  @
+//@    @@@@ @@#,        @@@.`.@.+@.````@@@@,;+##;, @@.``````@@#  @
+//@    @@@+ @@          @@@```+  @`````@@@'@@@@@@@+@@..'```.@@'  @
+//@    @@@, @@          ;@@;```@@.````;@@;@@;    #@@@ @@@```@@@  @
+//@   #@@@  @#           @@@```..````.@@@,@@       @@'@ #;``@@,@ @
+//@   @@@'  @#           #@@#.```````,@@@ @@+      ;@@' # ` @@ ;@@
+//@   @@@,  @@            @@@#```````@@@  @@@@      @@` +`.@@+  @@
+//@  @@@@   #@            '@@@@#,``,@@@@   @;#@@    @@@```'@@    @
+//@ @@@@@@  ;@             #@@@@@@@@@@#    ;@;;@#  @'@@@@@@@     @
+//@#@@@#@@@                 ;@@@@@@@@        @@;@ @# ;@@@@+      @
+//@@@@@  @@@                                   #@##              @
+//@@@@    @@#                                   +'               @
+//@@@      @@'                                                   @
+//@@+      ;@@                                                   @
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-var Application = require('./src/application');
-
-var Provider = require('./src/provider');
-
-var utils = require('./src/support/utils');
-
-var applicationProviders = [
-    'auth',
-    'cli',
-    'controller',
-    'controllerDefaults',
-    //'database',
-    'express',
-    'gate',
-    'gulp',
-    'locale',
-    'logger',
-    //'model',
-    'orm',
-    'router',
-    'seeder',
-    'template',
-    'url',
-    'view'
-];
-
 /**
  * The Express MVC application.
- * @type {{}}
+ * @constructor
  */
-module.exports = {
+class Expressway
+{
+    constructor()
+    {
+        /**
+         * The root path of the application.
+         * @type {string}
+         * @private
+         */
+        this._rootPath = __dirname + "/app/";
+
+        /**
+         * The configuration file.
+         * @type {{}}
+         */
+        this.config = {};
+
+        this.env = null;
+
+        /**
+         * The Application instance.
+         * @type {null|Application}
+         */
+        this.app = null;
+
+        Object.defineProperties(this, {
+            Application : { enumerable: true, value: Application },
+            Provider :    { enumerable: true, value: Provider },
+            utils :       { enumerable: true, value: utils },
+        })
+    }
 
     /**
-     * The Application class.
-     * @type Application
+     * Get the root path to a file.
+     * @param filepath string
+     * @returns {string}
      */
-    Application: Application,
+    rootPath(filepath)
+    {
+        return path.normalize( this._rootPath + (filepath||"") );
+    }
 
     /**
-     * The Provider class.
-     * @type Provider
+     * Set the root path of the application.
+     * @param value {string}
+     * @returns {Expressway}
      */
-    Provider: Provider,
-
-    utils: utils,
+    setRootPath(value) {
+        this._rootPath = path.normalize(value);
+        return this;
+    }
 
     /**
      * Initialize the application and bootstrap.
@@ -91,16 +116,18 @@ module.exports = {
      * @param env string, optional
      * @returns {Application}
      */
-    init: function(rootPath,env)
+    init(rootPath,env)
     {
-        Application.setRootPath(rootPath);
+        this.setRootPath(rootPath);
 
-        applicationProviders.map(function(name) {
-            require('./src/providers/' + name);
-        });
+        utils.getModules(__dirname+'/src/providers/', true);
 
-        var config = require(Application.rootPath('config/config')) (Provider.get());
+        this.config = require(this.rootPath('config/config')) (Provider.get());
 
-        return new Application(config,env);
+        this.env = env || this.config.environment;
+
+        return this.app = new Application(this);
     }
-};
+}
+
+module.exports = new Expressway();

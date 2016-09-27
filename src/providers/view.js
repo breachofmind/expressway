@@ -1,24 +1,25 @@
 "use strict";
 
-var Provider = require('../provider');
+var expressway = require('expressway');
 var _string = require('lodash/string');
 
 /**
  * Provides a view helper class.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ViewProvider extends Provider
+class ViewProvider extends expressway.Provider
 {
     constructor()
     {
         super('view');
 
         this.requires('template');
+
+        this.inject('Template');
     }
 
-    register(app)
+    register(app, Template)
     {
-        var Template = app.Template;
 
         /**
          * The view class, which combines data with the template.
@@ -83,7 +84,7 @@ class ViewProvider extends Provider
             {
                 this.data.request = request;
                 this.data.template = this.template;
-                this.data.appVersion = app.version;
+                this.data.appVersion = app._version;
                 this.data._ = _string;
 
                 app.event.emit('view.created', this, request);
@@ -104,7 +105,8 @@ class ViewProvider extends Provider
         }
 
         // Attach the View class to the application.
-        app.View = View;
+        app.register('View', View);
+
     }
 }
 

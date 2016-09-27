@@ -1,9 +1,5 @@
 "use strict";
 
-var noop = function(){};
-
-var objects = {};
-
 /**
  * Provider class.
  * For adding or modifying functionality to the application.
@@ -23,8 +19,9 @@ class Provider
         this.dependencies   = [];
         this.environments   = [];
         this.order          = 1;
+        this.$inject        = [];
 
-        objects[this.name] = this;
+        Provider.classes[this.name] = this;
     }
 
     /**
@@ -35,6 +32,29 @@ class Provider
     register(app)
     {
         return null;
+    }
+
+    /**
+     * Get an array of objects specified as injectables.
+     * @return array
+     */
+    getInjectables(app)
+    {
+        var classes = this.$inject.map(function(className) {
+            return app.get(className);
+        });
+        return [app].concat(classes);
+    }
+
+    /**
+     * Choose which class instances or providers to inject.
+     * @param classes
+     * @returns {Provider}
+     */
+    inject(classes)
+    {
+        this.$inject = this.$inject.concat(classes);
+        return this;
     }
 
     /**
@@ -106,33 +126,14 @@ class Provider
         app.event.emit('provider.loading', this);
 
         this.loadDependencies(app);
-        this.register(app);
+        app.register(this.name, this);
         this.loaded = true;
 
-        app._providers.push(this.name);
         app.event.emit('provider.loaded', this);
 
         return true;
     }
 
-    /**
-     * Load all the providers.
-     * Returns an array of the loaded providers in the order they were loaded.
-     * @param providers array
-     * @param app Application
-     * @returns {array}
-     */
-    static boot(providers,app)
-    {
-        providers.sort(ascending);
-
-        providers.forEach(function(provider){
-            if (provider instanceof Provider) provider.load(app);
-        });
-        app.event.emit('provider.registered', app, objects);
-
-        return app._providers;
-    }
 
     /**
      * Get a provider by name or get all providers.
@@ -141,19 +142,38 @@ class Provider
      */
     static get(name)
     {
-        return arguments.length ? objects[name] : objects;
+        return arguments.length ? Provider.classes[name] : Provider.classes;
+    }
+
+    /**
+     * Given an array of providers, check if they are what they are supposed to be.
+     * Return an array of providers sorted by their load order property.
+     * @param providers array
+     * @returns {Array}
+     */
+    static check(providers)
+    {
+        var out = [];
+
+        providers.forEach(function(provider)
+        {
+            if (typeof provider == 'string') {
+                provider = Provider.get(provider);
+            }
+            if (provider instanceof Provider) {
+                return out.push(provider);
+            }
+            throw ("Provider given is not an instance of a Provider: "+provider);
+        });
+
+        out.sort(function ascending(a,b) {
+            return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
+        });
+
+        return out;
     }
 }
 
-/**
- * Sort by ascending order.
- * @param a
- * @param b
- * @returns {number}
- */
-function ascending(a,b) {
-    return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
-}
-
+Provider.classes = {};
 
 module.exports = Provider;

@@ -115,13 +115,32 @@ module.exports = {
     /**
      * Return the complete path to the modules in a directory.
      * @param dir string
-     * @param callback func, optional
+     * @param callback func|boolean - make true to require the module
      * @returns {array}
      */
     getModules: function(dir,callback)
     {
+
         return this.getFileBaseNames(dir).map(function(name) {
-            return callback ? callback(dir + name) : dir + name;
+            var module = dir + name;
+            if (callback === true) {
+
+                return require(module);
+            }
+            return callback ? callback(module) : module;
         })
+    },
+
+    /**
+     * Call a method on each item in the array.
+     * @param array array
+     * @param method string
+     * @param args mixed
+     */
+    callOnEach: function(array, method, args)
+    {
+        array.forEach(function(object) {
+            object[method].call(object,args);
+        });
     }
 };

@@ -14,6 +14,7 @@ function Auth(app)
 {
     var auth = this;
     var User = expressway.Model.get('User');
+    var logger = app.get('Log');
 
     /**
      * Encrypt a password with a salt.
@@ -61,7 +62,7 @@ function Auth(app)
         {
             User.model.findOne({ email: username }).populate(User.populate).exec(function (err, user) {
 
-                app.logger.log('access', "Login attempt: '%s'", username);
+                logger.log('access', "Login attempt: '%s'", username);
 
                 // If error, return with error.
                 if (err) {
@@ -70,17 +71,17 @@ function Auth(app)
 
                 // If user is not found, fail with message.
                 if (! user) {
-                    app.logger.log('access', "User does not exist: '%s'", username);
+                    logger.log('access', "User does not exist: '%s'", username);
                     return done(null, false, { message: 'auth.err_user_missing' });
                 }
 
                 // If user password is not valid, fail with message.
                 if (! user.isValid(password)) {
-                    app.logger.log('access', "Login attempt failed: '%s'", username);
+                    logger.log('access', "Login attempt failed: '%s'", username);
                     return done(null, false, { message: 'auth.err_incorrect_password' });
                 }
 
-                app.logger.log('access', "Login successful: '%s' %s", username, user.id);
+                logger.log('access', "Login successful: '%s' %s", username, user.id);
 
                 return done(null, user);
             });
@@ -111,11 +112,10 @@ class AuthProvider extends expressway.Provider
         super('auth');
 
         this.requires([
-            'logger',
             'orm',
+            'logger',
             'express'
         ]);
-
     }
 
     register(app)

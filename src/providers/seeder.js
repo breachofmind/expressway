@@ -35,13 +35,13 @@ class SeederProvider extends expressway.Provider
             'logger',
             'orm'
         ]);
+
+        this.inject(['Log', 'Models']);
     }
 
-    register(app)
+    register(app,logger,Models)
     {
         var ObjectId = app.db.Types.ObjectId;
-        var event = app.event;
-        var logger = app.logger;
 
         /**
          * Seeder class.
@@ -162,8 +162,7 @@ class SeederProvider extends expressway.Provider
                 this.data = [];
                 this.models = [];
                 this.parse = parse || function(row,i) { return row; };
-                this.blueprint = expressway.Model.get(name);
-                this.model = this.blueprint.model || null;
+                this.model = Models[name];
 
                 this._setup(parent,datasource);
 
@@ -247,6 +246,7 @@ class SeederProvider extends expressway.Provider
             seed()
             {
                 var self = this;
+                var model = this.model;
 
                 return new Promise(function(resolve, reject) {
 
@@ -254,14 +254,14 @@ class SeederProvider extends expressway.Provider
                         return resolve(self);
                     }
                     // Just move on to the next one.
-                    if (! self.model || ! self.data.length) {
+                    if (! model || ! self.data.length) {
                         return error(msg.noModel)(null);
                     }
 
                     // User is asking to dump the database records first.
                     if (self.reset) {
-                        logger.info(msg.dumping, self.blueprint.name);
-                        self.model.remove().then(create, error(msg.err_dumping));
+                        logger.info(msg.dumping, model.name);
+                        model.remove().then(create, error(msg.err_dumping));
                     } else {
                         create();
                     }
@@ -280,9 +280,9 @@ class SeederProvider extends expressway.Provider
                     // Create new models.
                     function create()
                     {
-                        self.model.create(self.data).then(function(response) {
+                        model.create(self.data).then(function(response) {
                             self.setModels(response);
-                            logger.info(msg.created, self.blueprint.name, response.length);
+                            logger.info(msg.created, model.name, response.length);
 
                             resolve(self);
 

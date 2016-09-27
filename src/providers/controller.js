@@ -12,6 +12,8 @@ var utils = expressway.utils;
 function ControllerFactory(app)
 {
     var factory = this;
+    var logger = app.get('Log');
+    var Models = app.get('Models');
     var controllers = {};
 
     /**
@@ -28,7 +30,7 @@ function ControllerFactory(app)
             var controller = require(file);
             if (controller instanceof Controller) {
                 controllers[controller.name] = controller;
-                app.logger.debug('[Controller] Loaded: %s', controller.name);
+                logger.debug('[Controller] Loaded: %s', controller.name);
                 return true;
             }
             throw (file+" does not return a controller instance");
@@ -246,7 +248,7 @@ function ControllerFactory(app)
         };
 
         // Constructor
-        this.methods = boot.call(this,app);
+        this.methods = boot.call(this,app,Models);
     }
 }
 
@@ -262,6 +264,7 @@ class ControllerProvider extends expressway.Provider
         super('controller');
 
         this.requires([
+            'logger',
             'url',
             'orm'
         ]);

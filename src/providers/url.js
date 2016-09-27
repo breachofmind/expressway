@@ -1,12 +1,12 @@
 "use strict";
 
-var Provider = require('../provider');
+var expressway = require('expressway');
 
 /**
  * Provides a URL helper.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class URLProvider extends Provider
+class URLProvider extends expressway.Provider
 {
     constructor()
     {

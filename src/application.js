@@ -1,30 +1,9 @@
 "use strict";
 
-// Environment constants.
-GLOBAL.ENV_LOCAL = 'local';
-GLOBAL.ENV_DEV   = 'development';
-GLOBAL.ENV_PROD  = 'production';
-GLOBAL.ENV_CLI   = 'cli';
-GLOBAL.ENV_TEST  = 'test';
-GLOBAL.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
-
 var path     = require('path');
 var events   = require('events');
 var Provider = require('./provider');
 var utils    = require('./support/utils');
-
-/**
- * The default application root directory.
- * This is where the config, routes, models and controller files are located.
- * @type {string}
- */
-var rootPath = path.normalize(path.dirname(__dirname) + "/app/");
-
-/**
- * The package.json object.
- * @type {*|Object}
- */
-var npmPackage = utils.readJSON(__dirname+'/../package.json');
 
 
 /**
@@ -35,49 +14,51 @@ class Application
 {
     /**
      * Constructor.
-     * @param config object
-     * @param env string
+     * @param expressway Expressway
      * @returns Application
      */
-    constructor(config, env)
+    constructor(expressway)
     {
-        this.booted   = false;
-        this.config   = config;
-        this.version  = npmPackage.version;
-        this.event    = new events.EventEmitter();
-        this.env      = env || this.config.environment;
-        this.rootPath = Application.rootPath;
-        this.utils    = utils;
+        this._expressway    = expressway;
+        this._booted        = false;
+        this._package       = require(__dirname+'/../package.json');
+        this._version       = this._package.version;
+
+        this.providers     = {};
+        this.classes       = {};
 
         /**
-         * The NPM package.json.
-         * @type {*|Object}
-         * @private
+         * Event emitter class.
+         * @type {*|EventEmitter|d}
          */
-        this._package = npmPackage;
+        this.event = new events.EventEmitter();
+        this.config = expressway.config;
+        this.env = expressway.env;
 
-        /**
-         * Loaded providers.
-         * @type {Array} of strings
-         * @private
-         */
-        this._providers = [];
+        this.register('Event', this.event);
     }
 
 
     /**
      * Initial setup of the server.
+     * @param providers array, optional
      * @returns Application
      */
-    bootstrap()
+    bootstrap(providers)
     {
-        if (! this.booted)
+        if (! providers) providers = this.config.providers;
+
+        providers = Provider.check(providers);
+
+        if (! this._booted)
         {
-            Provider.boot(this.config.providers, this);
+            utils.callOnEach(providers, 'load', this);
+
+            this.event.emit('providers.registered', this);
+
+            this._booted = true;
 
             this.event.emit('application.bootstrap', this);
-
-            this.booted = true;
         }
         return this;
     }
@@ -98,6 +79,17 @@ class Application
     };
 
     /**
+     * Return a path relative to the root path.
+     * @param filepath string
+     * @returns {string}
+     */
+    rootPath(filepath)
+    {
+        return this._expressway.rootPath(filepath);
+
+    }
+
+    /**
      * Return a path relative to the public path.
      * @param filepath string
      * @returns {string}
@@ -115,7 +107,7 @@ class Application
      */
     path(conf,defaultPath)
     {
-        return this.rootPath(this.conf(conf,defaultPath)) + "/";
+        return this.rootPath( this.conf(conf,defaultPath) ) + "/";
     }
 
     /**
@@ -132,25 +124,7 @@ class Application
         return defaultValue;
     }
 
-    /**
-     * Return a path relative to the root path.
-     * @param filepath string
-     * @returns {string}
-     */
-    static rootPath(filepath)
-    {
-        return path.normalize(rootPath+"/"+(filepath||""));
-    }
 
-    /**
-     * Set the root path to your application.
-     * @param dir string
-     * @returns string
-     */
-    static setRootPath(dir)
-    {
-        return rootPath = dir;
-    }
 
     /**
      * Destroy the application and connections.
@@ -158,22 +132,45 @@ class Application
      */
     destruct()
     {
-        this.booted = false;
+        this._booted = false;
         this._providers = [];
         this.event.emit('application.destruct');
         this.event.removeAllListeners();
     }
 
     /**
-     * Get a provider by name.
-     * Providers can have configurations or objects attached to them.
-     * @param providerName string
-     * @returns {Provider|null}
+     * Register a singleton object.
+     * @param name
+     * @param instance
+     * @returns {Application}
      */
-    get(providerName)
+    register(name, instance)
     {
-        return Provider.get(providerName);
+        if (this.classes.hasOwnProperty(name)) {
+            throw new Error (`"${name}" class has already been defined`);
+        }
+        this.classes[name] = instance;
+        if (instance instanceof Provider) {
+            instance.register.apply(instance, instance.getInjectables(this));
+            this.providers[name] = instance;
+        }
+        return this;
+    }
+
+    /**
+     * Get a provider or class instance by name.
+     * @param className string
+     * @returns {Provider|object|null}
+     */
+    get(className)
+    {
+        if (this.classes.hasOwnProperty(className)) {
+            return this.classes[className];
+        }
+        return null;
     }
 }
+
+
 
 module.exports = Application;

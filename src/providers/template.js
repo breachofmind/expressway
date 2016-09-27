@@ -1,6 +1,7 @@
 "use strict";
 
-var Provider = require('../provider');
+var expressway = require('expressway');
+var utils = expressway.utils;
 var ejs = require('ejs');
 var fs = require('fs');
 var _ = require('lodash');
@@ -9,7 +10,7 @@ var _ = require('lodash');
  * Provides the Template class.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class TemplateProvider extends Provider
+class TemplateProvider extends expressway.Provider
 {
     constructor()
     {
@@ -18,8 +19,6 @@ class TemplateProvider extends Provider
 
     register(app)
     {
-        var utils = app.utils;
-
         var styles = {
             close: ejs.compile("<<%-element%> <%-attributes%>><%-text%></<%-element%>>"),
             open: ejs.compile("<<%-element%> <%-attributes%>/>")
@@ -203,7 +202,7 @@ class TemplateProvider extends Provider
             }
         }
 
-        app.Template = Template;
+        app.register('Template', Template);
     }
 }
 

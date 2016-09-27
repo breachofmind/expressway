@@ -16,10 +16,13 @@ class ORMProvider extends expressway.Provider
 
         this.requires('logger');
 
-        this.models = [];
+        this.inject('Log');
+
+        this.models = {};
     }
 
-    register(app)
+
+    register(app,logger)
     {
         var modelPath = app.rootPath(app.conf('models_path',' models') + "/");
 
@@ -40,11 +43,16 @@ class ORMProvider extends expressway.Provider
             }
             if (! this.has(instance.name)) {
                 instance.boot();
-                this[instance.name] = instance;
-                this.models.push(instance.name);
+                this.models[instance.name] = instance;
+
+                logger.debug('[Model] Loaded: %s', instance.name);
             }
 
         }.bind(this));
+
+        app.register('Models', this.models);
+
+        app.event.emit('models.loaded',app, this);
     }
 
     /**
@@ -54,7 +62,7 @@ class ORMProvider extends expressway.Provider
      */
     has(modelName)
     {
-        return this.models.indexOf(modelName) > -1;
+        return this.models.hasOwnProperty(modelName);
     }
 
     /**
@@ -64,8 +72,9 @@ class ORMProvider extends expressway.Provider
      */
     bySlug(slug)
     {
-        for(let i=0; i<this.models.length; i++) {
-            var Model = this[this.models[i]];
+        var models = this.all();
+        for(let i=0; i<models.length; i++) {
+            var Model = models[i];
             if (Model.slug == slug) {
                 return Model;
             }
@@ -76,15 +85,26 @@ class ORMProvider extends expressway.Provider
     /**
      * Call a callback on each model.
      * @param callback function
+     * @returns {Array}
      */
     each(callback)
     {
-        this.models.forEach(function(modelName) {
-            var model = this[modelName];
-            callback(model);
-        }.bind(this));
+        return this.all().map(function(model) {
+            return callback(model);
+        });
     }
 
+    /**
+     * Return all the model objects.
+     * @returns {Array}
+     */
+    all()
+    {
+        var keys = Object.keys(this.models);
+        return keys.map(function(key) {
+            return this.models[key];
+        }.bind(this));
+    }
 }
 
 module.exports = new ORMProvider();

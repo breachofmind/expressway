@@ -11,6 +11,7 @@ const VERBS = ['get','post','put','patch','delete','options'];
  */
 function Router(app)
 {
+    var logger = app.get('Log');
     var router = this;
     var routes = [];
 
@@ -74,7 +75,7 @@ function Router(app)
         // ie, app.express.get("/url", function(){...}, function(){...})
         app.express[this.verb].apply(app.express, [this.url].concat(this.methods));
 
-        app.logger.debug('[Router] #%d: %s - %s (%d Middleware)',
+        logger.debug('[Router] #%d: %s - %s (%d Middleware)',
             this.index,
             this.verb.toUpperCase(),
             this.url,
@@ -101,19 +102,22 @@ class RouterProvider extends expressway.Provider
             'express'
         ]);
 
+        this.inject(['Template','Express']);
     }
 
-    register(app)
+    register(app, Template, express)
     {
         var routes = require(app.rootPath('config/routes'));
 
-        // Attach the router class to the application.
-        app.router = new Router(app);
+        var router = new Router(app);
+
+        app.register('Router', router);
+
 
         // After express is loaded, add the routes to it.
         app.event.on('application.bootstrap', function(app) {
-            routes.call(app.router, app, app.Template);
-            app.express.use(app.router.notFound);
+            routes.call(router, app, Template);
+            express.use(router.notFound);
         });
     }
 }

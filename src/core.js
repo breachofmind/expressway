@@ -1,6 +1,8 @@
 "use strict";
 
 var codes = require('./support/status');
+var expressway = require('expressway');
+var utils = expressway.utils;
 
 /**
  * Adds some helper functions to the request and response.
@@ -8,9 +10,8 @@ var codes = require('./support/status');
  */
 module.exports = function Core (app)
 {
-    var utils = app.utils;
-    var logger = app.logger;
-    var View = app.View;
+    var logger = app.get('Log');
+    var View = app.get('View');
 
     /**
      * This is the main core middleware passed to express.

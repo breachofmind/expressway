@@ -4,8 +4,6 @@ var _ = require('lodash');
 var expressway = require('expressway');
 var Collection = require('./collection');
 
-var objects = {};
-
 class Model
 {
     constructor(app)
@@ -29,9 +27,6 @@ class Model
         this.sort = 1;
 
         this.methods = {};
-
-        objects[this.name] = this;
-        app.logger.debug('[Model] Loaded: %s', this.name);
     }
 
     /**
@@ -39,9 +34,9 @@ class Model
      * @param modelArray
      * @returns {exports|module.exports}
      */
-    newCollection(modelArray)
+    collection(modelArray)
     {
-        return new Collection(modelArray);
+        return new Collection(modelArray, this);
     }
 
     /**
@@ -53,6 +48,20 @@ class Model
         var out = {}; out[this.key] = this.sort;
         return out;
     }
+
+    /**
+     * Return an object for a filter query.
+     * @param value string from ?p
+     * @returns {{}}
+     */
+    paging(value)
+    {
+        var q = {};
+        q[this.key] = this.sort == 1
+            ? {$gt:value}
+            : {$lt:value};
+        return q;
+    };
 
     /**
      * Boot the model.
@@ -69,12 +78,12 @@ class Model
      */
     static register(app)
     {
-        Model._app = app;
+        var logger = app.get('Log');
         var ModelClass = app.conf('db_driver', 'mongo');
         if (typeof ModelClass == 'string') {
             var driver = require('./drivers/'+ModelClass);
             ModelClass = driver(app, Model);
-            app.logger.debug('[Model] Using driver: %s', driver.name);
+            logger.debug('[Model] Using driver: %s', driver.name);
         }
         return ModelClass;
     }
@@ -86,10 +95,7 @@ class Model
      */
     static get(modelName)
     {
-        if (! objects.hasOwnProperty(modelName)) {
-            return null;
-        }
-        return objects[modelName];
+        return expressway.app.get('orm') [modelName];
     }
 }
 

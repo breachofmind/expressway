@@ -6,11 +6,12 @@ var program  = require('commander'),
     ejs      = require('ejs'),
     fs       = require('fs'),
     _string  = require('lodash/string'),
-    Provider = require('../provider');
+    expressway = require('expressway');
 
 function CLI(app)
 {
-    var cli = program.version(app.version);
+    var cli = program.version(app._version);
+    var logger = app.get('Log');
 
     this.app = app;
 
@@ -65,7 +66,7 @@ function CLI(app)
 
         fs.writeFileSync(destFile,str);
 
-        app.logger.info('[CLI] Created File: %s', destFile);
+        logger.info('[CLI] Created File: %s', destFile);
     };
 
     /**
@@ -87,7 +88,7 @@ function CLI(app)
  * Provides a Command Line interface module.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class CLIProvider extends Provider
+class CLIProvider extends expressway.Provider
 {
     constructor()
     {
@@ -100,15 +101,18 @@ class CLIProvider extends Provider
 
     register(app)
     {
-        app.cli = new CLI(app);
 
-        app.cli.action('new', function(env,opts){
+        var cli = new CLI(app);
+
+        cli.action('new', function(env,opts){
             var type = env.trim().toLowerCase();
             var templateFile = __dirname + `/../templates/${type}.template`;
             var destFile = app.path(type+"s_path", type+"s") + opts +".js";
             app.cli.template(templateFile, destFile , {name:opts, _:_string});
             process.exit(1);
         });
+
+        app.register('CLI', cli);
     }
 }
 
