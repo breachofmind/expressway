@@ -26,7 +26,7 @@ module.exports = function MongoDriver (app, BaseModel)
 
     db.connect(app.config.db);
 
-    app.db = db;
+    app.register('db', db);
 
     /**
      * The mongo Model class.
@@ -36,6 +36,8 @@ module.exports = function MongoDriver (app, BaseModel)
     {
         constructor(app) {
             super(app);
+
+            this.Types = db.Schema.Types;
         }
 
         get(args) {

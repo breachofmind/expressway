@@ -100,12 +100,13 @@ class ExpressProvider extends Provider
              */
             function sessionMiddleware (app)
             {
+                var conn = app.get('db').connection;
                 return session ({
                     secret: app.conf('appKey', 'keyboard cat'),
                     saveUninitialized: false,
                     resave: false,
                     store: new MongoStore({
-                        mongooseConnection: app.db.connection
+                        mongooseConnection: conn
                     })
                 });
             },

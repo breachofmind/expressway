@@ -36,12 +36,12 @@ class SeederProvider extends expressway.Provider
             'orm'
         ]);
 
-        this.inject(['Log', 'Models']);
+        this.inject(['Log', 'Models','db']);
     }
 
-    register(app,logger,Models)
+    register(app,logger,Models,db)
     {
-        var ObjectId = app.db.Types.ObjectId;
+        var ObjectId = db.Schema.Types.ObjectId;
 
         /**
          * Seeder class.

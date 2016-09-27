@@ -5,7 +5,7 @@ module.exports = function MysqlDriver (app, BaseModel)
 {
     var db = new Sequelize(app.config.db, {});
 
-    app.db = db;
+    app.register('db', db);
 
     /**
      * The mysql Model class.
@@ -13,7 +13,12 @@ module.exports = function MysqlDriver (app, BaseModel)
      */
     class MysqlModel extends BaseModel
     {
-        constructor(app) {
+        /**
+         * Model constructor.
+         * @param app
+         */
+        constructor(app)
+        {
             super(app);
 
             this.Sequelize = Sequelize;
