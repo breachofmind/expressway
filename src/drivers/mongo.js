@@ -1,38 +1,14 @@
 "use strict";
 
+var expressway   = require('expressway');
+var BaseModel    = require('../model');
 var mongoose     = require('mongoose');
 mongoose.Promise = require('bluebird');
 
-module.exports = function MongoDriver (app, BaseModel)
+
+function MongoDriver(app,db)
 {
-    var db = mongoose;
-    var event = app.event;
-    var logger = app.get('Log');
-
-    db.connection.on('error', function(err){
-        logger.error('[Database] Connection error: %s', err.message);
-        process.exit(0);
-    });
-
-    db.connection.on('open', function(){
-        logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
-        event.emit('database.connected', app);
-    });
-
-    event.on('application.destruct', function(){
-        db.disconnect();
-        logger.debug('[Database] Connection closed.');
-    });
-
-    db.connect(app.config.db);
-
-    app.register('db', db);
-
-    /**
-     * The mongo Model class.
-     * Uses the Mongoose ORM api.
-     */
-    class MongoModel extends BaseModel
+    return class MongoModel extends BaseModel
     {
         constructor(app) {
             super(app);
@@ -145,6 +121,42 @@ module.exports = function MongoDriver (app, BaseModel)
             return super.boot();
         }
     }
+}
 
-    return MongoModel;
-};
+class MongoDriverProvider extends expressway.Provider
+{
+    constructor()
+    {
+        super('mongo');
+
+        this.requires('logger');
+
+        this.inject(['Log','Event']);
+    }
+
+    register(app,logger,event)
+    {
+        mongoose.connection.on('error', function(err){
+            logger.error('[Database] Connection error: %s', err.message);
+            process.exit(0);
+        });
+
+        mongoose.connection.on('open', function(){
+            logger.debug('[Database] Connected to MongoDB: %s', app.config.db);
+            event.emit('database.connected', app);
+        });
+
+        event.on('application.destruct', function(){
+            mongoose.disconnect();
+            logger.debug('[Database] Connection closed.');
+        });
+
+        mongoose.connect(app.config.db);
+
+        app.register('db', mongoose);
+        expressway.Model = MongoDriver(app,mongoose);
+        app.register('Model', expressway.Model);
+    }
+}
+
+module.exports = new MongoDriverProvider();

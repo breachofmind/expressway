@@ -1,17 +1,12 @@
 "use strict";
+
+var BaseModel = require('../model');
 var Sequelize = require('sequelize');
+var expressway = require('expressway');
 
-module.exports = function MysqlDriver (app, BaseModel)
+function MysqlDriver(app,db)
 {
-    var db = new Sequelize(app.config.db, {});
-
-    app.register('db', db);
-
-    /**
-     * The mysql Model class.
-     * Uses the sequelize ORM api.
-     */
-    class MysqlModel extends BaseModel
+    return class MysqlModel extends BaseModel
     {
         /**
          * Model constructor.
@@ -22,6 +17,7 @@ module.exports = function MysqlDriver (app, BaseModel)
             super(app);
 
             this.Sequelize = Sequelize;
+            this.PRIMARY_KEY = {type:Sequelize.INTEGER, unique:true, primaryKey:true, authIncrement:true}
         }
 
         get(args) {
@@ -71,12 +67,38 @@ module.exports = function MysqlDriver (app, BaseModel)
             this._setToJSON();
 
             this._model = db.define(this.name.toLowerCase(), this.schema, {
-                instanceMethods: this.methods
+                instanceMethods: this.methods,
+                tableName: this.table || this.name.toLowerCase()
             });
+
+            this._model.sync();
 
             return super.boot();
         }
     }
-
-    return MysqlModel;
 };
+
+
+
+class MysqlDriverProvider extends expressway.Provider
+{
+    constructor()
+    {
+        super('mysql');
+    }
+
+    register(app)
+    {
+        var db = new Sequelize(app.config.db, {
+            timestamps: false,
+            underscored: true,
+        });
+
+        app.register('db', db);
+
+        expressway.Model = MysqlDriver(app,db);
+        app.register('Model', expressway.Model);
+    }
+}
+
+module.exports = new MysqlDriverProvider();

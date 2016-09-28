@@ -163,7 +163,7 @@ class ExpressProvider extends Provider
                 logger.info('[Express] Using root path: %s', app.rootPath());
                 logger.info(`[Express] Starting %s server v.%s on %s (%s)...`,
                     app.env,
-                    app.version,
+                    app._version,
                     app.conf('url'),
                     app.url());
 

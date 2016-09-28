@@ -4,16 +4,17 @@ var _ = require('lodash');
 var expressway = require('expressway');
 var Collection = require('./collection');
 
-class Model
+class BaseModel
 {
     constructor(app)
     {
-        this._app = app;
+        Object.defineProperty(this, 'app', {value: app});
+        Object.defineProperty(this, 'name', {value: this.constructor.name});
+
         this._booted = false;
         this._schema = {};
         this._model = null;
 
-        this.name = this.constructor.name;
         this.slug = _.snakeCase(this.name);
         this.title = "id";
         this.expose = true;
@@ -73,22 +74,6 @@ class Model
     }
 
     /**
-     * Register the model class and get the database driver.
-     * @param app Application
-     */
-    static register(app)
-    {
-        var logger = app.get('Log');
-        var ModelClass = app.conf('db_driver', 'mongo');
-        if (typeof ModelClass == 'string') {
-            var driver = require('./drivers/'+ModelClass);
-            ModelClass = driver(app, Model);
-            logger.debug('[Model] Using driver: %s', driver.name);
-        }
-        return ModelClass;
-    }
-
-    /**
      * Get a model object by name.
      * @param modelName string
      * @returns {null|Model}
@@ -99,4 +84,4 @@ class Model
     }
 }
 
-module.exports = Model;
+module.exports = BaseModel;

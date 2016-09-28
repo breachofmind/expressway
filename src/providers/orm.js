@@ -14,31 +14,42 @@ class ORMProvider extends expressway.Provider
     {
         super('orm');
 
-        this.requires('logger');
+        this.requires([
+            'logger',
+            'driver'
+        ]);
 
-        this.inject('Log');
+        this.inject(['Log','Model']);
 
         this.models = {};
     }
 
 
-    register(app,logger)
+    register(app,logger,Model)
     {
-        var modelPath = app.rootPath(app.conf('models_path',' models') + "/");
+        this.modelPath = app.rootPath(app.conf('models_path',' models') + "/");
 
-        // Register method will determine which driver to use.
-        var Model = BaseModel.register(app);
+        app.call(this,'loadModels', [app,'Log','Model']);
 
-        // Bind the new Model class for the developer's convenience.
-        app.Model = expressway.Model =  Model;
+        app.register('Models', this.models);
 
+        app.event.emit('models.loaded',app, this);
+    }
+
+    /**
+     * Load all models.
+      * @param logger
+     * @param Model
+     */
+    loadModels(app,logger,Model)
+    {
         // Load all models in the models directory.
-        utils.getModules(modelPath, function(path)
+        utils.getModules(this.modelPath, function(path)
         {
             var Class = require(path);
             var instance = new Class(app);
 
-            if (! (instance instanceof BaseModel)) {
+            if (! (instance instanceof Model)) {
                 throw (path + " module does not return Model instance");
             }
             if (! this.has(instance.name)) {
@@ -49,10 +60,6 @@ class ORMProvider extends expressway.Provider
             }
 
         }.bind(this));
-
-        app.register('Models', this.models);
-
-        app.event.emit('models.loaded',app, this);
     }
 
     /**

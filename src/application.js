@@ -25,7 +25,7 @@ class Application
         this._version       = this._package.version;
 
         this.providers     = {};
-        this.classes       = {};
+        this.services      = {};
 
         /**
          * Event emitter class.
@@ -139,33 +139,58 @@ class Application
     }
 
     /**
-     * Register a singleton object.
-     * @param name
-     * @param instance
+     * Register a service, provider, or other object.
+     * @param name tsring
+     * @param instance mixed
      * @returns {Application}
      */
     register(name, instance)
     {
-        if (this.classes.hasOwnProperty(name)) {
-            throw new Error (`"${name}" class has already been defined`);
+        if (this.services.hasOwnProperty(name)) {
+            throw new Error (`"${name}" service has already been defined`);
         }
-        this.classes[name] = instance;
+        this.services[name] = instance;
         if (instance instanceof Provider) {
-            instance.register.apply(instance, instance.getInjectables(this));
+            this.call(instance,"register",[this].concat(instance.$inject));
             this.providers[name] = instance;
         }
         return this;
     }
 
     /**
+     * Call a method with the services injected.
+     * @param context object
+     * @param method string
+     * @param services array
+     * @returns {*}
+     */
+    call(context,method,services)
+    {
+        return context[method].apply(context, this.getServices(services));
+    }
+
+    /**
+     * Given the array of string service/provider names,
+     * return the registered objects.
+     * @param array
+     * @returns {Array}
+     */
+    getServices(array)
+    {
+        return array.map(function(service) {
+            return typeof service == 'string' ? this.get(service) : service;
+        }.bind(this))
+    }
+
+    /**
      * Get a provider or class instance by name.
-     * @param className string
+     * @param service string
      * @returns {Provider|object|null}
      */
-    get(className)
+    get(service)
     {
-        if (this.classes.hasOwnProperty(className)) {
-            return this.classes[className];
+        if (this.services.hasOwnProperty(service)) {
+            return this.services[service];
         }
         return null;
     }

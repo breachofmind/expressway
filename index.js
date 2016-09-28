@@ -121,6 +121,7 @@ class Expressway
         this.setRootPath(rootPath);
 
         utils.getModules(__dirname+'/src/providers/', true);
+        utils.getModules(__dirname+'/src/drivers/', true);
 
         this.config = require(this.rootPath('config/config')) (Provider.get());
 

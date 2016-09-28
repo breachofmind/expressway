@@ -125,7 +125,12 @@ module.exports = {
             var module = dir + name;
             if (callback === true) {
 
-                return require(module);
+                try {
+                    return require(module);
+                } catch (e) {
+                    return e;
+                }
+
             }
             return callback ? callback(module) : module;
         })
