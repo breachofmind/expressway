@@ -72,10 +72,10 @@ module.exports = {
     /**
      * Given a string or functions, return an array of functions for the express router.
      * @param values
-     * @param factory ControllerFactory
+     * @param ControllerProvider ControllerProvider
      * @returns {Array}
      */
-    getRouteFunctions: function(values, factory)
+    getRouteFunctions: function(values, ControllerProvider)
     {
         var out = [];
 
@@ -86,7 +86,7 @@ module.exports = {
             // "indexController.index"
             // dispatch method should return an array of functions.
             if (typeof value == 'string') {
-                out = out.concat( factory.dispatch.apply(factory, value.split(".",2)) );
+                out = out.concat( ControllerProvider.dispatch.apply(ControllerProvider, value.split(".",2)) );
             }
             // function(request,response,next) {...}
             if (typeof value == 'function') {

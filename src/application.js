@@ -35,7 +35,7 @@ class Application
         this.config = expressway.config;
         this.env = expressway.env;
 
-        this.register('Event', this.event);
+        this.register('events', this.event);
     }
 
 
@@ -62,6 +62,47 @@ class Application
         }
         return this;
     }
+
+    /**
+     * Boot a provider into the application.
+     * @param provider Provider
+     * @returns {boolean}
+     */
+    load(provider)
+    {
+        if (! provider.isLoadable(this.env)) {
+            return false;
+        }
+
+        this.event.emit('provider.loading', provider);
+
+        // Load any dependencies first.
+        for (let i=0; i<provider.requires.length; i++)
+        {
+            var dependency = Provider.get(provider.requires[i]);
+
+            // This provider wasn't created.
+            if (! dependency) {
+                throw (`Provider ${provider.name} is missing a dependency: ${provider.requires[i]}`);
+            }
+            if (! provider.active) {
+                throw (`Provider ${provider.name} dependency needs to be loadable: ${provider.requires[i]}`);
+            }
+            this.load(provider);
+        }
+
+        // Call provider.register() with any services
+        this.call(provider,"register",[this].concat(provider.inject));
+
+        this.providers[provider.name] = provider;
+
+        provider.loaded = true;
+
+        this.event.emit('provider.loaded', provider);
+
+        return true;
+    }
+
 
 
     /**
@@ -139,8 +180,8 @@ class Application
     }
 
     /**
-     * Register a service, provider, or other object.
-     * @param name tsring
+     * Register a service or other object.
+     * @param name {string}
      * @param instance mixed
      * @returns {Application}
      */
@@ -150,10 +191,6 @@ class Application
             throw new Error (`"${name}" service has already been defined`);
         }
         this.services[name] = instance;
-        if (instance instanceof Provider) {
-            this.call(instance,"register",[this].concat(instance.$inject));
-            this.providers[name] = instance;
-        }
         return this;
     }
 
@@ -171,7 +208,7 @@ class Application
 
     /**
      * Given the array of string service/provider names,
-     * return the registered objects.
+     * resolve the registered objects.
      * @param array
      * @returns {Array}
      */

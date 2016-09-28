@@ -1,25 +1,23 @@
 "use strict";
 
 var winston = require('winston');
-var Provider = require('../provider');
+var expressway = require('expressway');
 var fs = require('fs');
 
 /**
  * Provides the winston logger.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class LoggerProvider extends Provider
+class LoggerProvider extends expressway.Provider
 {
     constructor()
     {
-        super('logger');
+        super();
 
         this.order = -1;
-    }
+        this.inject = ['events'];
 
-    register(app)
-    {
-        var appLevels = {
+        this.config = {
             levels: {
                 error:   0,
                 warn:    1,
@@ -33,58 +31,74 @@ class LoggerProvider extends Provider
                 error:  'red',
                 warn:   'yellow',
                 access: 'magenta',
-                info:   'blue',
+                info:   'blue'
             }
         };
 
-        winston.addColors(appLevels.colors);
+        this.fileMaxSize = 1000 * 1000 * 10; // 10MB
+        this.logFileName = "server.log";
+        this.colorize = true;
+    }
 
-        var fileMaxSize = 1000 * 1000 * 10; // 10MB
+    /**
+     * Register the provider with the application.
+     * @param app Application
+     * @param event EventEmitter
+     */
+    register(app,event)
+    {
+        winston.addColors(this.config.colors);
+
         var logPath = app.rootPath(app.conf('logs_path', 'logs')) + "/";
-        var logFile = logPath + "server.log";
+        var logFile = logPath + this.logFileName;
 
+        // Create the log path, if it doesn't exist.
         if (! fs.existsSync(logPath)) {
             fs.mkdirSync(logPath);
             fs.writeFileSync(logFile,"");
         }
-        /**
-         * Decide which level to report based on the environment.
-         * @returns {string}
-         */
-        function getConsoleLevel()
-        {
-            switch (app.env) {
-                case ENV_TEST: return 'warn';
-                case ENV_CLI: return 'info';
-                default: return app.conf('debug') == true ? 'debug' : 'info';
-            }
-        }
 
         var logger = new winston.Logger({
-            levels: appLevels.levels,
+            levels: this.config.levels,
             transports: [
                 new winston.transports.Console({
-                    level: getConsoleLevel(),
-                    colorize:true
+                    level: this.getConsoleLevel(),
+                    colorize: this.colorize
                 }),
+
+                // Will log events up to the access level into a file.
                 new winston.transports.File({
                     level: 'access',
                     filename: logFile,
-                    maxsize: fileMaxSize
+                    maxsize: this.fileMaxSize
                 })
             ]
         });
 
-        // Attach to the application.
-        app.register('Log', logger);
+        app.register('log', logger);
 
-        app.event.on('application.bootstrap', function(){
+        event.on('application.bootstrap', function(){
             logger.debug('[Application] booting...');
         });
 
-        app.event.on('provider.loaded', function(provider) {
+        event.on('provider.loaded', function(provider) {
             logger.debug('[Provider] Loaded: %s', provider.name);
         });
+    }
+
+    /**
+     * Decide which level to report to the console
+     * based on the environment.
+     * @param app Application
+     * @returns {string}
+     */
+    getConsoleLevel(app)
+    {
+        switch (app.env) {
+            case ENV_TEST: return 'warn';
+            case ENV_CLI: return 'info';
+            default: return app.conf('debug') == true ? 'debug' : 'info';
+        }
     }
 }
 

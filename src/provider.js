@@ -9,17 +9,16 @@ class Provider
 {
     /**
      * Create an instance of a provider.
-     * @param name string
      */
-    constructor(name)
+    constructor()
     {
-        this.name           = name;
+        this.name           = this.constructor.name;
         this.active         = true;
         this.loaded         = false;
-        this.dependencies   = [];
+        this.requires       = [];
         this.environments   = [];
         this.order          = 1;
-        this.$inject        = [];
+        this.inject         = [];
 
         Provider.classes[this.name] = this;
     }
@@ -34,73 +33,6 @@ class Provider
         return null;
     }
 
-    /**
-     * Get an array of objects specified as injectables.
-     * @return array
-     */
-    getInjectables(app)
-    {
-        var classes = this.$inject.map(function(className) {
-            return app.get(className);
-        });
-        return [app].concat(classes);
-    }
-
-    /**
-     * Choose which class instances or providers to inject.
-     * @param classes
-     * @returns {Provider}
-     */
-    inject(classes)
-    {
-        this.$inject = this.$inject.concat(classes);
-        return this;
-    }
-
-    /**
-     * Loads the dependencies for this provider.
-     * @param app Application
-     */
-    loadDependencies(app)
-    {
-        this.dependencies.forEach(function(providerName) {
-
-            var provider = Provider.get(providerName);
-
-            // This provider wasn't created.
-            if (! provider) {
-                throw (`Provider ${this.name} is missing a dependency: ${providerName}`);
-            }
-            if (! provider.active) {
-                throw (`Provider ${this.name} dependency needs to be loadable: ${providerName}`);
-            }
-            // Load the provider.
-            provider.load(app);
-
-        }.bind(this));
-    }
-
-    /**
-     * Specify the provider(s) that this provider depends on.
-     * @param providers array|string
-     * @returns Provider
-     */
-    requires(providers)
-    {
-        this.dependencies = this.dependencies.concat(providers);
-        return this;
-    }
-
-    /**
-     * Specify the environments(s) that this provider can run in.
-     * @param environments array|string
-     * @returns Provider
-     */
-    inside(environments)
-    {
-        this.environments = this.environments.concat(environments);
-        return this;
-    }
 
     /**
      * Check if this provider can be loaded.
@@ -111,27 +43,6 @@ class Provider
         var inEnvironment = !this.environments.length ? true : this.environments.indexOf(env) > -1;
 
         return this.active && !this.loaded && inEnvironment;
-    }
-
-    /**
-     * Boot this provider into the application.
-     * @returns {boolean}
-     */
-    load(app)
-    {
-        if (! this.isLoadable(app.env)) {
-            return false;
-        }
-
-        app.event.emit('provider.loading', this);
-
-        this.loadDependencies(app);
-        app.register(this.name, this);
-        this.loaded = true;
-
-        app.event.emit('provider.loaded', this);
-
-        return true;
     }
 
 
@@ -174,6 +85,10 @@ class Provider
     }
 }
 
+/**
+ * An index of all created providers.
+ * @type {{}}
+ */
 Provider.classes = {};
 
 module.exports = Provider;

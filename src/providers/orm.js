@@ -14,37 +14,42 @@ class ORMProvider extends expressway.Provider
     {
         super('orm');
 
-        this.requires([
-            'logger',
-            'driver'
-        ]);
+        this.requires = [
+            'LoggerProvider',
+            'DriverProvider'
+        ];
 
-        this.inject(['Log','Model']);
+        this.inject = ['events'];
 
         this.models = {};
     }
 
 
-    register(app,logger,Model)
+    /**
+     * Register the provider with the application.
+     * @param app Application
+     * @param event EventEmitter
+     */
+    register(app,event)
     {
-        this.modelPath = app.rootPath(app.conf('models_path',' models') + "/");
-
-        app.call(this,'loadModels', [app,'Log','Model']);
+        app.call(this,'loadModels', [app,'log','Model']);
 
         app.register('Models', this.models);
 
-        app.event.emit('models.loaded',app, this);
+        event.emit('models.loaded', app, this);
     }
 
     /**
      * Load all models.
-      * @param logger
+     * @param app Application
+     * @param log Winston
      * @param Model
      */
-    loadModels(app,logger,Model)
+    loadModels(app,log,Model)
     {
-        // Load all models in the models directory.
-        utils.getModules(this.modelPath, function(path)
+        var modelPath = app.rootPath(app.conf('models_path',' models') + "/");
+
+        utils.getModules(modelPath, function(path)
         {
             var Class = require(path);
             var instance = new Class(app);
@@ -56,7 +61,7 @@ class ORMProvider extends expressway.Provider
                 instance.boot();
                 this.models[instance.name] = instance;
 
-                logger.debug('[Model] Loaded: %s', instance.name);
+                log.debug('[Model] Loaded: %s', instance.name);
             }
 
         }.bind(this));

@@ -175,6 +175,17 @@ class ExpressProvider extends Provider
 
         app.event.on('application.server', server)
     }
+
+    /**
+     * Add to the middleware stack.
+     * @param func function
+     * @returns ExpressProvider
+     */
+    middleware(func)
+    {
+        this.middlewareStack.push(func);
+        return this;
+    }
 }
 
 module.exports = new ExpressProvider();

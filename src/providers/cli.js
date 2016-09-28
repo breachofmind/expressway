@@ -8,82 +8,6 @@ var program  = require('commander'),
     _string  = require('lodash/string'),
     expressway = require('expressway');
 
-function CLI(app)
-{
-    var cli = program.version(app._version);
-    var logger = app.get('Log');
-
-    this.app = app;
-
-    /**
-     * Register an action.
-     * @param name string
-     * @param func
-     */
-    this.action = function(name,func)
-    {
-        cli.command(name).action(func);
-    };
-
-    /**
-     * Set multiple actions.
-     * @param obj
-     */
-    this.actions = function(obj)
-    {
-        for (let name in obj) {
-            this.action(name, obj[name]);
-        }
-    };
-
-    /**
-     * Run and process the cli arguments.
-     * @returns void
-     */
-    this.run = function()
-    {
-        cli.parse(process.argv);
-    };
-
-    /**
-     * Create a file from a template.
-     * @param templateFile string path
-     * @param destFile string path
-     * @param data object
-     * @returns boolean
-     */
-    this.template = function(templateFile, destFile, data)
-    {
-        var destDir = path.dirname(destFile);
-        if (! fs.existsSync(destDir)) {
-            fs.mkdirSync(destDir);
-        }
-        if (fs.existsSync(destFile)) {
-            throw ("File exists: "+destFile);
-        }
-        var template = ejs.compile(fs.readFileSync(templateFile, 'utf8').toString());
-        var str = template(data || {});
-
-        fs.writeFileSync(destFile,str);
-
-        logger.info('[CLI] Created File: %s', destFile);
-    };
-
-    /**
-     * Execute a cli command and print the response to the console.
-     * @param command string
-     * @param args array
-     * @returns void
-     */
-    this.exec = function(command,args)
-    {
-        var process = cp.spawn(command,args);
-        process.stdout.on('data', function(data) {
-            console.log(data.toString());
-        });
-    }
-}
-
 /**
  * Provides a Command Line interface module.
  * @author Mike Adamczyk <mike@bom.us>
@@ -92,27 +16,137 @@ class CLIProvider extends expressway.Provider
 {
     constructor()
     {
-        super('cli');
+        super();
 
-        this.requires('logger');
+        this.requires = [
+            'LoggerProvider'
+        ];
 
-        this.inside(ENV_CLI);
+        this.environments = [ENV_CLI];
     }
 
+    /**
+     * Register the provider with the application.
+     * @param app Application
+     */
     register(app)
     {
+        var CLI = app.call(this,'getCLIClass',[app,'log']);
 
         var cli = new CLI(app);
 
-        cli.action('new', function(env,opts){
+        this.setDefaultActions(app,cli);
+
+        app.register('CLI', cli);
+    }
+
+    /**
+     * Give the CLI class some default actions.
+     * @param app Application
+     * @param cli CLI
+     */
+    setDefaultActions(app,cli)
+    {
+        // Creates a new model, provider, or controller.
+        cli.action('new', function(env,opts)
+        {
             var type = env.trim().toLowerCase();
             var templateFile = __dirname + `/../templates/${type}.template`;
             var destFile = app.path(type+"s_path", type+"s") + opts +".js";
-            app.cli.template(templateFile, destFile , {name:opts, _:_string});
+
+            cli.template(templateFile, destFile , {name:opts, _:_string});
+
             process.exit(1);
         });
+    }
 
-        app.register('CLI', cli);
+    /**
+     * Return the CLI class.
+     * @param app Application
+     * @param log Winston
+     * @returns {CLI}
+     */
+    getCLIClass(app,log)
+    {
+        return class CLI
+        {
+            constructor()
+            {
+                this.app = app;
+                this.cli = program.version(app._version);
+            }
+
+            /**
+             * Register an action.
+             * @param name string
+             * @param func
+             * @returns CLI
+             */
+            action(name,func)
+            {
+                this.cli.command(name).action(func);
+                return this;
+            }
+
+            /**
+             * Set multiple actions.
+             * @param object object
+             * @returns CLI
+             */
+            actions(object)
+            {
+                Object.keys(object).forEach(function(key) {
+                    this.action(key, object[key]);
+                }.bind(this));
+                return this;
+            }
+
+            /**
+             * Run and process the cli arguments.
+             * @returns void
+             */
+            run()
+            {
+                this.cli.parse(process.argv);
+            };
+
+            /**
+             * Create a file from a template.
+             * @param templateFile string path
+             * @param destFile string path
+             * @param data object
+             * @returns boolean
+             */
+            template(templateFile, destFile, data)
+            {
+                var destDir = path.dirname(destFile);
+                if (! fs.existsSync(destDir)) {
+                    fs.mkdirSync(destDir);
+                }
+                if (fs.existsSync(destFile)) {
+                    throw new Error("File exists: "+destFile);
+                }
+                var template = ejs.compile(fs.readFileSync(templateFile, 'utf8').toString());
+
+                fs.writeFileSync(destFile, template(data || {}));
+
+                log.info('[CLI] Created File: %s', destFile);
+            };
+
+            /**
+             * Execute a cli command and print the response to the console.
+             * @param command string
+             * @param args array
+             * @returns void
+             */
+            exec(command,args)
+            {
+                var process = cp.spawn(command,args);
+                process.stdout.on('data', function(data) {
+                    console.log(data.toString());
+                });
+            }
+        }
     }
 }
 
