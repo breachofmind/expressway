@@ -16,7 +16,7 @@ class ControllerProvider extends expressway.Provider
         this.requires = [
             'LoggerProvider',
             'URLProvider',
-            'ORMProvider'
+            'ModelProvider'
         ];
 
         this.inject = ['events'];
@@ -39,9 +39,10 @@ class ControllerProvider extends expressway.Provider
         // Expose the controller class.
         expressway.Controller = Controller;
 
-        app.call(this,'loadControllers', [app,'log']);
-
-        event.emit('controllers.loaded', app);
+        event.on('application.bootstrap', function(app) {
+            app.call(this,'loadControllers', [app,'log']);
+            event.emit('controllers.loaded', app);
+        }.bind(this))
     }
 
     /**
