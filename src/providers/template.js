@@ -12,10 +12,6 @@ var _ = require('lodash');
  */
 class TemplateProvider extends expressway.Provider
 {
-    constructor()
-    {
-        super('template');
-    }
 
     register(app)
     {

@@ -2,6 +2,8 @@
 
 var Sequelize = require('sequelize');
 var expressway = require('expressway');
+var session = require('express-session');
+var MySQLStore = require('express-mysql-session')(session);
 
 class MysqlDriver
 {
@@ -26,6 +28,16 @@ class MysqlDriver
         app.register('db', db);
 
         return this.Model = app.call(this,'getModelClass', [app,'db','BaseModel']);
+    }
+
+    /**
+     * Get the session storage solution.
+     * @param app Application
+     * @returns MySQLStore
+     */
+    getSessionStore(app)
+    {
+        return new MySQLStore({}, app.get('db').connection);
     }
 
     /**

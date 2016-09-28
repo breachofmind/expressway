@@ -74,12 +74,10 @@ class ModelProvider extends expressway.Provider
             if (! (instance instanceof Model)) {
                 throw (path + " module does not return Model instance");
             }
-            if (! this.has(instance.name)) {
-                instance.boot();
-                this.models[instance.name] = instance;
 
-                log.debug('[Model] Loaded: %s', instance.name);
-            }
+            instance.boot(app);
+
+            log.debug('[Model] Loaded: %s', instance.name);
 
         }.bind(this));
     }
@@ -116,6 +114,10 @@ class ModelProvider extends expressway.Provider
                 this.sort = 1;
 
                 this.methods = {};
+
+                if (ModelProvider.hasModel(this.name)) {
+                    throw new Error(`"${this.name}" controller exists already`);
+                }
 
                 ModelProvider.models[this.name] = this;
             }
@@ -156,9 +158,10 @@ class ModelProvider extends expressway.Provider
 
             /**
              * Boot the model.
+             * @param app Application
              * @returns {boolean}
              */
-            boot()
+            boot(app)
             {
                 return this._booted = true;
             }
@@ -180,7 +183,7 @@ class ModelProvider extends expressway.Provider
      * @param modelName string
      * @returns {boolean}
      */
-    has(modelName)
+    hasModel(modelName)
     {
         return this.models.hasOwnProperty(modelName);
     }

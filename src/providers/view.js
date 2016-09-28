@@ -11,16 +11,16 @@ class ViewProvider extends expressway.Provider
 {
     constructor()
     {
-        super('view');
+        super();
 
-        this.requires('template');
+        this.requires = ['TemplateProvider'];
 
-        this.inject('Template');
+        this.inject = ['Template'];
     }
+
 
     register(app, Template)
     {
-
         /**
          * The view class, which combines data with the template.
          * @constructor

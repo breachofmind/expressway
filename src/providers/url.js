@@ -8,11 +8,6 @@ var expressway = require('expressway');
  */
 class URLProvider extends expressway.Provider
 {
-    constructor()
-    {
-        super('url');
-    }
-
     register(app)
     {
         var config = app.config;

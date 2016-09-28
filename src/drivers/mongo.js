@@ -2,6 +2,9 @@
 
 var expressway   = require('expressway');
 var mongoose     = require('mongoose');
+var session      = require('express-session');
+var MongoStore   = require('connect-mongo')(session);
+
 mongoose.Promise = require('bluebird');
 
 class MongoDriver
@@ -42,6 +45,18 @@ class MongoDriver
         app.register('db', mongoose);
 
         return this.Model = app.call(this,'getModelClass', [app,'db','BaseModel']);
+    }
+
+    /**
+     * Return the session storage solution.
+     * @param app Application
+     * @returns {*}
+     */
+    getSessionStore(app)
+    {
+        return new MongoStore({
+            mongooseConnection: app.get('db').connection
+        })
     }
 
     /**

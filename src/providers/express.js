@@ -5,30 +5,29 @@ var core         = require('../core'),
     locale       = require('locale'),
     bodyParser   = require('body-parser'),
     session      = require('express-session'),
-    csrf         = require('csurf'),
     flash        = require('connect-flash'),
     cookieParser = require('cookie-parser'),
-    Provider     = require('../provider'),
-    MongoStore   = require('connect-mongo')(session);
+    expressway   = require('expressway');
 
 /**
  * Provides the express server and core middleware.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ExpressProvider extends Provider
+class ExpressProvider extends expressway.Provider
 {
     constructor()
     {
-        super('express');
+        super();
 
         this.order = 10;
-        this.requires([
-            'logger',
-            'view',
-            'url'
-        ]);
 
-        this.inject('Log');
+        this.requires = [
+            'LoggerProvider',
+            'ViewProvider',
+            'UrlProvider'
+        ];
+
+        this.inject = ['log','events'];
 
         this.middlewareStack = [
             /**
@@ -100,14 +99,12 @@ class ExpressProvider extends Provider
              */
             function sessionMiddleware (app)
             {
-                var conn = app.get('db').connection;
+                var driver = app.get('ModelProvider').driver;
                 return session ({
                     secret: app.conf('appKey', 'keyboard cat'),
                     saveUninitialized: false,
                     resave: false,
-                    store: new MongoStore({
-                        mongooseConnection: conn
-                    })
+                    store: driver.getSessionStore()
                 });
             },
 
@@ -122,7 +119,13 @@ class ExpressProvider extends Provider
         ]
     }
 
-    register(app,logger)
+    /**
+     * Register the provider with the application.
+     * @param app Application
+     * @param log Winston
+     * @param event EventEmitter
+     */
+    register(app,log,event)
     {
         var config = app.config;
         var self = this;
@@ -130,7 +133,7 @@ class ExpressProvider extends Provider
         app.express = express();
         app._middlewares = [];
 
-        app.register('Express', app.express);
+        app.register('express', app.express);
 
         /**
          * Called before the server starts.
@@ -144,7 +147,7 @@ class ExpressProvider extends Provider
             // Install the default middleware.
             self.middlewareStack.forEach(function(func)
             {
-                logger.debug('[Express] Adding Application Middleware: %s', func.name);
+                log.debug('[Express] Adding Application Middleware: %s', func.name);
                 app._middlewares.push(func.name);
                 var use = func(app);
                 if (use) app.express.use(use);
@@ -160,20 +163,20 @@ class ExpressProvider extends Provider
         {
             app.express.listen(config.port, function()
             {
-                logger.info('[Express] Using root path: %s', app.rootPath());
-                logger.info(`[Express] Starting %s server v.%s on %s (%s)...`,
+                log.info('[Express] Using root path: %s', app.rootPath());
+                log.info(`[Express] Starting %s server v.%s on %s (%s)...`,
                     app.env,
                     app._version,
                     app.conf('url'),
                     app.url());
 
-                app.event.emit('express.listening', app.express);
+                event.emit('express.listening', app.express);
             });
         }
 
-        app.event.on('application.bootstrap', bootstrap);
+        event.on('application.bootstrap', bootstrap);
 
-        app.event.on('application.server', server)
+        event.on('application.server', server)
     }
 
     /**
