@@ -39,18 +39,18 @@ class ControllerProvider extends expressway.Provider
         // Expose the controller class.
         expressway.Controller = Controller;
 
-        event.on('application.bootstrap', function(app) {
-            app.call(this,'loadControllers', [app,'log']);
-            event.emit('controllers.loaded', app);
-        }.bind(this))
+        event.on('providers.registered', function(){
+            app.call(this,'loadControllers', [app,'log','events']);
+        }.bind(this));
     }
 
     /**
      * Load all controllers in the app directory.
      * @param app Application
      * @param log Winston
+     * @param event EventEmitter
      */
-    loadControllers(app,log)
+    loadControllers(app,log,event)
     {
         var controllerPath = app.rootPath(app.conf('controllers_path', 'controllers') + "/");
 
@@ -64,12 +64,11 @@ class ControllerProvider extends expressway.Provider
             }
             instance.boot(app);
 
-            // Run the methods method using the injector.
-            app.call(instance,'methods',[app].concat(instance.inject));
-
             log.debug('[Controller] Loaded: %s', instance.name);
 
         }.bind(this));
+
+        event.emit('controllers.loaded',app);
     }
 
     /**

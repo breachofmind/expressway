@@ -88,9 +88,9 @@ class GulpProvider extends expressway.Provider
 {
     constructor()
     {
-        super('gulp');
+        super();
 
-        this.inside([ENV_CLI]);
+        this.environments = [ENV_CLI];
     }
 
     register(app)

@@ -48,11 +48,13 @@ class Application
     {
         if (! providers) providers = this.config.providers;
 
-        providers = Provider.check(providers);
+        var checkedProviders = Provider.check(providers);
 
         if (! this._booted)
         {
-            utils.callOnEach(providers, 'load', this);
+            for(let i=0; i<checkedProviders.length; i++) {
+                this.load(checkedProviders[i]);
+            }
 
             this.event.emit('providers.registered', this);
 
@@ -85,10 +87,10 @@ class Application
             if (! dependency) {
                 throw (`Provider ${provider.name} is missing a dependency: ${provider.requires[i]}`);
             }
-            if (! provider.active) {
-                throw (`Provider ${provider.name} dependency needs to be loadable: ${provider.requires[i]}`);
+            if (! dependency.active) {
+                throw (`Provider ${provider.name} dependency needs to be loadable: ${dependency.name}`);
             }
-            this.load(provider);
+            this.load(dependency);
         }
 
         // Call provider.register() with any services
@@ -203,6 +205,9 @@ class Application
      */
     call(context,method,services)
     {
+        if (! context) {
+            throw new Error("Context missing for method "+method);
+        }
         return context[method].apply(context, this.getServices(services));
     }
 

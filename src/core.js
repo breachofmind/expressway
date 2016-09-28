@@ -10,7 +10,7 @@ var utils = expressway.utils;
  */
 module.exports = function Core (app)
 {
-    var logger = app.get('Log');
+    var logger = app.get('log');
     var View = app.get('View');
 
     /**

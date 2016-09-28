@@ -74,7 +74,7 @@ class Provider
             if (provider instanceof Provider) {
                 return out.push(provider);
             }
-            throw ("Provider given is not an instance of a Provider: "+provider);
+            throw new Error ("Provider given is not an instance of a Provider: "+provider);
         });
 
         out.sort(function ascending(a,b) {

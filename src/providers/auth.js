@@ -17,13 +17,13 @@ class AuthProvider extends expressway.Provider
         super();
 
         this.requires = [
-            'ORMProvider',
+            'ModelProvider',
             "LoggerProvider",
             "ExpressProvider"
         ];
 
         this.inject = [
-            'ORM',
+            'ModelProvider',
             'ExpressProvider',
             'events'
         ];
@@ -31,14 +31,14 @@ class AuthProvider extends expressway.Provider
 
     /**
      * Register with express.
-     * @param app
-     * @param ORM
+     * @param app Application
+     * @param ModelProvider
      * @param ExpressProvider
      * @param event EventEmitter
      */
-    register(app, ORM, ExpressProvider,event)
+    register(app, ModelProvider, ExpressProvider,event)
     {
-        if (! ORM.has('User')) {
+        if (! ModelProvider.hasModel('User')) {
             throw ('User model is required to use basic Auth functionality.');
         }
 

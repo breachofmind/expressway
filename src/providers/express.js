@@ -24,7 +24,7 @@ class ExpressProvider extends expressway.Provider
         this.requires = [
             'LoggerProvider',
             'ViewProvider',
-            'UrlProvider'
+            'URLProvider'
         ];
 
         this.inject = ['log','events'];
@@ -77,7 +77,7 @@ class ExpressProvider extends expressway.Provider
             function staticContentMiddleware (app)
             {
                 if (app.conf('static_path')) {
-                    app.get('Log').debug('[Express] Using static path: %s', app.path('static_path'));
+                    app.get('log').debug('[Express] Using static path: %s', app.path('static_path'));
                     return express.static(app.path('static_path'));
                 }
             },
@@ -104,7 +104,7 @@ class ExpressProvider extends expressway.Provider
                     secret: app.conf('appKey', 'keyboard cat'),
                     saveUninitialized: false,
                     resave: false,
-                    store: driver.getSessionStore()
+                    store: driver.getSessionStore(app)
                 });
             },
 
@@ -134,6 +134,7 @@ class ExpressProvider extends expressway.Provider
         app._middlewares = [];
 
         app.register('express', app.express);
+        app.register('ExpressProvider', this);
 
         /**
          * Called before the server starts.

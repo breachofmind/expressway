@@ -86,6 +86,10 @@ class MongoDriver
                 return this._model.find(args).populate(this.populate).sort(this.range);
             }
 
+            findOne(args) {
+                return this._model.findOne(args);
+            }
+
             findById(id) {
                 return this._model.findById(id).populate(this.populate);
             }

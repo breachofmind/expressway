@@ -32,7 +32,7 @@ module.exports = function(ControllerDefaultsProvider)
              */
             function apiAuthenticationMiddleware(request,response,next)
             {
-                if (! request.user && ControllerDefaultsProvider.REST.requireUser) {
+                if (! request.user && ControllerDefaultsProvider.RESTController.requireUser) {
                     return response.api({error:`You are not authorized to perform this operation`}, 401);
                 }
                 return next();
@@ -86,7 +86,7 @@ module.exports = function(ControllerDefaultsProvider)
             });
 
             // Assign any user-defined middlewares.
-            this.middleware(ControllerDefaultsProvider.REST.middleware);
+            this.middleware(ControllerDefaultsProvider.RESTController.middleware);
 
             return {
 

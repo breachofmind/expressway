@@ -62,7 +62,7 @@ class LoggerProvider extends expressway.Provider
             levels: this.config.levels,
             transports: [
                 new winston.transports.Console({
-                    level: this.getConsoleLevel(),
+                    level: this.getConsoleLevel(app),
                     colorize: this.colorize
                 }),
 

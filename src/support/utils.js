@@ -144,6 +144,7 @@ module.exports = {
      */
     callOnEach: function(array, method, args)
     {
+        console.log(method);
         array.forEach(function(object) {
             object[method].call(object,args);
         });

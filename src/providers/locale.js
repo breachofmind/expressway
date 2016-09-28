@@ -13,18 +13,18 @@ class LocaleProvider extends expressway.Provider
 {
     constructor()
     {
-        super('locale');
+        super();
 
-        this.requires([
-            'logger',
-            'view',
-            'express'
-        ]);
+        this.requires = [
+            'LoggerProvider',
+            'ViewProvider',
+            'ExpressProvider'
+        ];
 
-        this.inject('Log');
+        this.inject = ['log','ExpressProvider'];
     }
 
-    register(app,logger)
+    register(app,logger,ExpressProvider)
     {
         /**
          * The main key store.
@@ -196,18 +196,20 @@ class LocaleProvider extends expressway.Provider
 
         app.locale = store;
 
+        app.register('Localization', store);
+
         // When each view is created, add the template function.
         app.event.on('view.created', function(view,request) {
             view.data.lang = lang(request);
         });
 
         // Add the helper function to the request object.
-        app.get('express').middlewareStack.push(function localeMiddleware(app) {
+        ExpressProvider.middleware(function localeMiddleware(app) {
             return function(request,response,next) {
                 request.lang = lang(request);
                 next();
             }
-        })
+        });
     }
 }
 

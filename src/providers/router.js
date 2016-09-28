@@ -36,7 +36,7 @@ class RouterProvider extends expressway.Provider
     {
         var routes = require(app.rootPath('config/routes'));
 
-        var Router = app.call(this,'getRouterClass',[app,'log','express']);
+        var Router = app.call(this,'getRouterClass',[app,'log','express','ControllerProvider']);
         var router = new Router(app);
 
         app.register('Router', router);
@@ -57,7 +57,7 @@ class RouterProvider extends expressway.Provider
      * @param express Express
      * @returns {Router}
      */
-    getRouterClass(app,log,express)
+    getRouterClass(app,log,express,ControllerProvider)
     {
         class Route
         {
@@ -96,7 +96,7 @@ class RouterProvider extends expressway.Provider
         {
             constructor()
             {
-                var routers = this;
+                var router = this;
 
                 this.routes = [];
 
@@ -108,7 +108,7 @@ class RouterProvider extends expressway.Provider
                         // object is a hash: { url: [string, function] }
                         return function(object) {
                             Object.keys(object).forEach(function(url) {
-                                var stack = utils.getRouteFunctions(object[url], expressway.Controller);
+                                var stack = utils.getRouteFunctions(object[url], ControllerProvider);
                                 new Route(verb,url,stack).addTo(router);
                             });
                             return router;
