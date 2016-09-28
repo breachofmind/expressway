@@ -1,295 +1,302 @@
 "use strict";
 
 var _ = require('lodash');
+var expressway = require('expressway');
+var utils = expressway.utils;
 
-/**
- * Maintained controller that does basic CRUD and REST stuff.
- * @param app
- * @returns {object}
- */
-module.exports = function(app)
+module.exports = function(ControllerDefaultsProvider)
 {
-    var Model = app.get('orm');
-    var utils = app.utils;
-
-    this.middleware('update', apiAuthMiddleware);
-    this.middleware('create', apiAuthMiddleware);
-    this.middleware('trash', apiAuthMiddleware);
-
-    /**
-     * Assign global middleware.
-     */
-    this.middleware(modelMiddleware);
-
-    /**
-     * Resolve the id of the model with the object.
-     */
-    this.bind('id', function(value,request,response,next)
+    return class RESTController extends expressway.Controller
     {
-        if (request.Model && value) {
-            request.Object = request.Model.findOne({_id: value});
+        constructor(app)
+        {
+            super();
+            this.inject = ['ModelProvider','Models','events'];
         }
-    });
-
-    this.query('p', function(value,request,response,next)
-    {
-        request.query.filter = request.blueprint.paging(utils.fromBase64(value));
-    });
-
-    // Apply any user-defined middleware.
-    this.middleware(app.get('controllerDefaults').REST.middleware);
-
-    /**
-     * Special middleware to check if this is a model being requested.
-     * @param request
-     * @param response
-     * @param next
-     */
-    function modelMiddleware(request,response,next)
-    {
-        if (! request.params.hasOwnProperty('model')) {
-            return next();
-        }
-        var value = request.params.model;
-        var blueprint = Model.bySlug(value);
-
-        if (! blueprint) {
-            return response.api({error:`Model "${value}" doesn't exist.`}, 404);
-        }
-
-        if (blueprint.expose == false && ! request.user) {
-            return response.api({error:`You must be logged in to view "${value}" models`}, 401);
-        }
-
-
-        request.Model = blueprint;
-        request.blueprint = blueprint;
-        return next();
-    }
-
-    /**
-     * Special middleware for certain routes on this controller.
-     * @param request
-     * @param response
-     * @param next
-     */
-    function apiAuthMiddleware (request,response,next)
-    {
-        if (! request.user && app.get('controllerDefaults').REST.requireUser) {
-            return response.api({error:`You are not authorized to perform this operation`}, 401);
-        }
-        next();
-    }
-
-
-
-    return {
 
         /**
-         * Say Hello.
-         *
-         * GET /api/v1/
+         * Returns the methods for this controller.
+         * @param app Application
+         * @param ModelProvider ModelProvider
+         * @param Models object
+         * @param event EventEmitter
+         * @returns {{}}
          */
-        index: function(request,response)
+        methods(app,ModelProvider,Models,event)
         {
-            var json = {
-                message: "Expressway API v1",
-                currentUser: request.user,
-                index: {}
-            };
-            Model.each(function(blueprint) {
-                if ((blueprint.expose == false && request.user) || blueprint.expose == true) {
-                    json.index[blueprint.name] = app.url('api/v1/'+blueprint.slug);
+            /**
+             * Special middleware for certain routes on this controller.
+             * @param request
+             * @param response
+             * @param next
+             */
+            function apiAuthenticationMiddleware(request,response,next)
+            {
+                if (! request.user && ControllerDefaultsProvider.REST.requireUser) {
+                    return response.api({error:`You are not authorized to perform this operation`}, 401);
                 }
+                return next();
+            }
+
+            this.middleware('update', apiAuthenticationMiddleware);
+            this.middleware('create', apiAuthenticationMiddleware);
+            this.middleware('trash', apiAuthenticationMiddleware);
+
+            /**
+             * If a model parameter is given,
+             * check if it is a model and attach the object to the request.
+             */
+            this.bind('model', function(value,request,response,next)
+            {
+                var Model = ModelProvider.bySlug(value);
+
+                if (! Model) {
+                    return response.api({error:`Model "${value}" doesn't exist.`}, 404);
+                }
+
+                if (Model.expose == false && ! request.user) {
+                    return response.api({error:`You must be logged in to view "${Model.name}" models`}, 401);
+                }
+
+                request.Model = Model;
+
+                return next();
             });
 
-            app.event.emit('rest.index', json.index);
-
-            return json;
-        },
-
-        /**
-         * Fetches an object by ID.
-         *
-         * GET /api/v1/{model}/{id}
-         */
-        fetchOne: function(request,response)
-        {
-            return request.Object.populate(request.blueprint.populate).exec().then(function(data) {
-
-                var meta = {
-                    labels: request.blueprint.labels,
-                    model: request.blueprint.name
-                };
-
-                return response.api(data, (! data ? 404 : 200), meta);
-
-            }, function(err) {
-
-                return response.apiError(err);
-            })
-        },
-
-        /**
-         * Fetches an array of objects, with pagination.
-         *
-         * GET /api/v1/{model}
-         */
-        fetchAll: function(request,response)
-        {
-            var paging = {
-                count:      0,
-                total:      0,
-                limit:      app.config.limit || 10000,
-                filter:     request.getQuery('filter', null),
-                sort:       request.getQuery('sort', request.blueprint.range),
-                next:       null
-            };
             /**
-             * Sets up the paging object with the next URL string.
-             * @param data array
-             * @returns object
+             * Bind to the url parameter "id"
+             * Attach a promise to the request for later use.
              */
-            paging.setNext = function(data)
+            this.bind('id', function(value,request,response,next)
             {
-                if (data.length) {
-                    var lastValue = data[data.length-1][request.blueprint.key];
+                if (request.Model && value) {
+                    request.Object = request.Model.findOne({_id: value});
                 }
-                this.count = data.length;
-                this.next = this.total > this.limit
-                    ? utils.toBase64(lastValue.toString())
-                    : null;
+                return next();
+            });
 
-                return this;
-            };
+            /**
+             * Bind to the query value, ?p
+             * This is used for paging.
+             */
+            this.query('p', function(value,request,response,next)
+            {
+                request.query.filter = request.Model.paging( utils.fromBase64(value) );
+                return next();
+            });
 
-            // Find the total record count first, then find the range.
-            return request.Model.count(paging.filter).exec().then(function(count) {
+            // Assign any user-defined middlewares.
+            this.middleware(ControllerDefaultsProvider.REST.middleware);
 
-                paging.total = count;
+            return {
 
-                var promise = request.Model
-                    .find       (paging.filter)
-                    .sort       (paging.sort)
-                    .limit      (paging.limit)
-                    .populate   (request.blueprint.populate)
-                    .exec();
-
-                // After finding the count, find the records.
-                return promise.then(function(data) {
-
-                    paging.setNext(data);
-
-                    return response.api(data,200, {
-                        pagination: paging,
-                        labels: request.blueprint.labels,
-                        model: request.blueprint.name
+                /**
+                 * Say Hello.
+                 * Provide an index of API objects.
+                 *
+                 * GET /api/v1/
+                 */
+                index: function(request,response)
+                {
+                    var json = {
+                        message: "Expressway API v1",
+                        currentUser: request.user,
+                        index: {}
+                    };
+                    ModelProvider.each(function(Model) {
+                        if ((Model.expose == false && request.user) || Model.expose == true) {
+                            json.index[Model.name] = app.url('api/v1/'+Model.slug);
+                        }
                     });
 
-                }, function(err) {
+                    event.emit('rest.index', json.index);
 
-                    // Model.find() error
-                    return response.apiError(err);
-                });
+                    return json;
+                },
 
-            }, function(err) {
+                /**
+                 * Fetches an object by ID.
+                 *
+                 * GET /api/v1/{model}/{id}
+                 */
+                fetchOne: function(request,response)
+                {
+                    return request.Object.exec().then(function(data) {
 
-                // Model.count() error
-                return response.apiError(err);
-            });
-        },
+                        var meta = {
+                            labels: request.Model.labels,
+                            model: request.Model.name
+                        };
 
-        /**
-         * Initiate a new search.
-         *
-         * POST /api/{model}/search
-         */
-        search: function(request,response)
-        {
-            var search = request.body;
+                        return response.api(data, (! data ? 404 : 200), meta);
 
-            var promise = request.Model
-                .find(search.where)
-                .sort(search.sort)
-                .limit(search.limit || app.config.limit)
-                .populate(search.populate || request.blueprint.populate)
-                .exec();
+                    }, function(err) {
 
-            return promise.then(function(data)
-            {
-                return response.api(data,200, {search:search});
+                        return response.apiError(err);
+                    })
+                },
 
-            }, function(err) {
 
-                return response.apiError(err);
-            });
-        },
+                /**
+                 * Fetches an array of objects, with pagination.
+                 *
+                 * GET /api/v1/{model}
+                 */
+                fetchAll: function(request,response)
+                {
+                    var paging = {
+                        count:      0,
+                        total:      0,
+                        limit:      app.config.limit || 10000,
+                        filter:     request.getQuery('filter', null),
+                        sort:       request.getQuery('sort', request.Model.range),
+                        next:       null
+                    };
+                    /**
+                     * Sets up the paging object with the next URL string.
+                     * @param data array
+                     * @returns object
+                     */
+                    paging.setNext = function(data)
+                    {
+                        if (data.length) {
+                            var lastValue = data[data.length-1][request.Model.key];
+                        }
+                        this.count = data.length;
+                        this.next = this.total > this.limit
+                            ? utils.toBase64(lastValue.toString())
+                            : null;
 
-        /**
-         * Update a model.
-         *
-         * PUT /api/{model}/{id}
-         */
-        update: function(request,response)
-        {
-            if (request.body._id) delete request.body._id; // Mongoose has problems with this.
+                        return this;
+                    };
 
-            request.body.modified_at = Date.now();
+                    // Find the total record count first, then find the range.
+                    return request.Model.count(paging.filter).exec().then(function(count) {
 
-            return request.Model
-                .findByIdAndUpdate(request.params.id, request.body, {new:true})
-                .populate(request.blueprint.populate)
-                .exec()
-                .then(function(data) {
+                        paging.total = count;
 
-                    return response.api(data,200);
+                        var promise = request.Model
+                            .find       (paging.filter)
+                            .sort       (paging.sort)
+                            .limit      (paging.limit)
+                            .populate   (request.Model.populate)
+                            .exec();
 
-                }, function(err){
+                        // After finding the count, find the records.
+                        return promise.then(function(data) {
 
-                    return response.apiError(err);
-                });
-        },
+                            paging.setNext(data);
 
-        /**
-         * Create a new model.
-         *
-         * POST /api/{model}
-         */
-        create: function(request,response)
-        {
-            var model = new request.Model (request.body);
+                            return response.api(data,200, {
+                                pagination: paging,
+                                labels: request.Model.labels,
+                                model: request.Model.name
+                            });
 
-            return model.save().then(function(data)
-            {
-                return response.api(data,200);
+                        }, function(err) {
 
-            }, function(err) {
+                            // Model.find() error
+                            return response.apiError(err);
+                        });
 
-                return response.apiError(err);
+                    }, function(err) {
 
-            });
-        },
+                        // Model.count() error
+                        return response.apiError(err);
+                    });
+                },
 
-        /**
-         * Deletes an object by ID.
-         *
-         * DELETE /api/{model}/{id}
-         */
-        trash: function(request,response)
-        {
-            return request.Model.remove({_id:request.params.id}).then(function(results) {
-                var data = {
-                    results: results,
-                    objectId : request.params.id
-                };
-                return response.api(data,200);
+                /**
+                 * Initiate a new search.
+                 *
+                 * POST /api/{model}/search
+                 */
+                search: function(request,response)
+                {
+                    var search = request.body;
 
-            }, function(err) {
+                    var promise = request.Model
+                        .find(search.where)
+                        .sort(search.sort)
+                        .limit(search.limit || app.config.limit)
+                        .populate(search.populate || request.Model.populate)
+                        .exec();
 
-                return response.apiError(err);
+                    return promise.then(function(data)
+                    {
+                        return response.api(data,200, {search:search});
 
-            });
+                    }, function(err) {
+
+                        return response.apiError(err);
+                    });
+                },
+
+                /**
+                 * Update a model.
+                 *
+                 * PUT /api/{model}/{id}
+                 */
+                update: function(request,response)
+                {
+                    if (request.body._id) delete request.body._id; // Mongoose has problems with this.
+
+                    request.body.modified_at = Date.now();
+
+                    return request.Model
+                        .findByIdAndUpdate(request.params.id, request.body, {new:true})
+                        .populate(request.Model.populate)
+                        .exec()
+                        .then(function(data) {
+
+                            return response.api(data,200);
+
+                        }, function(err){
+
+                            return response.apiError(err);
+                        });
+                },
+
+                /**
+                 * Create a new model.
+                 *
+                 * POST /api/{model}
+                 */
+                create: function(request,response)
+                {
+                    return request.Model.create(request.body).then(function(data)
+                    {
+                        return response.api(data,200);
+
+                    }, function(err) {
+
+                        return response.apiError(err);
+
+                    });
+                },
+
+                /**
+                 * Deletes an object by ID.
+                 *
+                 * DELETE /api/{model}/{id}
+                 */
+                trash: function(request,response)
+                {
+                    return request.Model.remove({_id:request.params.id}).then(function(results) {
+                        var data = {
+                            results: results,
+                            objectId : request.params.id
+                        };
+                        return response.api(data,200);
+
+                    }, function(err) {
+
+                        return response.apiError(err);
+
+                    });
+                }
+
+            }
         }
-
     }
 };

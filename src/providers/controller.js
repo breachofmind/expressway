@@ -61,6 +61,8 @@ class ControllerProvider extends expressway.Provider
             if (! (instance instanceof expressway.Controller)) {
                 throw (path + " module does not return Controller instance");
             }
+            instance.boot(app);
+
             // Run the methods method using the injector.
             app.call(instance,'methods',[app].concat(instance.inject));
 
@@ -121,6 +123,15 @@ class ControllerProvider extends expressway.Provider
                 }
 
                 ControllerProvider.controllers[this.name] = this;
+            }
+
+            /**
+             * Boot the controller into the application.
+             * @param app Application
+             */
+            boot(app)
+            {
+                return this._methods = app.call(this,'methods',[app].concat(this.inject));
             }
 
             /**
