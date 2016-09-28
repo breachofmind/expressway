@@ -135,7 +135,7 @@ class RouterProvider extends expressway.Provider
              */
             list()
             {
-                return routes.map(function(route) {
+                return this.routes.map(function(route) {
                     return `#${route.index}\t${route.verb.toUpperCase()}\t${route.url}`;
                 });
             };

@@ -62,7 +62,6 @@ class ControllerProvider extends expressway.Provider
             if (! (instance instanceof expressway.Controller)) {
                 throw (path + " module does not return Controller instance");
             }
-            instance.boot(app);
 
             log.debug('[Controller] Loaded: %s', instance.name);
 
@@ -109,14 +108,18 @@ class ControllerProvider extends expressway.Provider
          */
         return class Controller
         {
-            constructor()
+            constructor(app, inject)
             {
                 this.name = this.constructor.name;
-                this.Models = Models;
-                this.inject = [];
+                this.app  = app;
 
-                this._methods = {};
                 this._middleware = [];
+
+                // Injects services as property names of the controller, if given.
+                if (!inject) inject = [];
+                inject.forEach(function(serviceName) {
+                    this[serviceName] = app.get(serviceName);
+                }.bind(this));
 
                 if (ControllerProvider.hasController(this.name)) {
                     throw new Error(`"${this.name}" controller exists already`);
@@ -125,23 +128,6 @@ class ControllerProvider extends expressway.Provider
                 ControllerProvider.controllers[this.name] = this;
             }
 
-            /**
-             * Boot the controller into the application.
-             * @param app Application
-             */
-            boot(app)
-            {
-                return this._methods = app.call(this,'methods',[app].concat(this.inject));
-            }
-
-            /**
-             * Stub for controller methods.
-             * @param app Application
-             */
-            methods(app)
-            {
-                throw new Error(`"${this.name}" Controller does not return any methods`);
-            }
 
             /**
              * Attach middleware to a method or to all methods.
@@ -195,7 +181,7 @@ class ControllerProvider extends expressway.Provider
             {
                 return this.middleware(function parameterMiddleware(request,response,next) {
                     if (request.params.hasOwnProperty(parameter)) {
-                        handler(request.params[parameter], request,response,next);
+                        return handler(request.params[parameter], request,response,next);
                     }
                     return next();
                 });
@@ -211,35 +197,12 @@ class ControllerProvider extends expressway.Provider
             {
                 return this.middleware(function queryMiddleware(request,response,next) {
                     if (request.query.hasOwnProperty(parameter)) {
-                        handler(request.query[parameter], request,response,next);
+                        return handler(request.query[parameter], request,response,next);
                     }
                     return next();
                 });
             };
 
-
-            /**
-             * Check if this controller has a method.
-             * @param method string
-             * @returns {*|boolean}
-             */
-            has(method)
-            {
-                return this._methods.hasOwnProperty(method);
-            };
-
-            /**
-             * Use a particular method on this controller.
-             * @param method string
-             * @returns {*}
-             */
-            use(method)
-            {
-                if (this.has(method)) {
-                    return this._methods[method];
-                }
-                throw(`Controller "${this.name}" does not contain method "${method}"`);
-            };
 
             /**
              * Finds middleware required for the given route.
@@ -278,17 +241,20 @@ class ControllerProvider extends expressway.Provider
              */
             dispatch(method)
             {
-                var action = this.use(method);
-                var name = this.name;
+                var controller = this;
+
+                if (! typeof this[method] === 'function') {
+                    throw new Error(`"${this.name}" missing method "${method}"`);
+                }
 
                 function routeRequest(request,response,next)
                 {
-                    request.setController(name,method);
+                    request.setController(controller.name,method);
 
                     if (response.headersSent) {
                         return null;
                     }
-                    return response.smart( action(request,response,next) );
+                    return response.smart( controller[method](request,response,next) );
                 }
                 return this.getMiddleware(method, routeRequest);
             }

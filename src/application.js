@@ -219,6 +219,7 @@ class Application
      */
     getServices(array)
     {
+        if (! Array.isArray(array)) array = [];
         return array.map(function(service) {
             return typeof service == 'string' ? this.get(service) : service;
         }.bind(this))

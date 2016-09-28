@@ -94,6 +94,11 @@ class MongoDriver
                 return this._model.findById(id).populate(this.populate);
             }
 
+            findByIdAndUpdate(id,data,args)
+            {
+                return this._model.apply(this._model,arguments);
+            }
+
             count(args) {
                 return this._model.count(args);
             }
@@ -125,6 +130,7 @@ class MongoDriver
              */
             set schema(object)
             {
+                this.fillable = Object.keys(object);
                 this._schema = new db.Schema(object);
             }
 
@@ -135,7 +141,6 @@ class MongoDriver
             _setToJSON()
             {
                 var Class = this;
-                var app = this._app;
 
                 this.methods.toJSON = function()
                 {
@@ -180,6 +185,7 @@ class MongoDriver
             boot()
             {
                 this._setToJSON();
+                this.schema.methods = this.methods;
                 this._model = db.model(this.name, this.schema);
 
                 return super.boot();

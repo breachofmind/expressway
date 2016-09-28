@@ -8,32 +8,23 @@ module.exports = function(ControllerDefaultsProvider)
     {
         constructor(app)
         {
-            super();
-            this.inject = ['Localization'];
+            super(app);
 
+            this.localization = app.get('Localization');
             this.cacheResponses = app.env === ENV_PROD;
         }
 
-        methods(app,Localization)
+        index(request,response)
         {
-            var controller = this;
+            if (this.cacheResponses) {
+                response.setHeader('Cache-Control', 'public, max-age=' + 7*24*60*60);
+            }
+            var locale = request.locale.toLowerCase();
 
             return {
-                index: function(request,response)
-                {
-                    if (controller.cacheResponses) {
-                        response.setHeader('Cache-Control', 'public, max-age=' + 7*24*60*60);
-                    }
-                    var locale = request.locale.toLowerCase();
-
-                    return {
-                        locale: locale,
-                        keys: Localization.getLocale(locale)
-                    };
-                }
-            }
+                locale: locale,
+                keys: this.localization.getLocale(locale)
+            };
         }
-
-
     }
 };
