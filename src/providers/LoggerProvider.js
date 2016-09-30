@@ -1,21 +1,25 @@
 "use strict";
 
 var winston = require('winston');
-var expressway = require('expressway');
+var Expressway = require('expressway');
 var fs = require('fs');
 
 /**
  * Provides the winston logger.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class LoggerProvider extends expressway.Provider
+class LoggerProvider extends Expressway.Provider
 {
-    constructor()
+    /**
+     * Constructor
+     * @param app Application
+     */
+    constructor(app)
     {
-        super();
+        super(app);
 
         this.order = -1;
-        this.inject = ['events'];
+        this.inject = ['event'];
 
         this.config = {
             levels: {
@@ -42,14 +46,13 @@ class LoggerProvider extends expressway.Provider
 
     /**
      * Register the provider with the application.
-     * @param app Application
      * @param event EventEmitter
      */
-    register(app,event)
+    register(event)
     {
         winston.addColors(this.config.colors);
 
-        var logPath = app.rootPath(app.conf('logs_path', 'logs')) + "/";
+        var logPath = this.app.path('logs_path', 'logs');
         var logFile = logPath + this.logFileName;
 
         // Create the log path, if it doesn't exist.
@@ -62,7 +65,7 @@ class LoggerProvider extends expressway.Provider
             levels: this.config.levels,
             transports: [
                 new winston.transports.Console({
-                    level: this.getConsoleLevel(app),
+                    level: this.getConsoleLevel(),
                     colorize: this.colorize
                 }),
 
@@ -75,7 +78,7 @@ class LoggerProvider extends expressway.Provider
             ]
         });
 
-        app.register('log', logger);
+        this.app.register('log', logger);
 
         event.on('application.bootstrap', function(){
             logger.debug('[Application] booting...');
@@ -92,14 +95,14 @@ class LoggerProvider extends expressway.Provider
      * @param app Application
      * @returns {string}
      */
-    getConsoleLevel(app)
+    getConsoleLevel()
     {
-        switch (app.env) {
+        switch (this.app.env) {
             case ENV_TEST: return 'warn';
             case ENV_CLI: return 'info';
-            default: return app.conf('debug') == true ? 'debug' : 'info';
+            default: return this.app.conf('debug') == true ? 'debug' : 'info';
         }
     }
 }
 
-module.exports = new LoggerProvider();
+module.exports = LoggerProvider;

@@ -1,16 +1,16 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
 /**
  * Provides a URL helper.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class URLProvider extends expressway.Provider
+class URLProvider extends Expressway.Provider
 {
-    register(app)
+    register()
     {
-        var config = app.config;
+        var config = this.app.config;
 
         var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
 
@@ -25,8 +25,8 @@ class URLProvider extends expressway.Provider
         }
 
         // Attach to the application.
-        app.url = getUrl;
+        this.app.register('url', getUrl);
     }
 }
 
-module.exports = new URLProvider();
+module.exports = URLProvider;

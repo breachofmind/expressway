@@ -1,298 +1,299 @@
 "use strict";
 
-var _ = require('lodash');
-var expressway = require('expressway');
-var utils = expressway.utils;
+var _           = require('lodash');
+var Expressway  = require('expressway');
+var utils       = Expressway.utils;
 
-module.exports = function(ControllerDefaultsProvider)
+class RESTController extends Expressway.Controller
 {
-    return class RESTController extends expressway.Controller
+    constructor(app)
     {
-        constructor(app)
-        {
-            super(app, ['ModelProvider','Models','events']);
+        super(app, ['ModelProvider','event','ControllerDefaultsProvider']);
 
-            /**
-             * Special middleware for certain routes on this controller.
-             * @param request
-             * @param response
-             * @param next
-             */
-            function apiAuthenticationMiddleware(request,response,next)
-            {
-                if (! request.user && ControllerDefaultsProvider.RESTController.requireUser) {
-                    return response.api({error:`You are not authorized to perform this operation`}, 401);
-                }
-                return next();
+        var RESTDefaults = this.ControllerDefaultsProvider.RESTController;
+
+        /**
+         * Special middleware for certain routes on this controller.
+         * @param request
+         * @param response
+         * @param next
+         */
+        function apiAuthenticationMiddleware(request,response,next)
+        {
+            if (! request.user && RESTDefaults.requireUser) {
+                return response.api({error:`You are not authorized to perform this operation`}, 401);
+            }
+            return next();
+        }
+
+        this.middleware('update', apiAuthenticationMiddleware);
+        this.middleware('create', apiAuthenticationMiddleware);
+        this.middleware('trash', apiAuthenticationMiddleware);
+
+
+        /**
+         * If a model parameter is given,
+         * check if it is a model and attach the object to the request.
+         */
+        this.bind('model', function(value,request,response,next)
+        {
+            var Model = this.ModelProvider.bySlug(value);
+
+            if (! Model) {
+                return response.api({error:`Model "${value}" doesn't exist.`}, 404);
             }
 
-            this.middleware('update', apiAuthenticationMiddleware);
-            this.middleware('create', apiAuthenticationMiddleware);
-            this.middleware('trash', apiAuthenticationMiddleware);
+            if (Model.expose == false && ! request.user) {
+                return response.api({error:`You must be logged in to view "${Model.name}" models`}, 401);
+            }
 
+            request.Model = Model;
 
-            /**
-             * If a model parameter is given,
-             * check if it is a model and attach the object to the request.
-             */
-            this.bind('model', function(value,request,response,next)
-            {
-                var Model = this.ModelProvider.bySlug(value);
+            return next();
 
-                if (! Model) {
-                    return response.api({error:`Model "${value}" doesn't exist.`}, 404);
-                }
-
-                if (Model.expose == false && ! request.user) {
-                    return response.api({error:`You must be logged in to view "${Model.name}" models`}, 401);
-                }
-
-                request.Model = Model;
-
-                return next();
-
-            }.bind(this));
-
-            /**
-             * Bind to the url parameter "id"
-             * Attach a promise to the request for later use.
-             */
-            this.bind('id', function(value,request,response,next)
-            {
-                if (request.Model && value) {
-                    request.Object = request.Model.findOne({_id: value});
-                }
-                return next();
-            });
-
-            /**
-             * Bind to the query value, ?p
-             * This is used for paging.
-             */
-            this.query('p', function(value,request,response,next)
-            {
-                request.query.filter = request.Model.paging( utils.fromBase64(value) );
-                return next();
-            });
-
-            // Assign any user-defined middlewares.
-            this.middleware(ControllerDefaultsProvider.RESTController.middleware);
-        }
-
+        }.bind(this));
 
         /**
-         * Say Hello.
-         * Provide an index of API objects.
-         *
-         * GET /api/v1/
+         * Bind to the url parameter "id"
+         * Attach a promise to the request for later use.
          */
-        index(request,response)
+        this.bind('id', function(value,request,response,next)
         {
-            var app = this.app;
+            if (request.Model && value) {
+                request.Object = request.Model.findOne({_id: value});
+            }
+            return next();
+        });
 
-            var json = {
-                message: "Expressway API v1",
-                currentUser: request.user,
-                index: {}
+        /**
+         * Bind to the query value, ?p
+         * This is used for paging.
+         */
+        this.query('p', function(value,request,response,next)
+        {
+            request.query.filter = request.Model.paging( utils.fromBase64(value) );
+            return next();
+        });
+
+        // Assign any user-defined middlewares.
+        this.middleware(RESTDefaults.middleware);
+    }
+
+
+    /**
+     * Say Hello.
+     * Provide an index of API objects.
+     *
+     * GET /api/v1/
+     */
+    index(request,response)
+    {
+        var app = this.app;
+
+        var json = {
+            message: "Expressway API v1",
+            currentUser: request.user,
+            index: {}
+        };
+
+        this.ModelProvider.each(function(Model) {
+            if ((Model.expose == false && request.user) || Model.expose == true) {
+                json.index[Model.name] = app.url('api/v1/'+Model.slug);
+            }
+        });
+
+        this.events.emit('rest.index', json.index);
+
+        return json;
+    }
+
+
+    /**
+     * Fetches an object by ID.
+     *
+     * GET /api/v1/{model}/{id}
+     */
+    fetchOne(request,response)
+    {
+        return request.Object.exec().then(function(data) {
+
+            var meta = {
+                labels: request.Model.labels,
+                model: request.Model.name
             };
 
-            this.ModelProvider.each(function(Model) {
-                if ((Model.expose == false && request.user) || Model.expose == true) {
-                    json.index[Model.name] = app.url('api/v1/'+Model.slug);
-                }
-            });
+            return response.api(data, (! data ? 404 : 200), meta);
 
-            this.events.emit('rest.index', json.index);
+        }, function(err) {
 
-            return json;
-        }
+            return response.apiError(err);
+        })
+    }
 
 
+    /**
+     * Fetches an array of objects, with pagination.
+     *
+     * GET /api/v1/{model}
+     */
+    fetchAll(request,response)
+    {
+        var app = this.app;
+
+        var paging = {
+            count:      0,
+            total:      0,
+            limit:      app.config.limit || 10000,
+            filter:     request.getQuery('filter', null),
+            sort:       request.getQuery('sort', request.Model.range),
+            next:       null
+        };
         /**
-         * Fetches an object by ID.
-         *
-         * GET /api/v1/{model}/{id}
+         * Sets up the paging object with the next URL string.
+         * @param data array
+         * @returns object
          */
-        fetchOne(request,response)
+        paging.setNext = function(data)
         {
-            return request.Object.exec().then(function(data) {
+            if (data.length) {
+                var lastValue = data[data.length-1][request.Model.key];
+            }
+            this.count = data.length;
+            this.next = this.total > this.limit
+                ? utils.toBase64(lastValue.toString())
+                : null;
 
-                var meta = {
-                    labels: request.Model.labels,
-                    model: request.Model.name
-                };
+            return this;
+        };
 
-                return response.api(data, (! data ? 404 : 200), meta);
+        // Find the total record count first, then find the range.
+        return request.Model.count(paging.filter).exec().then(function(count) {
 
-            }, function(err) {
-
-                return response.apiError(err);
-            })
-        }
-
-
-        /**
-         * Fetches an array of objects, with pagination.
-         *
-         * GET /api/v1/{model}
-         */
-        fetchAll(request,response)
-        {
-            var app = this.app;
-
-            var paging = {
-                count:      0,
-                total:      0,
-                limit:      app.config.limit || 10000,
-                filter:     request.getQuery('filter', null),
-                sort:       request.getQuery('sort', request.Model.range),
-                next:       null
-            };
-            /**
-             * Sets up the paging object with the next URL string.
-             * @param data array
-             * @returns object
-             */
-            paging.setNext = function(data)
-            {
-                if (data.length) {
-                    var lastValue = data[data.length-1][request.Model.key];
-                }
-                this.count = data.length;
-                this.next = this.total > this.limit
-                    ? utils.toBase64(lastValue.toString())
-                    : null;
-
-                return this;
-            };
-
-            // Find the total record count first, then find the range.
-            return request.Model.count(paging.filter).exec().then(function(count) {
-
-                paging.total = count;
-
-                var promise = request.Model
-                    .find       (paging.filter)
-                    .sort       (paging.sort)
-                    .limit      (paging.limit)
-                    .populate   (request.Model.populate)
-                    .exec();
-
-                // After finding the count, find the records.
-                return promise.then(function(data) {
-
-                    paging.setNext(data);
-
-                    return response.api(data,200, {
-                        pagination: paging,
-                        labels: request.Model.labels,
-                        model: request.Model.name
-                    });
-
-                }, function(err) {
-
-                    // Model.find() error
-                    return response.apiError(err);
-                });
-
-            }, function(err) {
-
-                // Model.count() error
-                return response.apiError(err);
-            });
-        }
-
-
-        /**
-         * Initiate a new search.
-         *
-         * POST /api/{model}/search
-         */
-        search(request,response)
-        {
-            var search = request.body;
+            paging.total = count;
 
             var promise = request.Model
-                .find(search.where)
-                .sort(search.sort)
-                .limit(search.limit || app.config.limit)
-                .populate(search.populate || request.Model.populate)
+                .find       (paging.filter)
+                .sort       (paging.sort)
+                .limit      (paging.limit)
+                .populate   (request.Model.populate)
                 .exec();
 
-            return promise.then(function(data)
-            {
-                return response.api(data,200, {search:search});
+            // After finding the count, find the records.
+            return promise.then(function(data) {
 
-            }, function(err) {
+                paging.setNext(data);
 
-                return response.apiError(err);
-            });
-        }
-
-
-        /**
-         * Update a model.
-         *
-         * PUT /api/{model}/{id}
-         */
-        update(request,response)
-        {
-            if (request.body._id) delete request.body._id; // Mongoose has problems with this.
-
-            request.body.modified_at = Date.now();
-
-            return request.Model
-                .findByIdAndUpdate(request.params.id, request.body, {new:true})
-                .populate(request.Model.populate)
-                .exec()
-                .then(function(data) {
-
-                    return response.api(data,200);
-
-                }, function(err){
-
-                    return response.apiError(err);
+                return response.api(data,200, {
+                    pagination: paging,
+                    labels: request.Model.labels,
+                    model: request.Model.name
                 });
-        }
-
-
-        /**
-         * Create a new model.
-         *
-         * POST /api/{model}
-         */
-        create(request,response)
-        {
-            return request.Model.create(request.body).then(function(data)
-            {
-                return response.api(data,200);
 
             }, function(err) {
 
+                // Model.find() error
                 return response.apiError(err);
-
             });
-        }
 
-        /**
-         * Deletes an object by ID.
-         *
-         * DELETE /api/{model}/{id}
-         */
-        trash(request,response)
-        {
-            return request.Model.remove({_id:request.params.id}).then(function(results) {
-                var data = {
-                    results: results,
-                    objectId : request.params.id
-                };
-                return response.api(data,200);
+        }, function(err) {
 
-            }, function(err) {
-
-                return response.apiError(err);
-
-            });
-        }
+            // Model.count() error
+            return response.apiError(err);
+        });
     }
-};
+
+
+    /**
+     * Initiate a new search.
+     *
+     * POST /api/{model}/search
+     */
+    search(request,response)
+    {
+        var search = request.body;
+
+        var promise = request.Model
+            .find(search.where)
+            .sort(search.sort)
+            .limit(search.limit || app.config.limit)
+            .populate(search.populate || request.Model.populate)
+            .exec();
+
+        return promise.then(function(data)
+        {
+            return response.api(data,200, {search:search});
+
+        }, function(err) {
+
+            return response.apiError(err);
+        });
+    }
+
+
+    /**
+     * Update a model.
+     *
+     * PUT /api/{model}/{id}
+     */
+    update(request,response)
+    {
+        if (request.body._id) delete request.body._id; // Mongoose has problems with this.
+
+        request.body.modified_at = Date.now();
+
+        return request.Model
+            .findByIdAndUpdate(request.params.id, request.body, {new:true})
+            .populate(request.Model.populate)
+            .exec()
+            .then(function(data) {
+
+                return response.api(data,200);
+
+            }, function(err){
+
+                return response.apiError(err);
+            });
+    }
+
+
+    /**
+     * Create a new model.
+     *
+     * POST /api/{model}
+     */
+    create(request,response)
+    {
+        return request.Model.create(request.body).then(function(data)
+        {
+            return response.api(data,200);
+
+        }, function(err) {
+
+            return response.apiError(err);
+
+        });
+    }
+
+    /**
+     * Deletes an object by ID.
+     *
+     * DELETE /api/{model}/{id}
+     */
+    trash(request,response)
+    {
+        return request.Model.remove({_id:request.params.id}).then(function(results) {
+            var data = {
+                results: results,
+                objectId : request.params.id
+            };
+            return response.api(data,200);
+
+        }, function(err) {
+
+            return response.apiError(err);
+
+        });
+    }
+}
+
+module.exports = RESTController;

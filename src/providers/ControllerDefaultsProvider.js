@@ -1,16 +1,16 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
 /**
  * Provides some defaults for controllers.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ControllerDefaultsProvider extends expressway.Provider
+class ControllerDefaultsProvider extends Expressway.Provider
 {
-    constructor()
+    constructor(app)
     {
-        super();
+        super(app);
 
         this.order = 0;
 
@@ -19,8 +19,6 @@ class ControllerDefaultsProvider extends expressway.Provider
             'LocaleProvider',
             'URLProvider'
         ];
-
-        this.inject = ['ControllerProvider'];
 
         this.RESTController = {
             // Require logged in user to create/delete/update?
@@ -48,7 +46,7 @@ class ControllerDefaultsProvider extends expressway.Provider
             routes: function(router)
             {
                 router.get({
-                    '/api/v1/lang' : 'LocaleController.index',
+                    '/api/v1/locale' : 'LocaleController.index',
                 })
             }
         };
@@ -56,14 +54,13 @@ class ControllerDefaultsProvider extends expressway.Provider
 
     /**
      * Register with the application.
-     * @param app Application
      */
-    register(app)
+    register()
     {
-        app.register('ControllerDefaultsProvider', this);
-        app.register('DefaultRESTController', require('../controllers/RESTController')(this));
-        app.register('DefaultLocaleController', require('../controllers/LocaleController')(this));
+        this.app.register('ControllerDefaultsProvider', this);
+        this.app.register('DefaultRESTController',   require('../controllers/RESTController'));
+        this.app.register('DefaultLocaleController', require('../controllers/LocaleController'));
     }
 }
 
-module.exports = new ControllerDefaultsProvider();
+module.exports = ControllerDefaultsProvider;

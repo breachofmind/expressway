@@ -1,30 +1,29 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
-module.exports = function(ControllerDefaultsProvider)
+class LocaleController extends Expressway.Controller
 {
-    return class LocaleController extends expressway.Controller
+    constructor(app)
     {
-        constructor(app)
-        {
-            super(app);
+        super(app, ['ControllerDefaultsProvider']);
 
-            this.localization = app.get('Localization');
-            this.cacheResponses = app.env === ENV_PROD;
-        }
-
-        index(request,response)
-        {
-            if (this.cacheResponses) {
-                response.setHeader('Cache-Control', 'public, max-age=' + 7*24*60*60);
-            }
-            var locale = request.locale.toLowerCase();
-
-            return {
-                locale: locale,
-                keys: this.localization.getLocale(locale)
-            };
-        }
+        this.localization = app.get('localization');
+        this.cacheResponses = app.env === ENV_PROD;
     }
-};
+
+    index(request,response)
+    {
+        if (this.cacheResponses) {
+            response.setHeader('Cache-Control', 'public, max-age=' + 7*24*60*60);
+        }
+        var locale = request.locale.toLowerCase();
+
+        return {
+            locale: locale,
+            keys: this.localization.getLocale(locale)
+        };
+    }
+}
+
+module.exports = LocaleController;

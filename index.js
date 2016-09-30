@@ -14,11 +14,11 @@ GLOBAL.ENV_TEST  = 'test';
 GLOBAL.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
 
 var path        = require('path');
-var Application = require('./src/application');
-var Provider    = require('./src/provider');
+var Application = require('./src/Application');
+var Provider    = require('./src/Provider');
+var Driver      = require('./src/Driver');
+var Model       = require('./src/Model');
 var utils       = require('./src/support/utils');
-
-
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //@          '@@+'''''''@@@@         '#@@@@@@@@@@@               @
@@ -60,34 +60,32 @@ var utils       = require('./src/support/utils');
  */
 class Expressway
 {
-    constructor()
+    constructor(rootPath, config)
     {
         /**
          * The root path of the application.
          * @type {string}
          * @private
          */
-        this._rootPath = __dirname + "/app/";
+        this._rootPath = rootPath;
 
         /**
          * The configuration file.
          * @type {{}}
          */
-        this.config = {};
+        this.config = config;
 
-        this.env = null;
+        /**
+         * The default environment.
+         * @type {string}
+         */
+        this.env = config.environment;
 
         /**
          * The Application instance.
          * @type {null|Application}
          */
-        this.app = null;
-
-        Object.defineProperties(this, {
-            Application : { enumerable: true, value: Application },
-            Provider :    { enumerable: true, value: Provider },
-            utils :       { enumerable: true, value: utils },
-        })
+        this.app = new Application(this);
     }
 
     /**
@@ -101,33 +99,37 @@ class Expressway
     }
 
     /**
-     * Set the root path of the application.
-     * @param value {string}
-     * @returns {Expressway}
+     * Bootstrap the application.
+     * @returns {Application}
      */
-    setRootPath(value) {
-        this._rootPath = path.normalize(value);
-        return this;
+    bootstrap()
+    {
+        return this.app.bootstrap();
     }
 
     /**
-     * Initialize the application and bootstrap.
+     * Initialize the application.
      * @param rootPath string
      * @param env string, optional
-     * @returns {Application}
+     * @returns {Expressway}
      */
-    init(rootPath,env)
+    static init(rootPath,env)
     {
-        this.setRootPath(rootPath);
+        var providers = utils.getModulesAsHash(__dirname+'/src/providers/', true);
 
-        utils.getModules(__dirname+'/src/providers/', true);
+        var config = require(rootPath + '/config/config') (providers);
 
-        this.config = require(this.rootPath('config/config')) (Provider.get());
+        if (env) config.environment = env;
 
-        this.env = env || this.config.environment;
-
-        return this.app = new Application(this);
+        return Expressway.instance = new Expressway(rootPath, config);
     }
 }
 
-module.exports = new Expressway();
+Expressway.instance = null;
+Expressway.BaseModel = Model;
+Expressway.Provider = Provider;
+Expressway.Driver = Driver;
+Expressway.Application = Application;
+Expressway.utils = utils;
+
+module.exports = Expressway;

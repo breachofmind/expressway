@@ -3,7 +3,7 @@
 var Converter = require("csvtojson").Converter;
 var path = require('path');
 var Promise = require('bluebird');
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
 var msg = {
     running: "[Seeder] Running seeder: %s",
@@ -25,22 +25,27 @@ var msg = {
  * Provides the Seeder helper.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class SeederProvider extends expressway.Provider
+class SeederProvider extends Expressway.Provider
 {
-    constructor()
+    /**
+     * Constructor
+     * @param app Application
+     */
+    constructor(app)
     {
-        super('seeder');
+        super(app);
 
-        this.requires([
+        this.requires = [
             'logger',
             'orm'
-        ]);
+        ];
 
-        this.inject(['Log', 'Models','db']);
+        this.inject = ['log', 'Models','db'];
     }
 
-    register(app,logger,Models,db)
+    register(logger,Models,db)
     {
+        var app = this.app;
         var ObjectId = db.Schema.Types.ObjectId;
 
         /**
@@ -297,4 +302,4 @@ class SeederProvider extends expressway.Provider
     }
 }
 
-module.exports = new SeederProvider();
+module.exports = SeederProvider;

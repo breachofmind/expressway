@@ -120,33 +120,29 @@ module.exports = {
      */
     getModules: function(dir,callback)
     {
-
-        return this.getFileBaseNames(dir).map(function(name) {
-            var module = dir + name;
+        return this.getFileBaseNames(dir).map(function(name)
+        {
+            var modulePath = dir + name;
             if (callback === true) {
-
-                try {
-                    return require(module);
-                } catch (e) {
-                    return e;
-                }
-
+                return require(modulePath);
             }
-            return callback ? callback(module) : module;
+            return callback ? callback(modulePath, dir, name) : modulePath;
         })
     },
 
     /**
-     * Call a method on each item in the array.
-     * @param array array
-     * @param method string
-     * @param args mixed
+     * Given a directory, return a hash where the keyname is the file name of the module.
+     * If callback is true, require the module and store under the key.
+     * @param dir string
+     * @param callback function
+     * @returns {{}}
      */
-    callOnEach: function(array, method, args)
+    getModulesAsHash: function(dir,callback)
     {
-        console.log(method);
-        array.forEach(function(object) {
-            object[method].call(object,args);
+        var out = {};
+        this.getModules(dir, function(modulePath,dir,name) {
+            out[name] = callback === true ? require(modulePath) : callback(modulePath,dir,name);
         });
+        return out;
     }
 };

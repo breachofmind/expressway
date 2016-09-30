@@ -1,6 +1,6 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
 /**
  *
@@ -84,19 +84,19 @@ function BigGulp(app)
  * Gulp helper.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class GulpProvider extends expressway.Provider
+class GulpProvider extends Expressway.Provider
 {
-    constructor()
+    constructor(app)
     {
-        super();
+        super(app);
 
         this.environments = [ENV_CLI];
     }
 
-    register(app)
+    register()
     {
-        expressway.BigGulp = new BigGulp(app);
+        Expressway.BigGulp = new BigGulp(app);
     }
 }
 
-module.exports = new GulpProvider();
+module.exports = GulpProvider;

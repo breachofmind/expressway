@@ -2,7 +2,7 @@
 
 var path     = require('path');
 var events   = require('events');
-var Provider = require('./provider');
+var Provider = require('./Provider');
 var utils    = require('./support/utils');
 
 
@@ -23,6 +23,7 @@ class Application
         this._booted        = false;
         this._package       = require(__dirname+'/../package.json');
         this._version       = this._package.version;
+        this._order         = [];
 
         this.providers     = {};
         this.services      = {};
@@ -35,7 +36,7 @@ class Application
         this.config = expressway.config;
         this.env = expressway.env;
 
-        this.register('events', this.event);
+        this.register('event', this.event);
     }
 
 
@@ -46,22 +47,36 @@ class Application
      */
     bootstrap(providers)
     {
+        if (this._booted) return this;
+
         if (! providers) providers = this.config.providers;
 
-        var checkedProviders = Provider.check(providers);
-
-        if (! this._booted)
-        {
-            for(let i=0; i<checkedProviders.length; i++) {
-                this.load(checkedProviders[i]);
+        // Instantiate and index all providers first.
+        var objects = providers.map(function(ProviderClass) {
+            try {
+                var instance = new ProviderClass(this);
+                this.providers[instance.name] = instance;
+            } catch (e) {
+                console.error(ProviderClass);
+                throw (e);
             }
 
-            this.event.emit('providers.registered', this);
+            return instance;
+        }.bind(this)).sort(function ascending(a,b) {
+            return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
+        });
 
-            this._booted = true;
+        // Register all providers and their dependencies.
+        objects.forEach(function(provider) {
+            this.load(provider);
+        }.bind(this));
 
-            this.event.emit('application.bootstrap', this);
-        }
+        this.event.emit('providers.registered', this);
+
+        this._booted = true;
+
+        this.event.emit('application.bootstrap', this);
+
         return this;
     }
 
@@ -72,31 +87,29 @@ class Application
      */
     load(provider)
     {
-        if (! provider.isLoadable(this.env)) {
-            return false;
-        }
+        if (! provider.isLoadable(this.env)) return false;
 
         this.event.emit('provider.loading', provider);
 
         // Load any dependencies first.
-        for (let i=0; i<provider.requires.length; i++)
+        provider.requires.forEach(function(dependencyName)
         {
-            var dependency = Provider.get(provider.requires[i]);
+            var dependency = this.providers[dependencyName];
 
-            // This provider wasn't created.
             if (! dependency) {
-                throw (`Provider ${provider.name} is missing a dependency: ${provider.requires[i]}`);
+                throw (`Provider ${provider.name} is missing a dependency: ${dependencyName}`);
             }
             if (! dependency.active) {
-                throw (`Provider ${provider.name} dependency needs to be loadable: ${dependency.name}`);
+                throw (`Provider ${provider.name} dependency needs to be active: ${dependency.name}`);
             }
             this.load(dependency);
-        }
+
+        }.bind(this));
 
         // Call provider.register() with any services
-        this.call(provider,"register",[this].concat(provider.inject));
+        this.call(provider,"register", provider.inject);
 
-        this.providers[provider.name] = provider;
+        this._order.push(provider.name);
 
         provider.loaded = true;
 
@@ -198,8 +211,10 @@ class Application
 
     /**
      * Call a method with the services injected.
-     * @param context object
-     * @param method string
+     * When calling a function: app.call(func, ['db','log'])
+     * When calling a method on a class instance: app.call(instance, 'methodName', ['db','log']
+     * @param context object|function
+     * @param method string|array
      * @param services array
      * @returns {*}
      */
@@ -207,6 +222,9 @@ class Application
     {
         if (! context) {
             throw new Error("Context missing for method "+method);
+        }
+        if (typeof context === 'function') {
+            return new ( Function.prototype.bind.apply(context, this.getServices(method)) );
         }
         return context[method].apply(context, this.getServices(services));
     }
