@@ -20,7 +20,6 @@ class Provider
         this.order          = 1;
         this.requires       = [];
         this.environments   = [];
-        this.inject         = [];
     }
 
     /**

@@ -36,6 +36,7 @@ class Application
         this.config = expressway.config;
         this.env = expressway.env;
 
+        this.register('app', this);
         this.register('event', this.event);
     }
 
@@ -107,7 +108,7 @@ class Application
         }.bind(this));
 
         // Call provider.register() with any services
-        this.call(provider,"register", provider.inject);
+        this.call(provider,"register");
 
         this._order.push(provider.name);
 
@@ -210,37 +211,61 @@ class Application
     }
 
     /**
-     * Call a method with the services injected.
-     * When calling a function: app.call(func, ['db','log'])
-     * When calling a method on a class instance: app.call(instance, 'methodName', ['db','log']
+     * Call a method or function with the services injected.
+     * The function arguments should be the service names.
+     * Example: this.register(db,Models)
      * @param context object|function
-     * @param method string|array
-     * @param services array
+     * @param method string
+     * @param args Array - optional arguments
      * @returns {*}
      */
-    call(context,method,services)
+    call(context,method,args)
     {
         if (! context) {
             throw new Error("Context missing for method "+method);
         }
         if (typeof context === 'function') {
-            return new ( Function.prototype.bind.apply(context, this.getServices(method)) );
+            if (context.constructor) {
+                var svc = this.injectServices(context.prototype.constructor, args);
+                return new context(...svc);
+            }
+            return context.apply(context, this.injectServices(context, args));
         }
-        return context[method].apply(context, this.getServices(services));
+        return context[method].apply(context, this.injectServices(context[method], args));
     }
 
     /**
      * Given the array of string service/provider names,
      * resolve the registered objects.
      * @param array
+     * @param args array
      * @returns {Array}
      */
-    getServices(array)
+    getServices(array,args)
     {
+        if (! args) args = [];
         if (! Array.isArray(array)) array = [];
-        return array.map(function(service) {
-            return typeof service == 'string' ? this.get(service) : service;
+
+        return array.map(function(serviceName,i) {
+            if (args[i]) return args[i];
+            var service = this.get(serviceName);
+            if (! service) {
+                throw new Error("Service does not exist: " + serviceName);
+            }
+            return service;
         }.bind(this))
+    }
+
+    /**
+     * Inject services into a function.
+     * @param fn function
+     * @param args array
+     * @returns {Array}
+     */
+    injectServices(fn,args)
+    {
+        var names = utils.annotate(fn);
+        return this.getServices(names,args);
     }
 
     /**
@@ -254,6 +279,15 @@ class Application
             return this.services[service];
         }
         return null;
+    }
+
+    /**
+     * Get the Expressway version.
+     * @returns {string}
+     */
+    getVersion()
+    {
+        return this._version;
     }
 }
 

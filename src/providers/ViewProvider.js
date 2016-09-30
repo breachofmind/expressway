@@ -17,15 +17,12 @@ class ViewProvider extends Expressway.Provider
         super(app);
 
         this.requires = ['TemplateProvider'];
-
-        this.inject = ['Template'];
     }
 
     /**
      * Register the View class.
-     * @param Template
      */
-    register(Template)
+    register()
     {
         var View = require('./classes/View');
 

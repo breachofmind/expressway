@@ -23,8 +23,6 @@ class GateProvider extends Expressway.Provider
         ];
 
         this.environments = ENV_WEB;
-
-        this.inject = ['ModelProvider'];
     }
 
     /**

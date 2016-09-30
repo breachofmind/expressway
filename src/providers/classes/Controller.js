@@ -12,18 +12,12 @@ var utils = Expressway.utils;
  */
 class Controller
 {
-    constructor(app, inject)
+    constructor(app)
     {
         this.name = this.constructor.name;
         this.app  = app;
 
         this._middleware = [];
-
-        // Injects services as property names of the controller, if given.
-        if (!inject) inject = [];
-        inject.forEach(function(serviceName) {
-            this[serviceName] = app.get(serviceName);
-        }.bind(this));
     }
 
 
@@ -147,12 +141,16 @@ class Controller
 
         function routeRequest(request,response,next)
         {
-            request.setController(controller.name,method);
+            request.setController(controller.name, method);
 
             if (response.headersSent) {
                 return null;
             }
-            return response.smart( controller[method](request,response,next) );
+            // ALlows the injection of services into a controller method.
+            // The first 3 arguments are always the request/response/next params.
+            var output = app.call(controller, method, [request,response,next]);
+
+            return response.smart( output );
         }
         return this.getMiddleware(method, routeRequest);
     }

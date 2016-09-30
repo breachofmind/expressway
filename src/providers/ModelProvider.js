@@ -49,7 +49,7 @@ class ModelProvider extends Expressway.Provider
 
         this.app.register('Model', driver.Model);
 
-        this.app.call(this,'loadModels', ['log','Model']);
+        this.app.call(this,'loadModels');
 
         this.app.register('Models', this.models);
 
@@ -72,7 +72,7 @@ class ModelProvider extends Expressway.Provider
             var Class = require(path);
             var instance = new Class(app);
 
-            if (! (instance instanceof Model)) {
+            if (! (instance instanceof Expressway.Model)) {
                 throw (path + " module does not return Model instance");
             }
 

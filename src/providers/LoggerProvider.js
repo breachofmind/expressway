@@ -19,7 +19,6 @@ class LoggerProvider extends Expressway.Provider
         super(app);
 
         this.order = -1;
-        this.inject = ['event'];
 
         this.config = {
             levels: {

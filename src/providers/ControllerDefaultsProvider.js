@@ -8,6 +8,10 @@ var Expressway = require('expressway');
  */
 class ControllerDefaultsProvider extends Expressway.Provider
 {
+    /**
+     * Constructor.
+     * @param app Application
+     */
     constructor(app)
     {
         super(app);

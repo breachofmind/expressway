@@ -13,13 +13,13 @@ class Auth
      * Constructor.
      * @param app Application
      * @param log Winston
-     * @param User Model
+     * @param Models object
      */
-    constructor(app, User)
+    constructor(app, Models, log)
     {
         this.passport = passport;
-        this.User     = User;
-        this.log      = app.get('log');
+        this.User     = Models.User;
+        this.log      = log;
 
         passport.serializeUser(this.serializeUser);
         passport.deserializeUser(this.deserializeUser);

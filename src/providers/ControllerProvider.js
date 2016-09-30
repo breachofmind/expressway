@@ -9,6 +9,10 @@ var utils = Expressway.utils;
  */
 class ControllerProvider extends Expressway.Provider
 {
+    /**
+     * Constructor.
+     * @param app Application
+     */
     constructor(app)
     {
         super(app);
@@ -19,47 +23,45 @@ class ControllerProvider extends Expressway.Provider
             'ModelProvider'
         ];
 
-        this.inject = ['event'];
-
         this.controllers = {};
     }
 
     /**
      * Register the controller factory class with the app.
+     * @param app Application
      * @param event EventEmitter
      */
-    register(event)
+    register(app,event)
     {
         var Controller = require('./classes/Controller');
 
-        this.app.register('Controller', Controller);
-        this.app.register('ControllerProvider', this);
+        app.register('Controller', Controller);
+        app.register('ControllerProvider', this);
 
         // Expose the controller class.
         Expressway.Controller = Controller;
 
         // All providers should be registered first,
         // In case we're using a provider that adds a controller.
-        event.on('providers.registered', function()
-        {
-            this.app.call(this,'loadControllers', ['log','event']);
-
+        event.on('providers.registered', function() {
+            app.call(this,'loadControllers');
         }.bind(this));
     }
 
     /**
      * Load all controllers in the app directory.
+     * @param app Application
      * @param log Winston
      * @param event EventEmitter
      */
-    loadControllers(log,event)
+    loadControllers(app,log,event)
     {
-        var controllerPath = this.app.path('controllers_path', 'controllers') + "/";
+        var controllerPath = app.path('controllers_path', 'controllers') + "/";
 
         utils.getModules(controllerPath, function(path)
         {
             var Class = require(path);
-            var instance = new Class(this.app);
+            var instance = app.call(Class);
 
             if (! (instance instanceof Expressway.Controller)) {
                 throw (path + " module does not return Controller instance");
@@ -71,7 +73,7 @@ class ControllerProvider extends Expressway.Provider
 
         }.bind(this));
 
-        event.emit('controllers.loaded',this.app);
+        event.emit('controllers.loaded',app);
     }
 
     /**

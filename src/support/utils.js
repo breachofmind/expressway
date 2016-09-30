@@ -2,11 +2,45 @@ var glob = require('glob');
 var path = require('path');
 var fs = require('fs');
 
+const FN_ARGS = /\s*[^\(]*\(\s*([^\)]*)\)/m;
+const FN_ARG_SPLIT = /,/;
+const FN_ARG = /^\s*(_?)(.+?)\1\s*$/;
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+
 /**
  * Helper methods.
  * @author Mike Adamczyk <mike@bom.us>
  */
 module.exports = {
+
+    /**
+     * Adapted Function that angular uses to read function args names
+     * @param fn Function (can also be method name)
+     * @returns {*}
+     */
+    annotate: function(fn)
+    {
+        var $inject,
+            fnText,
+            argDecl;
+
+        if (typeof fn == 'function')
+        {
+            if (! ($inject = fn.$inject) ) {
+                $inject = [];
+                fnText = fn.toString().replace(STRIP_COMMENTS, '');
+                argDecl = fnText.match(FN_ARGS);
+                var parts = argDecl[1].split(FN_ARG_SPLIT);
+                parts.forEach(function(arg){
+                    arg.replace(FN_ARG, function(all, underscore, name){
+                        $inject.push(name);
+                    });
+                });
+                fn.$inject = $inject;
+            }
+        }
+        return $inject;
+    },
 
     /**
      * Compact an objects properties to the given array.

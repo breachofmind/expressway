@@ -6,11 +6,11 @@ var utils       = Expressway.utils;
 
 class RESTController extends Expressway.Controller
 {
-    constructor(app)
+    constructor(app, ControllerDefaultsProvider)
     {
-        super(app, ['ModelProvider','event','ControllerDefaultsProvider']);
+        super(app);
 
-        var RESTDefaults = this.ControllerDefaultsProvider.RESTController;
+        var RESTDefaults = ControllerDefaultsProvider.RESTController;
 
         /**
          * Special middleware for certain routes on this controller.

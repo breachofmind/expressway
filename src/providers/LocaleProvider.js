@@ -21,24 +21,23 @@ class LocaleProvider extends Expressway.Provider
             'ViewProvider',
             'ExpressProvider'
         ];
-
-        this.inject = ['ExpressProvider'];
     }
 
     /**
      * Register the provider with the application.
+     * @param app Application
      * @param ExpressProvider ExpressProvider
      */
-    register(ExpressProvider)
+    register(app, ExpressProvider)
     {
         var Localization = require('./classes/Localization');
 
         var localization = new Localization();
 
-        this.app.register('localization', localization);
+        app.register('localization', localization);
 
         // When each view is created, add the template function.
-        this.app.event.on('view.created', function(view,request) {
+        app.event.on('view.created', function(view,request) {
             view.data.lang = localization.helper(request);
         });
 

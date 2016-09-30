@@ -29,8 +29,6 @@ class ExpressProvider extends Expressway.Provider
             'URLProvider'
         ];
 
-        this.inject = ['event','log'];
-
         this.middlewareStack = new MiddlewareStack(this.app);
 
         this.middlewares = [];
@@ -38,12 +36,13 @@ class ExpressProvider extends Expressway.Provider
 
     /**
      * Register the provider with the application.
+     * @param app Application
      * @param event EventEmitter
      * @param log Winston
      */
-    register(event,log)
+    register(app,event,log)
     {
-        var core = new Core(this.app, log);
+        var core = new Core(app, log);
         var server = express();
 
         this.middlewareStack
@@ -105,12 +104,12 @@ class ExpressProvider extends Expressway.Provider
                 server.use( flash() );
             });
 
-        this.app.register('express', server);
-        this.app.register('ExpressProvider', this);
+        app.register('express', server);
+        app.register('ExpressProvider', this);
 
         event.on('application.bootstrap', this.onBootstrap());
 
-        event.on('application.server', this.onServerStart())
+        event.on('application.server', app.call(this,'onServerStart'))
     }
 
     /**
@@ -130,18 +129,18 @@ class ExpressProvider extends Expressway.Provider
 
     /**
      * Called when the server starts.
+     * @param log Winston
+     * @param url Function
+     * @param event EventEmitter
+     * @param express Express
      */
-    onServerStart()
+    onServerStart(log,url,event,express)
     {
         return function(app)
         {
-            var server = app.get('express');
             var config = app.config;
-            var log = app.get('log');
-            var url = app.get('url');
-            var event = app.get('event');
 
-            server.listen(config.port, function()
+            express.listen(config.port, function()
             {
                 log.info('[Express] Using root path: %s', app.rootPath());
                 log.info(`[Express] Starting %s server v.%s on %s (%s)...`,
@@ -150,7 +149,7 @@ class ExpressProvider extends Expressway.Provider
                     app.conf('url'),
                     url());
 
-                event.emit('express.listening', server);
+                event.emit('express.listening', express);
             });
         }
     }
