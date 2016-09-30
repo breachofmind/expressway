@@ -70,7 +70,7 @@ class ModelProvider extends Expressway.Provider
         utils.getModules(modelPath, function(path)
         {
             var Class = require(path);
-            var instance = new Class(app);
+            var instance = app.call(Class);
 
             if (! (instance instanceof Expressway.Model)) {
                 throw (path + " module does not return Model instance");

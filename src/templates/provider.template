@@ -1,26 +1,30 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
-class <%=name%>Provider extends expressway.Provider
+class <%=name%> extends Expressway.Provider
 {
-    constructor()
+    /**
+     * Constructor.
+     * @param app Application
+     */
+    constructor(app)
     {
-        super("<%= name.toLowerCase() %>");
+        super(app);
 
         this.order = 0;
 
-        this.requires([
-            'logger'
-        ]);
+        this.requires = [
+            'LoggerProvider',
+            'ModelProvider'
+        ];
 
-        // Environments this should run inside.
-        //this.inside(ENV_CLI);
+        this.environments = ENV_WEB;
     }
 
     /**
-     * Register any classes or instances with the application.
-     * @returns void
+     * Register any classes or instances
+     * with the application.
      */
     register(app)
     {
@@ -28,4 +32,4 @@ class <%=name%>Provider extends expressway.Provider
     }
 }
 
-module.exports = new <%=name%>Provider();
+module.exports = <%=name%>;

@@ -1,13 +1,25 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
-module.exports = expressway.Controller.create('<%=name%>', function(app)
+class <%=name%> extends Expressway.Controller
 {
-    return {
-        index: function(request,response,next)
-        {
-            //
-        },
+    /**
+     * Constructor.
+     * @param app Application
+     */
+    constructor(app)
+    {
+        // Controller Setup
     }
-});
+
+    /**
+     * "<%=name%>.index" route.
+     */
+    index: function(request,response,next)
+    {
+        //
+    }
+}
+
+module.exports = <%=name%>;

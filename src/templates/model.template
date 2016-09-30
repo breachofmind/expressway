@@ -1,22 +1,30 @@
 "use strict";
 
-var expressway = require('expressway');
+var Expressway = require('expressway');
 
-module.exports = expressway.Model.create('<%=name%>', function Blueprint(app)
+class <%=name%> extends Expressway.Model
 {
-    this.title      = 'id';
-    this.expose     = false;
-    this.guarded    = [];
-    this.appends    = [];
-    this.populate   = [];
-    this.managed    = false;
-    this.labels     = {};
+    /**
+     * Constructor.
+     * @param app Application
+     */
+    constructor(app)
+    {
+        this.title      = 'id';
+        this.expose     = false;
+        this.guarded    = [];
+        this.appends    = [];
+        this.populate   = [];
+        this.managed    = false;
+        this.labels     = {};
 
-    this.schema = {
-        created_at:  { type: Date, default: Date.now },
-        modified_at: { type: Date, default: Date.now }
-    };
+        this.schema = {
+            created_at:  { type: Date, default: Date.now },
+            modified_at: { type: Date, default: Date.now }
+        };
 
-    this.methods = {}
+        this.methods = {}
+    }
+}
 
-});
+module.exports = <%=name%>;
