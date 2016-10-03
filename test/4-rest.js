@@ -1,4 +1,5 @@
-var testkit = require('../src/testkit');
+var testkit = require('../src/support/TestKit');
+var app = testkit.expressway.app;
 var api = testkit.apiUrl;
 
 // Some test data.

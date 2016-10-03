@@ -15,58 +15,70 @@ class Auth
      * @param log Winston
      * @param Models object
      */
-    constructor(app, Models, log)
+    constructor(app, Models)
     {
+        app.register('auth', this);
+        app.register('passport', passport);
+
         this.passport = passport;
         this.User     = Models.User;
-        this.log      = log;
 
         passport.serializeUser(this.serializeUser);
         passport.deserializeUser(this.deserializeUser);
 
-        this.strategy = new Strategy(this.getStrategyMethod);
+        this.strategy = new Strategy(app.call(this,'getStrategyMethod'));
 
-        app.register('auth', this);
-        app.register('passport', passport);
 
     }
 
     /**
-     * The strategy callback.
-     * @param username string
-     * @param password string
-     * @param done function
+     * Get the strategy callback.
+     * @param app Application
+     * @param auth Auth
+     * @param log Winston
+     * @returns {Function}
      */
-    getStrategyMethod(username, password, done)
+    getStrategyMethod(app,auth,log)
     {
-        var auth = this;
-
-        this.log('access', "Login attempt: '%s'", username);
-
-        this.getUser(username).then(function(user)
+        /**
+         * The strategy callback.
+         * @param username string
+         * @param password string
+         * @param done function
+         */
+        return function(username, password, done)
         {
-            // If user is not found, fail with message.
-            if (! user) {
-                auth.log('access', "User does not exist: '%s'", username);
-                return done(null, false, { message: 'auth.err_user_missing' });
-            }
+            log.log('access', "Login attempt: '%s'", username);
 
-            // If user password is not valid, fail with message.
-            if (! user.isValid(password)) {
-                auth.log('access', "Login attempt failed: '%s'", username);
-                return done(null, false, { message: 'auth.err_incorrect_password' });
-            }
+            auth.getUser(username).then(function(user)
+            {
+                // If user is not found, fail with message.
+                if (! user) {
+                    log.log('access', "User does not exist: '%s'", username);
+                    return done(null, false, { message: 'auth.err_user_missing' });
+                }
 
-            // If they got this far, they were successfully authenticated.
-            auth.log('access', "Login successful: '%s' %s", username, user.id);
+                // If user password is not valid, fail with message.
+                if (! user.isValid(password)) {
+                    log.log('access', "Login attempt failed: '%s'", username);
+                    return done(null, false, { message: 'auth.err_incorrect_password' });
+                }
 
-            return done(null, user);
+                // If they got this far, they were successfully authenticated.
+                log.log('access', "Login successful: '%s' %s", username, user.id);
 
-        }, function(err) {
+                return done(null, user);
 
-            // There was an error, probably database related...
-            return done(err);
-        });
+            }, function(err) {
+
+                // There was an error, probably database related...
+                return done(err);
+            });
+        }
+
+
+
+
     }
 
 

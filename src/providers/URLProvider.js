@@ -8,9 +8,13 @@ var Expressway = require('expressway');
  */
 class URLProvider extends Expressway.Provider
 {
-    register()
+    /**
+     * Register with the application.
+     * @param app Application
+     */
+    register(app)
     {
-        var config = this.app.config;
+        var config = app.config;
 
         var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
 
@@ -25,7 +29,7 @@ class URLProvider extends Expressway.Provider
         }
 
         // Attach to the application.
-        this.app.register('url', getUrl);
+        app.register('url', getUrl);
     }
 }
 

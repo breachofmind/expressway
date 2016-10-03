@@ -6,7 +6,7 @@ var utils       = Expressway.utils;
 
 class RESTController extends Expressway.Controller
 {
-    constructor(app, ControllerDefaultsProvider)
+    constructor(app, ControllerDefaultsProvider, ModelProvider)
     {
         super(app);
 
@@ -37,7 +37,7 @@ class RESTController extends Expressway.Controller
          */
         this.bind('model', function(value,request,response,next)
         {
-            var Model = this.ModelProvider.bySlug(value);
+            var Model = ModelProvider.bySlug(value);
 
             if (! Model) {
                 return response.api({error:`Model "${value}" doesn't exist.`}, 404);
@@ -86,7 +86,7 @@ class RESTController extends Expressway.Controller
      *
      * GET /api/v1/
      */
-    index(request,response)
+    index(request,response,next,ModelProvider,url,event)
     {
         var app = this.app;
 
@@ -96,13 +96,13 @@ class RESTController extends Expressway.Controller
             index: {}
         };
 
-        this.ModelProvider.each(function(Model) {
+        ModelProvider.each(function(Model) {
             if ((Model.expose == false && request.user) || Model.expose == true) {
-                json.index[Model.name] = app.url('api/v1/'+Model.slug);
+                json.index[Model.name] = url('api/v1/'+Model.slug);
             }
         });
 
-        this.events.emit('rest.index', json.index);
+        event.emit('rest.index', json.index);
 
         return json;
     }
@@ -113,7 +113,7 @@ class RESTController extends Expressway.Controller
      *
      * GET /api/v1/{model}/{id}
      */
-    fetchOne(request,response)
+    fetchOne(request,response,next)
     {
         return request.Object.exec().then(function(data) {
 
@@ -136,10 +136,8 @@ class RESTController extends Expressway.Controller
      *
      * GET /api/v1/{model}
      */
-    fetchAll(request,response)
+    fetchAll(request,response,next,app)
     {
-        var app = this.app;
-
         var paging = {
             count:      0,
             total:      0,
@@ -208,7 +206,7 @@ class RESTController extends Expressway.Controller
      *
      * POST /api/{model}/search
      */
-    search(request,response)
+    search(request,response,next,app)
     {
         var search = request.body;
 
@@ -235,7 +233,7 @@ class RESTController extends Expressway.Controller
      *
      * PUT /api/{model}/{id}
      */
-    update(request,response)
+    update(request,response,next)
     {
         if (request.body._id) delete request.body._id; // Mongoose has problems with this.
 

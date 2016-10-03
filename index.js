@@ -118,7 +118,7 @@ class Expressway
     {
         var providers = utils.getModulesAsHash(__dirname+'/src/providers/', true);
 
-        var config = require(rootPath + '/config/config') (providers);
+        var config = require(rootPath + 'config/config') (providers);
 
         if (env) config.environment = env;
 

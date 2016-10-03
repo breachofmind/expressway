@@ -51,7 +51,7 @@ class LoggerProvider extends Expressway.Provider
     {
         winston.addColors(this.config.colors);
 
-        var logPath = this.app.path('logs_path', 'logs');
+        var logPath = this.app.path('logs_path', 'logs') + '/';
         var logFile = logPath + this.logFileName;
 
         // Create the log path, if it doesn't exist.

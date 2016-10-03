@@ -275,10 +275,17 @@ class Application
      */
     get(service)
     {
-        if (this.services.hasOwnProperty(service)) {
-            return this.services[service];
-        }
-        return null;
+        return this.has(service) ? this.services[service] : null;
+    }
+
+    /**
+     * Check if a service is loaded.
+     * @param service name
+     * @returns {boolean}
+     */
+    has(service)
+    {
+        return this.services.hasOwnProperty(service);
     }
 
     /**

@@ -1,46 +1,47 @@
-var expressway  = require('expressway');
-var cheerio     = require('cheerio');
+"use strict";
+
 var _           = require('lodash');
+var Expressway  = require('expressway');
+var cheerio     = require('cheerio');
 GLOBAL.chai     = require('chai');
 GLOBAL.chaiHttp = require('chai-http');
 GLOBAL.expect   = chai.expect;
 GLOBAL.should   = chai.should();
 
-GLOBAL.chai.use(GLOBAL.chaiHttp);
+chai.use(GLOBAL.chaiHttp);
 
-var app = expressway.init(__dirname+"/../demo/app/", ENV_TEST);
+var expressway = Expressway.init(__dirname+"/../../demo/app/", ENV_TEST);
+var app = expressway.app;
+
+var url = function(path) {
+    return app.get('url')(path);
+}
 
 /**
- * Testing kit that contains some helper methods.
- * @param app
- * @constructor
+ * A helper class for running tests
+ * for Expressway.
  */
-function TestingKit(app)
+class TestKit
 {
-    this.app = app;
-    this.expressway = expressway;
-    this.rootPath = app.rootPath();
-
     /**
      * Create an API path.
      * @param uri string
      * @returns {string}
      */
-    this.apiUrl = function(uri, relative)
+    apiUrl(uri,relative)
     {
         if (relative == undefined) relative = true;
         var path = 'api/v1/'+(uri||"");
-        return relative ? "/" + path : app.url(path);
-    };
-
+        return relative ? "/" + path : url(path);
+    }
 
     /**
      * Log in to the application.
      * @param callback function(response,agent)
      */
-    this.login = function(callback)
+    login(callback)
     {
-        var agent = chai.request.agent(app.url());
+        var agent = chai.request.agent(url());
 
         agent
             .get('login')
@@ -52,13 +53,13 @@ function TestingKit(app)
 
                 agent
                     .post('login')
-                    .send({username: "test@bom.us", password: "password", _csrf:token})
+                    .send({username: "admin@bom.us", password: "password", _csrf:token})
                     .then(function(res)
                     {
                         callback(res,agent);
                     })
             });
-    };
+    }
 
     /**
      * Check if the response is a valid json with expected results.
@@ -66,7 +67,7 @@ function TestingKit(app)
      * @param expectedStatus
      * @param dataType
      */
-    this.isJsonResponse = function(response, expectedStatus, dataType)
+    isJsonResponse(response, expectedStatus, dataType)
     {
         response.should.have.status(expectedStatus);
         response.should.be.json;
@@ -84,10 +85,10 @@ function TestingKit(app)
      * @param agent
      * @returns {*}
      */
-    this.request = function(verb,uri,data, agent)
+    request(verb,uri,data, agent)
     {
         var uri = _.trim(uri,"/");
-        var req = agent ? agent[verb.toLowerCase()](uri) : chai.request(app.url()) [verb.toLowerCase()](uri);
+        var req = agent ? agent[verb.toLowerCase()](uri) : chai.request(url()) [verb.toLowerCase()](uri);
         if (data) {
             req.send(data);
         }
@@ -95,6 +96,7 @@ function TestingKit(app)
     };
 }
 
+TestKit.prototype.expressway = expressway;
+TestKit.prototype.app = expressway.app;
 
-
-module.exports = new TestingKit(app);
+module.exports = new TestKit;
