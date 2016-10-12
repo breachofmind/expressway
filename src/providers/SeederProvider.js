@@ -36,16 +36,14 @@ class SeederProvider extends Expressway.Provider
         super(app);
 
         this.requires = [
-            'logger',
-            'orm'
+            'LoggerProvider',
+            'ModelProvider'
         ];
-
-        this.inject = ['log', 'Models','db'];
+        this.environments = [ENV_CLI];
     }
 
-    register(logger,Models,db)
+    register(app,log,Models,db)
     {
-        var app = this.app;
         var ObjectId = db.Schema.Types.ObjectId;
 
         /**
@@ -93,7 +91,7 @@ class SeederProvider extends Expressway.Provider
              */
             run()
             {
-                logger.info(msg.running, this.name);
+                log.info(msg.running, this.name);
                 return this._runMethodOnOrder('prepare');
             }
 
@@ -109,7 +107,7 @@ class SeederProvider extends Expressway.Provider
 
                 function errorHandler(err,seed)
                 {
-                    logger.error(msg.seeding, seed.name);
+                    log.error(msg.seeding, seed.name);
                 }
 
                 return new Promise(function(resolve,reject)
@@ -198,7 +196,7 @@ class SeederProvider extends Expressway.Provider
                 this.seeder[this.name] = results;
                 this.parsed = true;
 
-                logger.info(msg.parsed, this.name, results.length);
+                log.info(msg.parsed, this.name, results.length);
 
                 return results;
             }
@@ -216,7 +214,7 @@ class SeederProvider extends Expressway.Provider
                     if (self.parsed || !self.path) {
                         return resolve(self);
                     }
-                    logger.info(msg.prepare, self.path);
+                    log.info(msg.prepare, self.path);
 
                     self._converter.fromFile(self.path, complete);
 
@@ -265,7 +263,7 @@ class SeederProvider extends Expressway.Provider
 
                     // User is asking to dump the database records first.
                     if (self.reset) {
-                        logger.info(msg.dumping, model.name);
+                        log.info(msg.dumping, model.name);
                         model.remove().then(create, error(msg.err_dumping));
                     } else {
                         create();
@@ -277,7 +275,7 @@ class SeederProvider extends Expressway.Provider
                         return function(err)
                         {
                             if (err) console.error(err);
-                            logger.error(message, self.name);
+                            log.error(message, self.name);
                             resolve(err);
                         }
                     }
@@ -287,7 +285,7 @@ class SeederProvider extends Expressway.Provider
                     {
                         model.create(self.data).then(function(response) {
                             self.setModels(response);
-                            logger.info(msg.created, model.name, response.length);
+                            log.info(msg.created, model.name, response.length);
 
                             resolve(self);
 
@@ -298,7 +296,7 @@ class SeederProvider extends Expressway.Provider
 
         }
 
-        app.Seeder = Seeder;
+        app.register('Seeder', Seeder);
     }
 }
 

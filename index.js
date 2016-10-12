@@ -6,12 +6,12 @@
  */
 
 // Environment constants.
-GLOBAL.ENV_LOCAL = 'local';
-GLOBAL.ENV_DEV   = 'development';
-GLOBAL.ENV_PROD  = 'production';
-GLOBAL.ENV_CLI   = 'cli';
-GLOBAL.ENV_TEST  = 'test';
-GLOBAL.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
+global.ENV_LOCAL = 'local';
+global.ENV_DEV   = 'development';
+global.ENV_PROD  = 'production';
+global.ENV_CLI   = 'cli';
+global.ENV_TEST  = 'test';
+global.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
 
 var path        = require('path');
 var Application = require('./src/Application');
@@ -19,6 +19,7 @@ var Provider    = require('./src/Provider');
 var Driver      = require('./src/Driver');
 var Model       = require('./src/Model');
 var utils       = require('./src/support/utils');
+var GulpBuilder = require('./src/support/GulpBuilder');
 
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -132,5 +133,6 @@ Expressway.Provider = Provider;
 Expressway.Driver = Driver;
 Expressway.Application = Application;
 Expressway.utils = utils;
+Expressway.GulpBuilder = GulpBuilder;
 
 module.exports = Expressway;

@@ -30,7 +30,7 @@ class Application
 
         /**
          * Event emitter class.
-         * @type {*|EventEmitter|d}
+         * @type {*|EventEmitter}
          */
         this.event = new events.EventEmitter();
         this.config = expressway.config;

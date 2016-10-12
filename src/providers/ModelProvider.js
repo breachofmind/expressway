@@ -21,8 +21,6 @@ class ModelProvider extends Expressway.Provider
             'LoggerProvider',
         ];
 
-        this.inject = ['log','event'];
-
         this.models = {};
 
         this.driver = null;
@@ -38,7 +36,7 @@ class ModelProvider extends Expressway.Provider
     {
         this.app.register('ModelProvider', this);
 
-        var driver = require('../drivers/' + this.app.conf('db_driver', 'mongo'));
+        var driver = require('../drivers/' + this.app.conf('db_driver', 'mongodb'));
 
         this.driver = driver.register(this);
 

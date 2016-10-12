@@ -21,15 +21,16 @@ class ViewProvider extends Expressway.Provider
 
     /**
      * Register the View class.
+     * @param app Application
      */
-    register()
+    register(app)
     {
         var View = require('./classes/View');
 
         Expressway.View = View;
 
         // Attach the View class to the application.
-        this.app.register('View', View);
+        app.register('View', View);
     }
 }
 

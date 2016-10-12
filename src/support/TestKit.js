@@ -3,12 +3,12 @@
 var _           = require('lodash');
 var Expressway  = require('expressway');
 var cheerio     = require('cheerio');
-GLOBAL.chai     = require('chai');
-GLOBAL.chaiHttp = require('chai-http');
-GLOBAL.expect   = chai.expect;
-GLOBAL.should   = chai.should();
+global.chai     = require('chai');
+global.chaiHttp = require('chai-http');
+global.expect   = chai.expect;
+global.should   = chai.should();
 
-chai.use(GLOBAL.chaiHttp);
+chai.use(global.chaiHttp);
 
 var expressway = Expressway.init(__dirname+"/../../demo/app/", ENV_TEST);
 var app = expressway.app;

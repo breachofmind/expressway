@@ -7,10 +7,6 @@
     "test": "mocha test",
     "mongod": "mongod"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/breachofmind/expressway.git"
-  },
   "keywords": [
     "mvc",
     "express",
@@ -22,6 +18,10 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/breachofmind/expressway/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breachofmind/expressway.git"
   },
   "homepage": "https://github.com/breachofmind/expressway#readme",
   "dependencies": {
@@ -47,6 +47,11 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-http": "^3.0.0",
-    "cheerio": "^0.22.0"
+    "cheerio": "^0.22.0",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^3.1.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-livereload": "^3.8.1",
+    "gulp-sass": "^2.3.2"
   }
 }

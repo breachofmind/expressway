@@ -8,13 +8,17 @@ var Expressway = require('Expressway');
  */
 class TemplateProvider extends Expressway.Provider
 {
-    register()
+    /**
+     * Register with the application.
+     * @param app Application
+     */
+    register(app)
     {
         var Template = require('./classes/Template');
 
         Expressway.Template = Template;
 
-        this.app.register('Template', Template);
+        app.register('Template', Template);
     }
 }
 
