@@ -51,10 +51,10 @@ class ControllerProvider extends Expressway.Provider
     /**
      * Load all controllers in the app directory.
      * @param app Application
-     * @param log Winston
+     * @param debug function
      * @param event EventEmitter
      */
-    loadControllers(app,log,event)
+    loadControllers(app,debug,event)
     {
         var controllerPath = app.path('controllers_path', 'controllers') + "/";
 
@@ -69,7 +69,7 @@ class ControllerProvider extends Expressway.Provider
 
             this.controllers[instance.name] = instance;
 
-            log.debug('[Controller] Loaded: %s', instance.name);
+            debug(this,'Loaded: %s', instance.name);
 
         }.bind(this));
 

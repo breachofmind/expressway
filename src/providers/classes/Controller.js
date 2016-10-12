@@ -1,9 +1,9 @@
 "use strict";
 
-var Expressway = require('expressway');
-var app = Expressway.instance.app;
-var ControllerProvider = app.get('ControllerProvider');
-var utils = Expressway.utils;
+var Expressway          = require('expressway');
+var app                 = Expressway.instance.app;
+var utils               = Expressway.utils;
+var ControllerProvider  = app.get('ControllerProvider');
 
 /**
  * Controller class.

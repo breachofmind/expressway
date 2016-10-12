@@ -5,7 +5,7 @@ var utils               = Expressway.utils;
 var app                 = Expressway.instance.app;
 var ControllerProvider  = app.get('ControllerProvider');
 var express             = app.get('express');
-var log                 = app.get('log');
+var debug               = app.get('debug');
 
 const VERBS = ['get','post','put','patch','delete','options'];
 
@@ -43,7 +43,7 @@ class Route
 
         express[this.verb].apply(express, [this.url].concat(this.methods));
 
-        log.debug('[Router] #%d: %s - %s (%d Middleware)',
+        debug(this,'#%s: %s - %s (%s Middleware)',
             this.index,
             this.verb.toUpperCase(),
             this.url,

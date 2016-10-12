@@ -4,7 +4,6 @@ var concat     = require('gulp-concat');
 var sass       = require('gulp-sass');
 var concat     = require('gulp-concat');
 var autoprefix = require('gulp-autoprefixer');
-var livereload = require('gulp-livereload');
 
 class GulpBuilder
 {
@@ -87,8 +86,7 @@ class GulpBuilder
             this.gulp.src(files)
                 .pipe(sass(options).on('error', sass.logError))
                 .pipe(autoprefix())
-                .pipe(this.dest())
-                .pipe(livereload());
+                .pipe(this.dest());
         }.bind(this);
 
     }

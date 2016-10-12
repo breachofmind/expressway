@@ -18,21 +18,22 @@ class MongoDriver extends Expressway.Driver
     register(provider)
     {
         var log = this.app.get('log');
+        var debug = this.app.get('debug');
         var event = this.app.get('event');
 
         mongoose.connection.on('error', function(err){
-            log.error('[Database] Connection error: %s', err.message);
+            log.error('[MongoDriver] Connection error: %s', err.message);
             process.exit(0);
         });
 
         mongoose.connection.on('open', function(){
-            log.debug('[Database] Connected to MongoDB: %s', app.config.db);
+            debug('MongoDriver','Connected to MongoDB: %s', app.config.db);
             event.emit('database.connected', app);
         });
 
         event.on('application.destruct', function(){
             mongoose.disconnect();
-            log.debug('[Database] Connection closed.');
+            debug('MongoDriver','Connection closed');
         });
 
         mongoose.connect(this.app.config.db);

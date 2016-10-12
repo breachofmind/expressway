@@ -8,16 +8,23 @@ var Expressway = require('expressway');
  */
 class URLProvider extends Expressway.Provider
 {
+    constructor(app)
+    {
+        super(app);
+        this.requires = ['LoggerProvider'];
+    }
     /**
      * Register with the application.
      * @param app Application
+     * @param debug function
      */
-    register(app)
+    register(app,debug)
     {
         var config = app.config;
 
         var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
 
+        debug(this,"Using: %s", baseurl);
         /**
          * Return a url to the given path.
          * @return string

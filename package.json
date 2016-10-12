@@ -27,6 +27,7 @@
   "dependencies": {
     "bluebird": "^3.4.1",
     "body-parser": "^1.15.0",
+    "colors": "^1.1.2",
     "commander": "^2.9.0",
     "connect-flash": "^0.1.1",
     "connect-mongo": "^1.1.0",

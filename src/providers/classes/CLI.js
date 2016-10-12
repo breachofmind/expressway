@@ -75,7 +75,7 @@ class CLI
 
         fs.writeFileSync(destFile, template(data || {}));
 
-        log.info('[CLI] Created File: %s', destFile);
+        log.info('Created File: %s', destFile);
     };
 
     /**

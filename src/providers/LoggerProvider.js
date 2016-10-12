@@ -3,6 +3,7 @@
 var winston = require('winston');
 var Expressway = require('expressway');
 var fs = require('fs');
+var colors = require('colors/safe');
 
 /**
  * Provides the winston logger.
@@ -45,13 +46,14 @@ class LoggerProvider extends Expressway.Provider
 
     /**
      * Register the provider with the application.
+     * @param app Application
      * @param event EventEmitter
      */
-    register(event)
+    register(app,event)
     {
         winston.addColors(this.config.colors);
 
-        var logPath = this.app.path('logs_path', 'logs') + '/';
+        var logPath = app.path('logs_path', 'logs') + '/';
         var logFile = logPath + this.logFileName;
 
         // Create the log path, if it doesn't exist.
@@ -77,21 +79,27 @@ class LoggerProvider extends Expressway.Provider
             ]
         });
 
-        this.app.register('log', logger);
+        app.register('log', logger);
+        app.register('debug', debug);
+
+        function debug(className, message, ...args) {
+            if (typeof className == 'object') className = className.constructor.name;
+            args = args.map(function(arg) { return colors.green(arg) });
+            logger.debug(`[${colors.magenta(className)}] ${message}`, ...args);
+        }
 
         event.on('application.bootstrap', function(){
-            logger.debug('[Application] booting...');
+            debug('Application', 'booting...');
         });
 
         event.on('provider.loaded', function(provider) {
-            logger.debug('[Provider] Loaded: %s', provider.name);
+            debug('Provider', 'Loaded: %s', colors.gray(provider.name));
         });
     }
 
     /**
      * Decide which level to report to the console
      * based on the environment.
-     * @param app Application
      * @returns {string}
      */
     getConsoleLevel()

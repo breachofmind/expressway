@@ -2,7 +2,7 @@
 
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
-var log = app.get('log');
+var debug = app.get('debug');
 
 /**
  * Gate class
@@ -74,7 +74,7 @@ class Policy
         this.name = name;
         this.method = method;
 
-        log.debug("[Gate] Adding Policy: %s", this.name);
+        debug("Gate", "Adding Policy: %s", this.name);
     }
 
     check(user,object,action,args)

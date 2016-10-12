@@ -1,10 +1,13 @@
 "use strict";
 
+var Expressway = require('expressway');
+var app = Expressway.instance.app;
+var debug = app.get('debug');
+
 class MiddlewareStack
 {
-    constructor(app)
+    constructor()
     {
-        this.app = app;
         this.stack = [];
     }
 
@@ -27,14 +30,12 @@ class MiddlewareStack
      */
     load(server)
     {
-        var log = this.app.get('log');
-
         return this.stack.map(function(item) {
 
             if (item.loaded) return;
 
-            log.debug('[Express] Adding Application Middleware: %s', item.name);
-            item.func(this.app, server);
+            debug(this, 'Adding Application Middleware: %s', item.name);
+            item.func(app, server);
             item.loaded = true;
 
             return item.name;

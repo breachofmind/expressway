@@ -29,37 +29,38 @@ class ModelProvider extends Expressway.Provider
 
     /**
      * Register the provider with the application.
-     * @param log Winston
+     * @param app Application
+     * @param debug function
      * @param event EventEmitter
      */
-    register(log,event)
+    register(app,debug,event)
     {
-        this.app.register('ModelProvider', this);
+        app.register('ModelProvider', this);
 
-        var driver = require('../drivers/' + this.app.conf('db_driver', 'mongodb'));
+        var driver = require('../drivers/' + app.conf('db_driver', 'mongodb'));
 
         this.driver = driver.register(this);
 
-        log.debug('[Model] Using driver: %s', driver.name);
+        debug(this,'Using driver: %s', driver.name);
 
         // Expose the Driver model class.
         Expressway.Model = driver.Model;
 
-        this.app.register('Model', driver.Model);
+        app.register('Model', driver.Model);
 
-        this.app.call(this,'loadModels');
+        app.call(this,'loadModels');
 
-        this.app.register('Models', this.models);
+        app.register('Models', this.models);
 
-        event.emit('models.loaded', this.app);
+        event.emit('models.loaded', app);
     }
 
     /**
      * Load all models.
-     * @param log Winston
+     * @param debug function
      * @param Model
      */
-    loadModels(log,Model)
+    loadModels(debug,Model)
     {
         var app = this.app;
 
@@ -78,7 +79,7 @@ class ModelProvider extends Expressway.Provider
 
             this.models[instance.name] = instance;
 
-            log.debug('[Model] Loaded: %s', instance.name);
+            debug(this,'Loaded: %s', instance.name);
 
         }.bind(this));
     }

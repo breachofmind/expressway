@@ -2,7 +2,7 @@
 
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
-var log = app.get('log');
+var debug = app.get('debug');
 var utils = Expressway.utils;
 var glob = require('glob');
 var path = require('path');
@@ -39,7 +39,7 @@ class Localization
 
             var count = this.setKeys(localeName, file, hash);
 
-            log.debug("[Locale] Loaded File: %s.%s (%d keys)", localeName, file, count);
+            debug(this, "Loaded File: %s.%s (%s keys)", localeName, file, count);
 
         }.bind(this));
     }

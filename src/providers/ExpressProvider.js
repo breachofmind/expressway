@@ -2,7 +2,6 @@
 
 
 var Core            = require('../Core');
-var MiddlewareStack = require('./classes/MiddlewareStack');
 var express         = require('express');
 var locale          = require('locale');
 var bodyParser      = require('body-parser');
@@ -29,7 +28,7 @@ class ExpressProvider extends Expressway.Provider
             'URLProvider'
         ];
 
-        this.middlewareStack = new MiddlewareStack(this.app);
+
 
         this.middlewares = [];
     }
@@ -38,11 +37,15 @@ class ExpressProvider extends Expressway.Provider
      * Register the provider with the application.
      * @param app Application
      * @param event EventEmitter
-     * @param log Winston
+     * @param debug function
      */
-    register(app,event,log)
+    register(app,event,debug)
     {
-        var core = new Core(app, log);
+        var MiddlewareStack = require('./classes/MiddlewareStack');
+
+        this.middlewareStack = new MiddlewareStack();
+
+        var core = app.call(Core);
         var server = express();
 
         this.middlewareStack
@@ -73,10 +76,9 @@ class ExpressProvider extends Expressway.Provider
 
             .add('Static Content', function(app,server)
             {
-                var log = app.get('log');
                 if (app.conf('static_path')) {
                     var path = app.path('static_path');
-                    log.debug('[Express] Using static path: %s', path);
+                    debug('ExpressProvider', 'Using static path: %s', path);
                     server.use(express.static(path));
                 }
             })
@@ -142,8 +144,8 @@ class ExpressProvider extends Expressway.Provider
 
             express.listen(config.port, function()
             {
-                log.info('[Express] Using root path: %s', app.rootPath());
-                log.info(`[Express] Starting %s server v.%s on %s (%s)...`,
+                log.info('Using root path: %s', app.rootPath());
+                log.info(`Starting %s server v.%s on %s (%s)...`,
                     app.env,
                     app._version,
                     app.conf('url'),
