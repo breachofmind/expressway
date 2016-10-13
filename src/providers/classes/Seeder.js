@@ -13,7 +13,7 @@ var msg = {
     seeding: "Error seeding: %s",
     parsed:  "Parsed Seed: %s (%d rows)",
     prepare: "Preparing Seed: %s",
-    created: "Created Models: %s, %d objects",
+    created: 'Created Models: %s in table "%s", %d objects',
     dumping: "Dumping models: %s",
     err_noModel:  "Error seeding, no model or data: %s",
     err_creating: "Error creating models: %s",
@@ -34,7 +34,6 @@ class Seeder
         this.reset = false;
 
         this.seeds = [];
-        this.index = {};
     }
 
     /**
@@ -58,6 +57,7 @@ class Seeder
     add(model, source, parse)
     {
         var seed = new Seed(model, source, this);
+
         if (typeof parse === 'function') {
             seed.parse = parse;
         }
@@ -71,9 +71,8 @@ class Seeder
      */
     prepare()
     {
-        return Promise.each(this.seeds, seed => {
-            return seed.prepare();
-        });
+        var promises = this.seeds.map(seed => { return seed.prepare() });
+        return Promise.all(promises);
     }
 
     /**
@@ -82,9 +81,20 @@ class Seeder
      */
     seed()
     {
-        return Promise.each(this.seeds, seed => {
-            return seed.seed();
+        var promises = this.seeds.map(seed => { return seed.seed() });
+        return Promise.all(promises).catch(err => {
+            log.error(err);
         });
+    }
+
+    /**
+     * Exit the seeding process.
+     * @returns void
+     */
+    done()
+    {
+        log.info('Done seeding.');
+        process.exit(1);
     }
 }
 
@@ -142,12 +152,16 @@ class Seed
      */
     prepare()
     {
-        if (this.parsed) return this;
+        var seed = this;
 
-        if (Array.isArray(this.source)) {
-            this.setData(this.source);
-            return this;
+        if (seed.parsed) return seed;
+
+        if (Array.isArray(seed.source)) {
+            this.setData(seed.source);
+            return seed;
         }
+
+        var file = seed.seeder.path + seed.source;
 
         return new Promise((resolve,reject) =>
         {
@@ -155,13 +169,14 @@ class Seed
 
             var converted = (err,results) =>
             {
-                if (err || ! results.length) return reject(err,this);
+                if (err || ! results.length) return reject(err,seed);
 
                 this.setData(results);
-                return resolve(this);
+
+                return resolve(seed);
             };
 
-            converter.fromFile(this.source, converted);
+            converter.fromFile(file, converted);
         });
     }
 
@@ -169,9 +184,10 @@ class Seed
      * Inspect this seed to see if seeding is possible.
      * @returns {boolean}
      */
-    inspect()
+    check()
     {
-        if (! ModelProvider.hasModel(this.model) || this.data.length) {
+        if (! this.Model || ! this.data.length)
+        {
             log.warn(msg.err_noModel, this.model);
             return false;
         }
@@ -185,19 +201,23 @@ class Seed
      */
     seed()
     {
-        if (! this.inspect() ) return null;
+        var seed = this;
+
+        if (seed.check() === false) return null;
 
         return new Promise((resolve,reject) =>
         {
             if (this.reset) {
-                this.Model.remove().then(response => {
-                    this.create(resolve).then(models => {
-                        resolve(this);
+                log.info(msg.dumping, seed.model);
+                return seed.Model.remove().then(response => {
+                    return seed.create(resolve).then(models => {
+                        resolve(seed);
                     });
-                }).error(this.error(msg.err_dumping, resolve));
+                }).error(seed.error(msg.err_dumping, resolve));
+
             } else {
-                this.create(resolve).then(models => {
-                    resolve(this);
+                return seed.create(resolve).then(models => {
+                    resolve(seed);
                 })
             }
         });
@@ -210,18 +230,19 @@ class Seed
      */
     create(done)
     {
-        var self = this;
+        var seed = this;
 
-        return this.Model.create(this.data).then(function(response)
-        {
-            self.seeded = true;
-            self.models = response;
+        return seed.Model.create(seed.data)
+            .catch(seed.error(msg.err_creating, done))
+            .then( response =>
+            {
+                seed.seeded = true;
+                seed.models = response;
 
-            log.info(msg.created, self.model, response.length);
+                log.info(msg.created, seed.model, seed.Model.table, response.length);
 
-            return response;
-
-        }).error(this.error(msg.err_creating, done));
+                return response;
+            });
     }
 
     /**
@@ -233,8 +254,9 @@ class Seed
     error(message, done)
     {
         return function(err) {
+            console.error(err);
             log.error(message, this.model);
-            done(err);
+            done(this);
         }.bind(this);
     }
 

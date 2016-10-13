@@ -1,24 +1,22 @@
 "use strict";
 
-var program  = require('commander');
-var cp       = require('child_process');
-var path     = require('path');
-var ejs      = require('ejs');
-var fs       = require('fs');
+var Expressway  = require('expressway');
+var program     = require('commander');
+var app         = Expressway.instance.app;
+var log         = app.get('log');
+var cp          = require('child_process');
+var path        = require('path');
+var ejs         = require('ejs');
+var fs          = require('fs');
 
 class CLI
 {
     /**
      * Constructor.
-     * @param app Application
-     * @param log Winston
      */
-    constructor(app,log)
+    constructor()
     {
-        this.app = app;
-        this.log = log;
-
-        this.cli = program.version(app._version);
+        this.program = program.version(app._version);
     }
 
     /**
@@ -29,7 +27,7 @@ class CLI
      */
     action(name,func)
     {
-        this.cli.command(name).action(func);
+        this.program.command(name).action(func);
         return this;
     }
 
@@ -52,7 +50,7 @@ class CLI
      */
     run()
     {
-        this.cli.parse(process.argv);
+        this.program.parse(process.argv);
     };
 
     /**

@@ -1,7 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
-var CLI = require('./classes/CLI');
+
 var _string  = require('lodash/string');
 
 /**
@@ -28,9 +28,9 @@ class CLIProvider extends Expressway.Provider
      */
     register(app)
     {
-        this.cli = app.call(CLI);
+        var CLI = require('./classes/CLI');
 
-        app.register('cli', this.cli);
+        app.register('cli', app.call(CLI));
 
         app.call(this,'setDefaultActions');
     }
