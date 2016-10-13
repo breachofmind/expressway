@@ -110,6 +110,16 @@ class Expressway
     }
 
     /**
+     * An alias to the CLI environment.
+     * @param rootPath string
+     * @returns {Application}
+     */
+    static cli(rootPath)
+    {
+        return Expressway.init(rootPath, ENV_CLI).bootstrap();
+    }
+
+    /**
      * Initialize the application.
      * @param rootPath string
      * @param env string, optional
@@ -117,6 +127,9 @@ class Expressway
      */
     static init(rootPath,env)
     {
+        // Return the instance if it exists already.
+        if (Expressway.instance) return Expressway.instance;
+
         var providers = utils.getModulesAsHash(__dirname+'/src/providers/', true);
 
         var config = require(rootPath + 'config/config') (providers);

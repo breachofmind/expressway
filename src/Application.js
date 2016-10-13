@@ -27,6 +27,7 @@ class Application
 
         this.providers     = {};
         this.services      = {};
+        this.documentation = {};
 
         /**
          * Event emitter class.
@@ -36,8 +37,9 @@ class Application
         this.config = expressway.config;
         this.env = expressway.env;
 
-        this.register('app', this);
-        this.register('event', this.event);
+        this.register('package', this._package, "The NPM package.json");
+        this.register('app', this, "The Application instance");
+        this.register('event', this.event, "Application event emitter instance");
     }
 
 
@@ -199,14 +201,18 @@ class Application
      * Register a service or other object.
      * @param name {string}
      * @param instance mixed
+     * @param description {string} optional
      * @returns {Application}
      */
-    register(name, instance)
+    register(name, instance, description)
     {
         if (this.services.hasOwnProperty(name)) {
             throw new Error (`"${name}" service has already been defined`);
         }
         this.services[name] = instance;
+        if (description) {
+            this.documentation[name] = description;
+        }
         return this;
     }
 

@@ -49,11 +49,11 @@ class AuthProvider extends Expressway.Provider
 
 
         // Attach the authenticated user to the view for use in templates.
-        event.on('view.created', function(view,request){
+        event.on('view.created', (view,request) => {
             view.data.user = request.user;
         });
 
-        app.register('encrypt', this.encrypt);
+        app.register('encrypt', this.encrypt, "Function for encrypting passwords securely");
     }
 
     /**

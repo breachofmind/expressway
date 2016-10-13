@@ -30,7 +30,7 @@ class CLIProvider extends Expressway.Provider
     {
         var CLI = require('./classes/CLI');
 
-        app.register('cli', app.call(CLI));
+        app.register('cli', app.call(CLI), "The CLI class instance");
 
         app.call(this,'setDefaultActions');
     }

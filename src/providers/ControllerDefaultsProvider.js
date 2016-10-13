@@ -58,12 +58,13 @@ class ControllerDefaultsProvider extends Expressway.Provider
 
     /**
      * Register with the application.
+     * @param app Application
      */
-    register()
+    register(app)
     {
-        this.app.register('ControllerDefaultsProvider', this);
-        this.app.register('DefaultRESTController',   require('../controllers/RESTController'));
-        this.app.register('DefaultLocaleController', require('../controllers/LocaleController'));
+        app.register('ControllerDefaultsProvider', this, "Provider class");
+        app.register('DefaultRESTController',   require('../controllers/RESTController'), "The default REST Controller class");
+        app.register('DefaultLocaleController', require('../controllers/LocaleController', "The default Locale Controller class"));
     }
 }
 
