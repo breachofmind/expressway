@@ -19,11 +19,12 @@ class ModelProvider extends Expressway.Provider
 
         this.requires = [
             'LoggerProvider',
+            'DriverProvider'
         ];
 
-        this.models = {};
+        this.order = 1;
 
-        this.driver = null;
+        this.models = {};
     }
 
 
@@ -31,42 +32,36 @@ class ModelProvider extends Expressway.Provider
      * Register the provider with the application.
      * @param app Application
      * @param debug function
-     * @param event EventEmitter
+     * @param DriverProvider DriverProvider
      */
-    register(app,debug,event)
+    register(app,debug,DriverProvider,event)
     {
         app.register('ModelProvider', this);
 
-        var driver = require('../drivers/' + app.conf('db_driver', 'mongodb'));
-
-        this.driver = driver.register(this);
-
-        debug(this,'Using driver: %s', driver.name);
+        debug(this,'Using driver: %s', DriverProvider.alias);
 
         // Expose the Driver model class.
-        Expressway.Model = driver.Model;
+        Expressway.Model = DriverProvider.Model;
+        app.register('Model', DriverProvider.Model);
 
-        app.register('Model', driver.Model);
+        event.once('providers.registered', app => {
+            app.register('Models', app.call(this,'loadModels'));
+        })
 
-        app.call(this,'loadModels');
-
-        app.register('Models', this.models);
-
-        event.emit('models.loaded', app);
     }
 
     /**
      * Load all models.
+     * @param app Application
      * @param debug function
      * @param Model
+     * @returns {object}
      */
-    loadModels(debug,Model)
+    loadModels(app, debug, Model, event)
     {
-        var app = this.app;
-
         var modelPath = app.path('models_path', 'models') + "/";
 
-        utils.getModules(modelPath, function(path)
+        utils.getModules(modelPath, path =>
         {
             var Class = require(path);
             var instance = app.call(Class);
@@ -81,7 +76,11 @@ class ModelProvider extends Expressway.Provider
 
             debug(this,'Loaded: %s', instance.name);
 
-        }.bind(this));
+        });
+
+        event.emit('models.loaded', app);
+
+        return this.models;
     }
 
     /**

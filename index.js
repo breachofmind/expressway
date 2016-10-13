@@ -13,13 +13,13 @@ global.ENV_CLI   = 'cli';
 global.ENV_TEST  = 'test';
 global.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
 
-var path        = require('path');
-var Application = require('./src/Application');
-var Provider    = require('./src/Provider');
-var Driver      = require('./src/Driver');
-var Model       = require('./src/Model');
-var utils       = require('./src/support/utils');
-var GulpBuilder = require('./src/support/GulpBuilder');
+var path            = require('path');
+var Application     = require('./src/Application');
+var Provider        = require('./src/Provider');
+var DriverProvider  = require('./src/DriverProvider');
+var Model           = require('./src/Model');
+var utils           = require('./src/support/utils');
+var GulpBuilder     = require('./src/support/GulpBuilder');
 
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -127,12 +127,12 @@ class Expressway
     }
 }
 
-Expressway.instance = null;
-Expressway.BaseModel = Model;
-Expressway.Provider = Provider;
-Expressway.Driver = Driver;
-Expressway.Application = Application;
-Expressway.utils = utils;
-Expressway.GulpBuilder = GulpBuilder;
+Expressway.instance         = null;
+Expressway.BaseModel        = Model;
+Expressway.Provider         = Provider;
+Expressway.DriverProvider   = DriverProvider;
+Expressway.Application      = Application;
+Expressway.utils            = utils;
+Expressway.GulpBuilder      = GulpBuilder;
 
 module.exports = Expressway;

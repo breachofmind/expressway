@@ -92,12 +92,12 @@ class ExpressProvider extends Expressway.Provider
 
             .add('Session', function(app,server)
             {
-                var driver = app.get('ModelProvider').driver;
+                var driver = app.get('DriverProvider');
                 server.use(session ({
                     secret: app.conf('appKey', 'keyboard cat'),
                     saveUninitialized: false,
                     resave: false,
-                    store: driver.getSessionStore(app)
+                    store: app.call(driver,'getSessionStore')
                 }));
             })
 

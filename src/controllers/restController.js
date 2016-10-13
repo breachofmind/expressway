@@ -88,8 +88,6 @@ class RESTController extends Expressway.Controller
      */
     index(request,response,next,ModelProvider,url,event)
     {
-        var app = this.app;
-
         var json = {
             message: "Expressway API v1",
             currentUser: request.user,
@@ -233,7 +231,7 @@ class RESTController extends Expressway.Controller
      *
      * PUT /api/{model}/{id}
      */
-    update(request,response,next)
+    update(request,response)
     {
         if (request.body._id) delete request.body._id; // Mongoose has problems with this.
 

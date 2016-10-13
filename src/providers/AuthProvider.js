@@ -27,27 +27,33 @@ class AuthProvider extends Expressway.Provider
 
     /**
      * Register with express.
+     * @param app Application
      * @param ModelProvider ModelProvider
      * @param ExpressProvider ExpressProvider
      * @param event EventEmitter
      */
-    register(ModelProvider, ExpressProvider, event)
+    register(app, ModelProvider, ExpressProvider, event)
     {
-        if (! ModelProvider.hasModel('User')) {
-            throw ('"User" model is required to use basic Auth functionality.');
-        }
-        var auth = this.app.call(Auth);
+        event.once('providers.registered', app => {
 
-        ExpressProvider.middlewareStack.add('Basic Authentication', function(app,server) {
-            auth.middleware(server);
+            if (! ModelProvider.hasModel('User')) {
+                throw ('"User" model is required to use basic Auth functionality.');
+            }
+
+            var auth = app.call(Auth);
+
+            ExpressProvider.middlewareStack.add('Basic Authentication', function(app,server) {
+                auth.middleware(server);
+            });
         });
+
 
         // Attach the authenticated user to the view for use in templates.
         event.on('view.created', function(view,request){
             view.data.user = request.user;
         });
 
-        this.app.register('encrypt', this.encrypt);
+        app.register('encrypt', this.encrypt);
     }
 
     /**

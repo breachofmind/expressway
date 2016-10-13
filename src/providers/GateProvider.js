@@ -27,9 +27,10 @@ class GateProvider extends Expressway.Provider
 
     /**
      * Register with the application.
+     * @param app Application
      * @param ModelProvider ModelProvider
      */
-    register(ModelProvider)
+    register(app, ModelProvider)
     {
         // Permission index.
         var permissions = buildPermissions();
@@ -54,7 +55,7 @@ class GateProvider extends Expressway.Provider
         var Gate = require('./classes/Gate');
         var gate = new Gate(permissions);
 
-        this.app.register('gate', gate);
+        app.register('gate', gate);
     }
 
 }

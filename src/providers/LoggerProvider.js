@@ -88,13 +88,17 @@ class LoggerProvider extends Expressway.Provider
             logger.debug(`[${colors.magenta(className)}] ${message}`, ...args);
         }
 
-        event.on('application.bootstrap', function(){
-            debug('Application', 'booting...');
+        event.on('application.bootstrap', function(app){
+            debug(app, 'booting...');
         });
 
         event.on('provider.loaded', function(provider) {
             debug('Provider', 'Loaded: %s', colors.gray(provider.name));
         });
+
+        event.on('providers.registered', function(app) {
+            debug(app, 'Providers registered: %s', Object.keys(app.providers).length);
+        })
     }
 
     /**

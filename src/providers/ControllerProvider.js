@@ -43,9 +43,9 @@ class ControllerProvider extends Expressway.Provider
 
         // All providers should be registered first,
         // In case we're using a provider that adds a controller.
-        event.on('providers.registered', function() {
-            app.call(this,'loadControllers');
-        }.bind(this));
+        event.on('providers.registered', app => {
+            app.register('controllers', app.call(this,'loadControllers'));
+        });
     }
 
     /**
@@ -53,6 +53,7 @@ class ControllerProvider extends Expressway.Provider
      * @param app Application
      * @param debug function
      * @param event EventEmitter
+     * @returns object
      */
     loadControllers(app,debug,event)
     {
@@ -74,6 +75,8 @@ class ControllerProvider extends Expressway.Provider
         }.bind(this));
 
         event.emit('controllers.loaded',app);
+
+        return this.controllers;
     }
 
     /**
