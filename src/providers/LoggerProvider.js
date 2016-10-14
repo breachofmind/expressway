@@ -113,9 +113,9 @@ class LoggerProvider extends Expressway.Provider
      */
     getConsoleLevel()
     {
-        switch (this.app.env) {
-            case ENV_TEST: return 'warn';
-            case ENV_CLI: return 'info';
+        switch (this.app.context) {
+            case CXT_TEST: return 'warn';
+            case CXT_CLI: return 'info';
             default: return this.app.conf('debug') == true ? 'debug' : 'info';
         }
     }

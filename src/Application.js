@@ -36,6 +36,7 @@ class Application
         this.event = new events.EventEmitter();
         this.config = expressway.config;
         this.env = expressway.env;
+        this.context = expressway.context;
 
         this.register('package', this._package, "The NPM package.json");
         this.register('app', this, "The Application instance");
@@ -90,7 +91,7 @@ class Application
      */
     load(provider)
     {
-        if (! provider.isLoadable(this.env)) return false;
+        if (! provider.isLoadable(this.env, this.context) || provider.loaded) return false;
 
         this.event.emit('provider.loading', provider);
 

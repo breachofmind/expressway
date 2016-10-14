@@ -20,7 +20,7 @@ class CLIProvider extends Expressway.Provider
             'LoggerProvider'
         ];
 
-        this.environments = [ENV_CLI];
+        this.contexts = [CXT_CLI];
     }
 
     /**
@@ -105,6 +105,34 @@ class CLIProvider extends Expressway.Provider
             });
             console.log(columnify(columns));
             process.exit(1);
+        });
+
+        cli.action('providers', function(env,context) {
+
+            var columns = Object.keys(app.providers).sort((a,b) => { return a.localeCompare(b); }).map(function(key) {
+                var provider = app.providers[key];
+                return {
+                    name: colors.magenta(provider.name),
+                    loaded: provider.isLoadable(env || ENV_ALL, context || CXT_ALL) ? colors.green("yes") : colors.red("no"),
+                    envs: provider.environments,
+                    contexts: provider.contexts.map(cxt => { return colors.gray(cxt); }),
+                    dependencies: provider.requires
+                }
+            });
+            console.log(columnify(columns));
+            process.exit(1);
+        });
+
+        /**
+         * Run the seeder.
+         * @usage ./bin/cli seed
+         */
+        cli.action('seed', function(env,opts) {
+            if (app.env == ENV_PROD) {
+                log.warn("Seeding not allowed in production mode! Exiting.");
+                return process.exit(1);
+            }
+            require(app.path('db_path', 'db') + "seeder");
         });
     }
 }

@@ -30,7 +30,7 @@ class Seeder
     constructor(name, path)
     {
         this.name = name;
-        this.path = path || app.path('seeds_path', 'db/seeds');
+        this.path = path || app.path('db_path','db') + "seeds/";
         this.reset = false;
 
         this.seeds = [];

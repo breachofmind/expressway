@@ -22,7 +22,7 @@ class GateProvider extends Expressway.Provider
             'ModelProvider'
         ];
 
-        this.environments = ENV_WEB;
+        this.contexts = [CXT_TEST, CXT_WEB];
 
         app.register('permissionBuilder', function(modelNames) {
             var out = [];

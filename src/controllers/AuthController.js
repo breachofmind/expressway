@@ -95,9 +95,10 @@ class AuthController extends Expressway.Controller
                 subject: 'Password Reset',
                 view:    'email/reset',
                 data:    {resetLink: resetLink}
-            }).then(info => {
-                log.access('Mail sent: User requested reset: %s %s', user.id, app.config.debug ? resetLink : "");
-            });
+            })
+                .then(info => {
+                    log.access('Mail sent: User requested reset: %s %s', user.id, app.config.debug ? resetLink : "");
+                });
 
             request.flash('message', {
                 text: request.lang('auth.login_reset'),

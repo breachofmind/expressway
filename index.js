@@ -7,11 +7,15 @@
 
 // Environment constants.
 global.ENV_LOCAL = 'local';
-global.ENV_DEV   = 'development';
-global.ENV_PROD  = 'production';
-global.ENV_CLI   = 'cli';
-global.ENV_TEST  = 'test';
-global.ENV_WEB   = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_TEST];
+global.ENV_DEV   = 'dev';
+global.ENV_PROD  = 'prod';
+global.ENV_ALL   = [ENV_LOCAL, ENV_DEV, ENV_PROD];
+
+// Environment contexts.
+global.CXT_CLI   = 'cli';
+global.CXT_WEB   = 'web';
+global.CXT_TEST  = 'test';
+global.CXT_ALL   = [CXT_CLI,CXT_WEB,CXT_TEST];
 
 var path            = require('path');
 var Application     = require('./src/Application');
@@ -62,7 +66,7 @@ var GulpBuilder     = require('./src/support/GulpBuilder');
  */
 class Expressway
 {
-    constructor(rootPath, config)
+    constructor(rootPath, config, context)
     {
         /**
          * The root path of the application.
@@ -82,6 +86,12 @@ class Expressway
          * @type {string}
          */
         this.env = config.environment;
+
+        /**
+         * The environment context.
+         * @type {string}
+         */
+        this.context = context || CXT_WEB;
 
         /**
          * The Application instance.
@@ -116,16 +126,16 @@ class Expressway
      */
     static cli(rootPath)
     {
-        return Expressway.init(rootPath, ENV_CLI).bootstrap();
+        return Expressway.init(rootPath, CXT_CLI).bootstrap();
     }
 
     /**
      * Initialize the application.
      * @param rootPath string
-     * @param env string, optional
+     * @param context string, optional
      * @returns {Expressway}
      */
-    static init(rootPath,env)
+    static init(rootPath, context)
     {
         // Return the instance if it exists already.
         if (Expressway.instance) return Expressway.instance;
@@ -134,9 +144,7 @@ class Expressway
 
         var config = require(rootPath + 'config/config') (providers);
 
-        if (env) config.environment = env;
-
-        return Expressway.instance = new Expressway(rootPath, config);
+        return Expressway.instance = new Expressway(rootPath, config, context);
     }
 }
 

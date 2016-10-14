@@ -19,7 +19,8 @@ class Provider
         this.loaded         = false;
         this.order          = 1;
         this.requires       = [];
-        this.environments   = [];
+        this.environments   = ENV_ALL;
+        this.contexts       = CXT_ALL;
     }
 
     /**
@@ -35,13 +36,16 @@ class Provider
 
     /**
      * Check if this provider can be loaded.
+     * @param env {string}
+     * @param context {string}
      * @returns {boolean}
      */
-    isLoadable(env)
+    isLoadable(env, context)
     {
-        var inEnvironment = !this.environments.length ? true : this.environments.indexOf(env) > -1;
+        var inEnvironment = this.environments.indexOf(env) > -1;
+        var inContext =  this.contexts.indexOf(context) > -1;
 
-        return this.active && !this.loaded && inEnvironment;
+        return this.active && inEnvironment && inContext;
     }
 }
 
