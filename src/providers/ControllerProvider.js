@@ -24,6 +24,7 @@ class ControllerProvider extends Expressway.Provider
         ];
 
         this.controllers = {};
+
     }
 
     /**

@@ -119,11 +119,15 @@ module.exports = {
         {
             // "indexController.index"
             // dispatch method should return an array of functions.
-            if (typeof value == 'string') {
-                out = out.concat( ControllerProvider.dispatch.apply(ControllerProvider, value.split(".",2)) );
+            if (typeof value == 'string')
+            {
+                var funcs = ControllerProvider.dispatch.apply(ControllerProvider, value.split(".",2));
+                funcs[funcs.length-1].$route = value;
+                out = out.concat( funcs );
             }
             // function(request,response,next) {...}
             if (typeof value == 'function') {
+                value.$route = value.name || 'anonymous';
                 out.push(value);
             }
         });

@@ -39,8 +39,11 @@ class CLIProvider extends Expressway.Provider
 
     /**
      * Give the CLI class some default actions.
+     * @param app Application
+     * @param cli CLI
+     * @param log Winston
      */
-    setDefaultActions(app,cli)
+    setDefaultActions(app,cli,log)
     {
         /**
          * Create a new model, controller or provider.
@@ -75,7 +78,7 @@ class CLIProvider extends Expressway.Provider
                     index: route.index,
                     verb: verbColor(route.verb.toUpperCase()),
                     url: route.url,
-                    middleware: colors.blue(route.methods.length)
+                    middleware: colors.blue(route.methods.map(method => { return method.$route; }).join(" -> "))
                 }
             });
             console.log(columnify(columns));
@@ -107,6 +110,10 @@ class CLIProvider extends Expressway.Provider
             process.exit(1);
         });
 
+        /**
+         * List all the providers in the application.
+         * @usage ./bin/cli providers [environment] [context]
+         */
         cli.action('providers', function(env,context) {
 
             var columns = Object.keys(app.providers).sort((a,b) => { return a.localeCompare(b); }).map(function(key) {
