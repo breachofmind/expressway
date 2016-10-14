@@ -79,8 +79,8 @@ class LoggerProvider extends Expressway.Provider
             ]
         });
 
-        app.register('log', logger);
-        app.register('debug', debug);
+        app.register('log', logger, "The main Winston logger instance");
+        app.register('debug', debug, "Console logging function for debugging");
 
         function debug(className, message, ...args) {
             if (typeof className == 'object') className = className.constructor.name;

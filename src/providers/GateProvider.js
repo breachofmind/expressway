@@ -23,6 +23,16 @@ class GateProvider extends Expressway.Provider
         ];
 
         this.environments = ENV_WEB;
+
+        app.register('permissionBuilder', function(modelNames) {
+            var out = [];
+            modelNames.forEach(function(model) {
+                ['create','read','update','delete'].forEach(function(action) {
+                    out.push(model+"."+action);
+                })
+            });
+            return out;
+        }, "A helper function for building permissions")
     }
 
     /**

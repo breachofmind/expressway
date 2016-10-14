@@ -30,7 +30,7 @@ class ViewProvider extends Expressway.Provider
         Expressway.View = View;
 
         // Attach the View class to the application.
-        app.register('View', View);
+        app.register('View', View, "A wrapper class around HTML views and templates");
     }
 }
 

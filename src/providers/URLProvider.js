@@ -36,7 +36,7 @@ class URLProvider extends Expressway.Provider
         }
 
         // Attach to the application.
-        app.register('url', getUrl);
+        app.register('url', getUrl, "Function for returning the url/proxy url");
     }
 }
 

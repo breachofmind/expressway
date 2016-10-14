@@ -36,16 +36,16 @@ class ModelProvider extends Expressway.Provider
      */
     register(app,debug,DriverProvider,event)
     {
-        app.register('ModelProvider', this);
+        app.register('ModelProvider', this, "Model Provider instance, for getting/setting models");
 
         debug(this,'Using driver: %s', DriverProvider.alias);
 
         // Expose the Driver model class.
         Expressway.Model = DriverProvider.Model;
-        app.register('Model', DriverProvider.Model);
+        app.register('Model', DriverProvider.Model, "The Model class, an extension of the core BaseModel");
 
         event.once('providers.registered', app => {
-            app.register('Models', app.call(this,'loadModels'));
+            app.register('Models', app.call(this,'loadModels'), "An object containing all loaded Model instances");
         })
 
     }

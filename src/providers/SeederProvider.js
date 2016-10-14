@@ -41,7 +41,7 @@ class SeederProvider extends Expressway.Provider
 
         Expressway.Seeder = Seeder;
 
-        app.register('Seeder', Seeder);
+        app.register('Seeder', Seeder, "A class for seeding database records");
     }
 }
 

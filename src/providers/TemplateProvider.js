@@ -18,7 +18,7 @@ class TemplateProvider extends Expressway.Provider
 
         Expressway.Template = Template;
 
-        app.register('Template', Template);
+        app.register('Template', Template, "A helper class for HTML views");
     }
 }
 

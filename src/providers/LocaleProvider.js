@@ -34,7 +34,7 @@ class LocaleProvider extends Expressway.Provider
 
         var localization = new Localization();
 
-        app.register('localization', localization);
+        app.register('localization', localization, "The Localization class, for adding/retreiving locale keys");
 
         // When each view is created, add the template function.
         app.event.on('view.created', function(view,request) {

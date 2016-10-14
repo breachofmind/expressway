@@ -17,8 +17,8 @@ class Auth
      */
     constructor(app, Models)
     {
-        app.register('auth', this);
-        app.register('passport', passport);
+        app.register('auth', this, "The Auth instance");
+        app.register('passport', passport, "The passport instance");
 
         this.passport = passport;
         this.User     = Models.User;

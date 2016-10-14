@@ -106,8 +106,8 @@ class ExpressProvider extends Expressway.Provider
                 server.use( flash() );
             });
 
-        app.register('express', server);
-        app.register('ExpressProvider', this);
+        app.register('express', server, "The express instance");
+        app.register('ExpressProvider', this, "The Express Provider instance, for adding core middleware");
 
         event.on('application.bootstrap', this.onBootstrap());
 

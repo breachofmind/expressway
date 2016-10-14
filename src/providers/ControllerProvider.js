@@ -35,8 +35,8 @@ class ControllerProvider extends Expressway.Provider
     {
         var Controller = require('./classes/Controller');
 
-        app.register('Controller', Controller);
-        app.register('ControllerProvider', this);
+        app.register('Controller', Controller, 'The base Controller class');
+        app.register('ControllerProvider', this, 'The Controller Provider, for getting/setting controller instances');
 
         // Expose the controller class.
         Expressway.Controller = Controller;
@@ -44,7 +44,7 @@ class ControllerProvider extends Expressway.Provider
         // All providers should be registered first,
         // In case we're using a provider that adds a controller.
         event.on('providers.registered', app => {
-            app.register('controllers', app.call(this,'loadControllers'));
+            app.register('controllers', app.call(this,'loadControllers'), "An object containing all loaded Controller instances");
         });
     }
 

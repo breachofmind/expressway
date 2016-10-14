@@ -2,11 +2,20 @@
 
 var concat     = require('gulp-concat');
 var sass       = require('gulp-sass');
-var concat     = require('gulp-concat');
+var livereload = require('gulp-livereload');
 var autoprefix = require('gulp-autoprefixer');
 
+/**
+ * A helper class for creating gulp builds.
+ * @author Mike Adamczyk <mike@bom.us>
+ */
 class GulpBuilder
 {
+    /**
+     * Constructor
+     * @param app Application
+     * @param gulp
+     */
     constructor(app,gulp)
     {
         this.app = app;
@@ -100,6 +109,32 @@ class GulpBuilder
     watch(path, tasks)
     {
         this.gulp.watch(this.paths[path] + '/**/*.'+path, tasks);
+    }
+
+    /**
+     * Listen to file system changes when developing js/css.
+     * Also handle reloading the browser when files change in the build directory.
+     * @returns void
+     */
+    listen()
+    {
+        var gulp = this.gulp;
+
+        livereload.listen();
+
+        var viewExtension = this.app.conf('view_engine');
+
+        this.watch('js',   ['js:src']);
+        this.watch('scss', ['sass']);
+
+        var livereloadPaths = [
+            this.paths.views + '/**/*.' + viewExtension,
+            this.paths.build + '/**/*.js',
+            this.paths.build + '/**/*.css',
+        ];
+        gulp.watch(livereloadPaths, function(event) {
+            gulp.src(event.path).pipe( livereload() );
+        });
     }
 
     /**
