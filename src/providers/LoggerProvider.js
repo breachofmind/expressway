@@ -82,10 +82,14 @@ class LoggerProvider extends Expressway.Provider
         app.register('log', logger, "The main Winston logger instance");
         app.register('debug', debug, "Console logging function for debugging");
 
-        function debug(className, message, ...args) {
+        function debug(className, message, ...args)
+        {
+            if (app.config.debug !== true) return;
             if (typeof className == 'object') className = className.constructor.name;
             args = args.map(function(arg) { return colors.green(arg) });
-            logger.debug(`[${colors.magenta(className)}] ${message}`, ...args);
+            var classColor = "magenta";
+            if (className == "Application") classColor = "yellow";
+            logger.debug(`[${colors[classColor](className)}] ${message}`, ...args);
         }
 
         event.on('application.bootstrap', function(app){
@@ -97,7 +101,8 @@ class LoggerProvider extends Expressway.Provider
         });
 
         event.on('providers.registered', function(app) {
-            debug(app, 'Providers registered: %s', Object.keys(app.providers).length);
+            debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
+            debug(app, 'Provider Order... \n%s', app._order.join("\n"));
         })
     }
 

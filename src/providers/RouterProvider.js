@@ -42,7 +42,7 @@ class RouterProvider extends Expressway.Provider
         // After express is loaded, add the routes to it.
         event.once('application.bootstrap', function(app)
         {
-            routes.apply(router, [app,Template]);
+            app.call(routes, [router]);
 
             // Not Found is the last route to use.
             express.use(router.notFound);

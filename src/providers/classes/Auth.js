@@ -58,10 +58,11 @@ class Auth
                     return done(null, false, { message: 'auth.err_user_missing' });
                 }
 
-                // If user password is not valid, fail with message.
-                if (! user.isValid(password)) {
+                try {
+                    user.authenicate(password);
+                } catch(err) {
                     log.log('access', "Login attempt failed: '%s'", username);
-                    return done(null, false, { message: 'auth.err_incorrect_password' });
+                    return done(null, false, { message: 'auth.err_'+err });
                 }
 
                 // If they got this far, they were successfully authenticated.

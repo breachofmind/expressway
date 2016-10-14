@@ -77,7 +77,7 @@ class MongoModel extends Expressway.BaseModel
     {
         var schema = new db.Schema(this.schema, {collection: this.table});
         this.onBoot(schema);
-        this.schema.methods = this.methods;
+        schema.methods = this.methods;
         this.model = db.model(this.name, schema);
 
         return super.boot();

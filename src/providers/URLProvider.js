@@ -1,6 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
+var _ = require('lodash/string');
 
 /**
  * Provides a URL helper.
@@ -22,7 +23,7 @@ class URLProvider extends Expressway.Provider
     {
         var config = app.config;
 
-        var baseurl = config.proxy ? config.proxy : config.url + ":" +config.port;
+        var baseurl = _.trimEnd(config.proxy ? config.proxy : config.url + ":" +config.port, "/");
 
         debug(this,"Using: %s", baseurl);
         /**
@@ -32,6 +33,7 @@ class URLProvider extends Expressway.Provider
         function getUrl(uri)
         {
             if (!uri) uri = "";
+            uri = _.trim(uri,"/");
             return `${baseurl}/${uri}`;
         }
 
