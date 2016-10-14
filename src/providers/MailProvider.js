@@ -19,7 +19,10 @@ class MailProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = ['URLProvider'];
+        this.requires = [
+            'URLProvider',
+            'ExpressProvider'
+        ];
 
         // Use the configuration setting.
         // Otherwise, use the stub transport for testing purposes.
@@ -29,23 +32,31 @@ class MailProvider extends Expressway.Provider
     /**
      * Register the mail function with the application.
      * @param app Application
+     * @param express Express
      */
-    register(app)
+    register(app,express)
     {
         var transport = this.transport;
 
         /**
          * Using a promise, send mail with the given options.
+         * You can pass options.view = view name to render an HTML email using express template engine.
          * @param options object
          */
         function sendMail(options)
         {
             return new Promise((resolve,reject) => {
-                transport.sendMail(options, function(err,info) {
-                    if (err) return reject(err,info);
-
-                    return resolve(info);
-                });
+                var callback = (err,info) => {
+                    return err ? reject(err) : resolve(info);
+                };
+                if (options.view) {
+                    return express.render(options.view, options.data || {}, function(err,html) {
+                        if (err) return reject(err);
+                        options.html = html;
+                        transport.sendMail(options,callback);
+                    });
+                }
+                return transport.sendMail(options,callback);
             });
         }
 

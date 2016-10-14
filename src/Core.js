@@ -143,6 +143,15 @@ class Core
                 this.handleReturnValue(value,status,request,response);
             }.bind(this);
 
+            response.redirectWithFlash = function(to, key, body)
+            {
+                if (response.ajax) {
+                    return response.smart(body);
+                }
+                request.flash(key, body);
+                return response.redirect(to);
+            };
+
             /**
              * Send a response formatted for the API.
              * @param data mixed

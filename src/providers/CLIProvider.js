@@ -3,6 +3,8 @@
 var Expressway = require('expressway');
 
 var _string  = require('lodash/string');
+var columnify = require('columnify');
+var colors = require('colors');
 
 /**
  * Provides a Command Line interface module.
@@ -52,6 +54,56 @@ class CLIProvider extends Expressway.Provider
 
             this.cli.template(templateFile, destFile , {name:opts, _:_string});
 
+            process.exit(1);
+        });
+
+        /**
+         * List all the routes in the application.
+         * @usage ./bin/cli routes
+         */
+        cli.action('routes', function(env,opts)
+        {
+            var router = app.get('router');
+            var columns = router.routes.map(function(route) {
+                var verbColor = colors.gray;
+                switch (route.verb) {
+                    case "post": verbColor = colors.green; break;
+                    case "delete": verbColor = colors.red; break;
+                    case "put": verbColor = colors.magenta; break;
+                }
+                return {
+                    index: route.index,
+                    verb: verbColor(route.verb.toUpperCase()),
+                    url: route.url,
+                    middleware: colors.blue(route.methods.length)
+                }
+            });
+            console.log(columnify(columns));
+            process.exit(1);
+        });
+
+        /**
+         * List all the services in the application.
+         * @usage ./bin/cli services
+         */
+        cli.action('services', function(env,opts)
+        {
+            var serviceNames = Object.keys(app.services).sort((a,b) => {
+                return a.localeCompare(b);
+            });
+            var columns = serviceNames.map(function(key) {
+                var svc = app.services[key];
+                var doc = app.documentation[key] || "-";
+                var type = typeof svc;
+                if (type == 'function') type = svc.name || type;
+                return {
+                    type: colors.gray(type),
+                    service: colors.green(key),
+                    value: type == 'string' ? colors.blue(svc) : "",
+                    description: doc,
+                }
+            });
+            console.log(columnify(columns));
             process.exit(1);
         });
     }

@@ -2,6 +2,7 @@
 
 var Expressway = require('expressway');
 var _ = require('lodash/string');
+var URL = require('url');
 
 /**
  * Provides a URL helper.
@@ -39,6 +40,7 @@ class URLProvider extends Expressway.Provider
 
         // Attach to the application.
         app.register('url', getUrl, "Function for returning the url/proxy url");
+        app.register('domain', URL.parse(baseurl).hostname, "The server or proxy domain name");
     }
 }
 

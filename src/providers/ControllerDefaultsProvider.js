@@ -21,13 +21,13 @@ class ControllerDefaultsProvider extends Expressway.Provider
         this.requires = [
             'ControllerProvider',
             'LocaleProvider',
+            'AuthProvider',
             'URLProvider'
         ];
 
         this.RESTController = {
-            // Require logged in user to create/delete/update?
-            requireUser: true,
-            middleware: null,
+            requireUser : true, // Require logged in user to create/delete/update?
+            middleware  : null,
             routes: function(router)
             {
                 router.get({
@@ -54,6 +54,22 @@ class ControllerDefaultsProvider extends Expressway.Provider
                 })
             }
         };
+
+        this.AuthController = {
+            routes: function(router)
+            {
+                router.get({
+                    '/login'                : 'AuthController.login',
+                    '/logout'               : 'AuthController.logout',
+                    '/login/reset'          : 'AuthController.forgot',
+                    '/login/reset/:hash'    : 'AuthController.lookup',
+                }).post({
+                    '/login'                : 'AuthController.authenticate',
+                    '/login/reset'          : 'AuthController.request_reset',
+                    '/login/reset/:hash'    : 'AuthController.perform_reset',
+                });
+            }
+        }
     }
 
     /**
@@ -63,8 +79,10 @@ class ControllerDefaultsProvider extends Expressway.Provider
     register(app)
     {
         app.register('ControllerDefaultsProvider', this, "Controller Defaults Provider instance");
+
         app.register('DefaultRESTController',   require('../controllers/RESTController'), "The default REST Controller class");
         app.register('DefaultLocaleController', require('../controllers/LocaleController'), "The default Locale Controller class");
+        app.register('DefaultAuthController',   require('../controllers/AuthController'), "The default Auth Controller class");
     }
 }
 
