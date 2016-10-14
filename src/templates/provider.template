@@ -19,7 +19,8 @@ class <%=name%> extends Expressway.Provider
             'ModelProvider'
         ];
 
-        this.environments = ENV_WEB;
+        this.contexts = CXT_ALL;
+        this.environments = ENV_ALL;
     }
 
     /**
