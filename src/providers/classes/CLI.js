@@ -20,28 +20,14 @@ class CLI
     }
 
     /**
-     * Register an action.
+     * Return a command.
      * @param name string
-     * @param func
-     * @returns CLI
+     * @param desc string
+     * @returns {Command}
      */
-    action(name,func)
+    command(name, desc)
     {
-        this.program.command(name).action(func);
-        return this;
-    }
-
-    /**
-     * Set multiple actions.
-     * @param object object
-     * @returns CLI
-     */
-    actions(object)
-    {
-        Object.keys(object).forEach(function(key) {
-            this.action(key, object[key]);
-        }.bind(this));
-        return this;
+        return this.program.command(name).description(desc || "-");
     }
 
     /**
@@ -50,6 +36,7 @@ class CLI
      */
     run()
     {
+        if (! process.argv[2]) process.argv[2] = "--help";
         this.program.parse(process.argv);
     };
 

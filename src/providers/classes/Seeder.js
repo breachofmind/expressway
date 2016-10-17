@@ -7,19 +7,23 @@ var Promise         = require('bluebird');
 var fs              = require('fs');
 var ModelProvider   = app.get('ModelProvider');
 var log             = app.get('log');
+var colors          = require('colors/safe');
+var columnify       = require('columnify');
+
 
 var msg = {
-    running: "Running seeder: %s",
-    seeding: "Error seeding: %s",
-    parsed:  "Parsed Seed: %s (%d rows)",
-    prepare: "Preparing Seed: %s",
-    created: 'Created Models: %s in table "%s", %d objects',
-    dumping: "Dumping models: %s",
-    err_noModel:  "Error seeding, no model or data: %s",
-    err_creating: "Error creating models: %s",
-    err_dumping:  "Error dumping models: %s"
-
+    running: `Running Seeder: ${colors.green("%s")}`,
+    seeding: `Seeding: ${colors.green("%s")}`,
+    parsed:  `Parsed Seed: ${colors.green("%s")} (${colors.blue("%s")} rows)`,
+    prepare: `Preparing Seed: ${colors.green("%s")}`,
+    created: `Created Models: ${colors.green("%s")} in table ${colors.green("%s")}, ${colors.blue("%s")} objects`,
+    dumping: `Dumping models: ${colors.green("%s")}`,
+    err_noModel:  `Error seeding, no model or data: ${colors.red("%s")}`,
+    err_creating: `Error creating models: ${colors.red("%s")}`,
+    err_dumping:  `Error dumping models: ${colors.red("%s")}`
 };
+
+var seeders = [];
 
 /**
  * The main seeder class.
@@ -29,11 +33,33 @@ class Seeder
 {
     constructor(name, path)
     {
+        this.cliOptions = app.get('cliOptions');
         this.name = name;
         this.path = path || app.path('db_path','db') + "seeds/";
-        this.reset = false;
+
+        /**
+         * Dump the database table before seeding?
+         * @type {boolean}
+         */
+        this.dump = this.cliOptions.dump || false;
+
+        /**
+         * Allows the seeder to be seeded.
+         * It can still be prepared, however.
+         * @type {boolean}
+         */
+        this.active = true;
+
+        // Allow the user to disable this seeder
+        // from the command line utility.
+        if (this.cliOptions.seeder && this.cliOptions.seeder !== this.name) {
+            this.active = false;
+        }
 
         this.seeds = [];
+
+        // For global queueing.
+        seeders.push(this);
     }
 
     /**
@@ -71,8 +97,11 @@ class Seeder
      */
     prepare()
     {
+        log.info(msg.running, this.name);
         var promises = this.seeds.map(seed => { return seed.prepare() });
-        return Promise.all(promises);
+        return Promise.all(promises).catch(err => {
+            log.error(err.message);
+        });
     }
 
     /**
@@ -81,6 +110,7 @@ class Seeder
      */
     seed()
     {
+        if (this.active) log.info(msg.seeding, this.name);
         var promises = this.seeds.map(seed => { return seed.seed() });
         return Promise.all(promises).catch(err => {
             log.error(err);
@@ -91,10 +121,32 @@ class Seeder
      * Exit the seeding process.
      * @returns void
      */
-    done()
+    static done()
     {
         log.info('Done seeding.');
         process.exit(1);
+    }
+
+    /**
+     * Prepare all declared seeders.
+     * @returns {Promise.<*>}
+     */
+    static prepareAll(done)
+    {
+        return Promise.all( seeders.map(seeder => { return seeder.prepare(); })).then(result => {
+            return done(result);
+        }).catch(err => {
+            log.warn("Error post-processing seeds. Reason: "+err.message);
+        });
+    }
+
+    /**
+     * Seed all declared seeders, given they are active.
+     * @returns {Promise.<TResult>}
+     */
+    static seedAll()
+    {
+        return Promise.all( seeders.map(seeder => { return seeder.seed(); }) ).then(Seeder.done);
     }
 }
 
@@ -116,7 +168,7 @@ class Seed
         this.seeded = false;
         this.data   = [];
         this.models = [];
-        this.reset  = seeder.reset ? true : false;
+        this.dump  = seeder.dump ? true : false;
     }
 
     /**
@@ -143,6 +195,10 @@ class Seed
 
         log.info(msg.parsed, this.model, array.length);
 
+        if (this.seeder.cliOptions.list) {
+            console.log(columnify(array) + "\n");
+        }
+
         return array;
     }
 
@@ -154,7 +210,7 @@ class Seed
     {
         var seed = this;
 
-        if (seed.parsed) return seed;
+        if (seed.parsed || seed.seeder.active === false) return seed;
 
         if (Array.isArray(seed.source)) {
             this.setData(seed.source);
@@ -186,6 +242,9 @@ class Seed
      */
     check()
     {
+        if (this.seeder.active === false) {
+            return false;
+        }
         if (! this.Model || ! this.data.length)
         {
             log.warn(msg.err_noModel, this.model);
@@ -207,7 +266,7 @@ class Seed
 
         return new Promise((resolve,reject) =>
         {
-            if (this.reset) {
+            if (this.dump) {
                 log.info(msg.dumping, seed.model);
                 return seed.Model.remove().then(response => {
                     return seed.create(resolve).then(models => {

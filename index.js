@@ -140,9 +140,10 @@ class Expressway
         // Return the instance if it exists already.
         if (Expressway.instance) return Expressway.instance;
 
-        var providers = utils.getModulesAsHash(__dirname+'/src/providers/', true);
+        var systemProviders = utils.getModulesAsHash(__dirname+'/src/providers/', true);
+        var userProviders = utils.getModulesAsHash(rootPath + "providers/", true);
 
-        var config = require(rootPath + 'config/config') (providers);
+        var config = require(rootPath + 'config/config') (systemProviders, userProviders);
 
         return Expressway.instance = new Expressway(rootPath, config, context);
     }
