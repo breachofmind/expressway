@@ -2,7 +2,6 @@
 
 var crypto   = require('crypto');
 var Expressway = require('expressway');
-var Auth = require('./classes/Auth');
 
 /**
  * Provides basic authentication with passport.
@@ -39,6 +38,8 @@ class AuthProvider extends Expressway.Provider
             if (! ModelProvider.hasModel('User')) {
                 throw ('"User" model is required to use basic Auth functionality.');
             }
+
+            var Auth = require('./classes/Auth');
 
             var auth = app.call(Auth);
 

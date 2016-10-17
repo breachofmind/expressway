@@ -31,7 +31,7 @@ class AuthController extends Expressway.Controller
         return response
             .view('auth/login')
             .set({title: "Login"})
-            .use({message: flash[0] || ""});
+            .use({message: flash[0] || "", username:request.query.username || ""});
     }
 
     /**
@@ -98,6 +98,9 @@ class AuthController extends Expressway.Controller
             })
                 .then(info => {
                     log.access('Mail sent: User requested reset: %s %s', user.id, app.config.debug ? resetLink : "");
+                    if (app.config.debug) {
+                        console.log(info.response.toString());
+                    }
                 });
 
             request.flash('message', {
@@ -120,6 +123,7 @@ class AuthController extends Expressway.Controller
 
         if (! newPassword || newPassword == "") {
             return response.redirectWithFlash(this.loginURI, 'message', {
+                success: false,
                 text: request.lang('auth.err_no_password'),
                 type: 'alert'
             });
@@ -130,12 +134,26 @@ class AuthController extends Expressway.Controller
             // return to the login screen with a message.
             if (! user) {
                 return response.redirectWithFlash(this.loginURI, 'message', {
+                    success: false,
                     text: request.lang('auth.err_user_missing'),
                     type: 'alert'
-                })
+                });
             }
 
-            user.update({password: request.body.password});
+            return user.update({password: request.body.password}).then(result => {
+                user.reset_token = "";
+                user.save();
+                return response.redirectWithFlash(this.loginURI+"?username="+user.email, 'message', {
+                    text: request.lang('auth.password_reset'),
+                    type: 'success'
+                });
+            }, err => {
+                return response.redirectWithFlash(this.loginURI, 'message', {
+                    success: false,
+                    text: request.lang('auth.'+err.message),
+                    type: 'alert'
+                });
+            });
         })
     }
 
@@ -189,9 +207,9 @@ class AuthController extends Expressway.Controller
             {
                 if (err) return kill(info);
 
-                return response.smart(request.ajax
-                    ? {success:true, user:user, redirect:this.successURI}
-                    : response.redirect(this.successURI), 200);
+                return request.ajax
+                    ? response.smart({success:true, user:user, redirect:this.successURI}, 200)
+                    : response.redirect(this.successURI);
             });
 
         })(request,response,next);

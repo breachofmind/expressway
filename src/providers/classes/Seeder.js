@@ -124,7 +124,7 @@ class Seeder
     static done()
     {
         log.info('Done seeding.');
-        process.exit(1);
+        process.exit();
     }
 
     /**

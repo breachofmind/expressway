@@ -120,11 +120,9 @@ class Model
         /**
          * Methods attached to this model.
          * Note: "this" corresponds to the model in the function body.
-         * @type {{toJSON: Function}}
+         * @type {{}}
          */
-        this.methods = {
-            toJSON: toJSON(this)
-        };
+        this.methods = {};
     }
 
     /**
@@ -191,50 +189,6 @@ class Model
     static get(modelName)
     {
         return Expressway.instance.app.get('ModelProvider').models[modelName];
-    }
-}
-
-/**
- * Get the default toJSON method for all models.
- * "this" refers to the actual model object.
- * @param Class Model
- * @returns {Function}
- */
-function toJSON(Class)
-{
-    return function()
-    {
-        var out = {};
-        var model = this;
-
-        Class.fillable.forEach(function(column)
-        {
-            // Skip fields that are in the guarded column.
-            if (Class.guarded.indexOf(column) > -1) {
-                return;
-            }
-
-            return out[column] = typeof model[column] == 'undefined' ? null : model[column];
-        });
-
-        // The developer can append other columns to the output.
-        Class.appends.forEach(function(column)
-        {
-            if (typeof column == 'function') {
-                var arr = column(model,Class);
-                if (arr) {
-                    return out[arr[0]] = arr[1];
-                }
-            }
-            if (typeof model[column] == "function") {
-                return out[column] = model[column] ();
-            }
-        });
-
-        out['id'] = model.id;
-        out['$title'] = out[Class.title];
-
-        return out;
     }
 }
 

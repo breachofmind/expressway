@@ -2,6 +2,9 @@
 
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
+var Expressway = require('expressway');
+var app = Expressway.instance.app;
+var Models = app.get('Models');
 
 /**
  * Authentication class.
@@ -12,16 +15,13 @@ class Auth
     /**
      * Constructor.
      * @param app Application
-     * @param log Winston
-     * @param Models object
      */
-    constructor(app, Models)
+    constructor(app)
     {
         app.register('auth', this, "The Auth instance");
         app.register('passport', passport, "The passport instance");
 
         this.passport = passport;
-        this.User     = Models.User;
 
         passport.serializeUser(this.serializeUser);
         passport.deserializeUser(this.deserializeUser);
@@ -48,25 +48,25 @@ class Auth
          */
         return function(username, password, done)
         {
-            log.log('access', "Login attempt: '%s'", username);
+            log.access("Login attempt: '%s'", username);
 
             auth.getUser(username).then(function(user)
             {
                 // If user is not found, fail with message.
                 if (! user) {
-                    log.log('access', "User does not exist: '%s'", username);
+                    log.access("User does not exist: '%s'", username);
                     return done(null, false, { message: 'auth.err_user_missing' });
                 }
 
                 try {
                     user.authenicate(password);
                 } catch(err) {
-                    log.log('access', "Login attempt failed: '%s'", username);
+                    log.access("Login attempt failed: '%s'", username);
                     return done(null, false, { message: 'auth.err_'+err });
                 }
 
                 // If they got this far, they were successfully authenticated.
-                log.log('access', "Login successful: '%s' %s", username, user.id);
+                log.access("Login successful: '%s' %s", username, user.id);
 
                 return done(null, user);
 
@@ -111,12 +111,14 @@ class Auth
      */
     deserializeUser(id,done)
     {
-        this.User
+        Models.User
             .findById(id)
-            .populate(this.User.populate)
+            .populate(Models.User.populate)
             .exec()
-            .then(function(err, user) {
-                done(err, user);
+            .then(user => {
+                done(null, user);
+            }, err => {
+                done(err,null);
             });
     };
 
@@ -127,9 +129,9 @@ class Auth
      */
     getUser(username)
     {
-        return this.User
+        return Models.User
             .findOne({ email: username })
-            .populate(this.User.populate)
+            .populate(Models.User.populate)
             .exec();
     }
 }
