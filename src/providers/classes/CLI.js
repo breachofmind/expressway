@@ -54,7 +54,7 @@ class CLI
             fs.mkdirSync(destDir);
         }
         if (fs.existsSync(destFile)) {
-            throw new Error("File exists: "+destFile);
+            throw ("File exists: "+destFile);
         }
         var template = ejs.compile(fs.readFileSync(templateFile, 'utf8').toString());
 

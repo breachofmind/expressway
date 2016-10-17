@@ -10,13 +10,15 @@ class <%=name%> extends Expressway.Controller
      */
     constructor(app)
     {
-        // Controller Setup
+        super(app);
+
+        // Controller Setup...
     }
 
     /**
      * "<%=name%>.index" route.
      */
-    index: function(request,response,next)
+    index(request,response,next)
     {
         //
     }
