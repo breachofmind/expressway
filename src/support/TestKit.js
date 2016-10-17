@@ -10,7 +10,7 @@ global.should   = chai.should();
 
 chai.use(global.chaiHttp);
 
-var expressway = Expressway.init(__dirname+"/../../demo/app/", ENV_TEST);
+var expressway = Expressway.init(__dirname+"/../../demo/app/", CXT_TEST);
 var app = expressway.app;
 
 var url = function(path) {

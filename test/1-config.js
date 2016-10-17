@@ -19,18 +19,22 @@ describe('config', function()
         expect(app.config.port).to.be.within(0,9000);
     });
     it('should have valid environment string', function(){
-        var environments = [ENV_LOCAL,ENV_DEV,ENV_PROD,ENV_CLI,ENV_TEST];
+        var environments = [ENV_LOCAL,ENV_DEV,ENV_PROD];
         expect(environments).to.include(app.env);
+    });
+    it('should have valid context string', function(){
+        var contexts = [CXT_TEST,CXT_WEB,CXT_CLI];
+        expect(contexts).to.include(app.context);
     });
     it('should have an array of providers', function(){
         expect(app.config.providers).to.be.an('array');
         app.config.providers.forEach(function(provider) {
             expect(provider).to.be.a('function');
-            expect(new provider).to.be.an.instanceOf(Expressway.Provider);
+            expect(new provider(app)).to.be.an.instanceOf(Expressway.Provider);
         })
     });
     it('should have same environment as given', function(){
-        expect(app.config.environment).to.equal(ENV_TEST);
-        expect(app.env).to.equal(ENV_TEST);
+        expect(app.config.environment).to.equal(ENV_LOCAL);
+        expect(app.env).to.equal(ENV_LOCAL);
     })
 });
