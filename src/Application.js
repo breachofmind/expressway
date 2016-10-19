@@ -60,12 +60,14 @@ class Application
             try {
                 var instance = new ProviderClass(this);
                 this.providers[instance.name] = instance;
+                this.event.emit(instance.name+".construct", instance);
             } catch (e) {
                 console.error(ProviderClass);
                 throw (e);
             }
 
             return instance;
+
         }.bind(this)).sort(function ascending(a,b) {
             return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
         });

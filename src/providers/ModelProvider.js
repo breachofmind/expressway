@@ -63,7 +63,7 @@ class ModelProvider extends Expressway.Provider
      */
     loadModels(app, debug, Model, path, event)
     {
-        utils.getModules(path.model("/"), path =>
+        utils.getModules(path.models("/"), path =>
         {
             var Class = require(path);
             var instance = app.call(Class);

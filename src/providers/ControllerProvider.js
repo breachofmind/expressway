@@ -59,7 +59,7 @@ class ControllerProvider extends Expressway.Provider
      */
     loadControllers(app,debug,event,path)
     {
-        utils.getModules(path.controller("/"), function(path)
+        utils.getModules(path.controllers("/"), function(path)
         {
             var Class = require(path);
             var instance = app.call(Class);

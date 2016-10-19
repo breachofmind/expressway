@@ -14,7 +14,7 @@ class Localization
     {
         this.index = {};
 
-        this.langPath = pathService.locale('/');
+        this.langPath = pathService.locales('/');
 
         this.langDirs = glob.sync(this.langPath + "*");
 

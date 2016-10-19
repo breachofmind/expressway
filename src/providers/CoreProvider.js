@@ -51,15 +51,16 @@ class CoreProvider extends Expressway.Provider
     {
         var pathService = new PathService;
         var paths = {
-            resource:   "resources_path",
-            view:       "views_path",
-            controller: "controllers_path",
-            model:      "models_path",
-            provider:   "providers_path",
-            locale:     "locales_path",
+            resources:  "resources_path",
+            views:      "views_path",
+            controllers:"controllers_path",
+            models:     "models_path",
+            providers:  "providers_path",
+            locales:    "locales_path",
             public:     "static_path",
             db:         "db_path",
-            logs:       "logs_path"
+            logs:       "logs_path",
+            uploads:    "uploads_path",
         };
 
         pathService.set('root', app.rootPath());
