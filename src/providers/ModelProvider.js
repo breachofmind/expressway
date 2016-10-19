@@ -19,6 +19,7 @@ class ModelProvider extends Expressway.Provider
 
         this.requires = [
             'LoggerProvider',
+            'CoreProvider',
             'DriverProvider'
         ];
 
@@ -33,6 +34,7 @@ class ModelProvider extends Expressway.Provider
      * @param app Application
      * @param debug function
      * @param DriverProvider DriverProvider
+     * @param event EventEmitter
      */
     register(app,debug,DriverProvider,event)
     {
@@ -55,13 +57,13 @@ class ModelProvider extends Expressway.Provider
      * @param app Application
      * @param debug function
      * @param Model
+     * @param path PathService
+     * @param event EventEmitter
      * @returns {object}
      */
-    loadModels(app, debug, Model, event)
+    loadModels(app, debug, Model, path, event)
     {
-        var modelPath = app.path('models_path', 'models') + "/";
-
-        utils.getModules(modelPath, path =>
+        utils.getModules(path.model("/"), path =>
         {
             var Class = require(path);
             var instance = app.call(Class);

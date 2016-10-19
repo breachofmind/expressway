@@ -7,11 +7,18 @@ var path = require('path');
 var fs = require('fs');
 
 /**
- * Provides a URL helper.
+ * Provides some basic core functions the application will need.
  * @author Mike Adamczyk <mike@bom.us>
  */
 class CoreProvider extends Expressway.Provider
 {
+    constructor(app)
+    {
+        super(app);
+
+        this.order = -10;
+    }
+
     /**
      * Register with the application.
      * @param app Application
@@ -54,6 +61,8 @@ class CoreProvider extends Expressway.Provider
             db:         "db_path",
             logs:       "logs_path"
         };
+
+        pathService.set('root', app.rootPath());
 
         // Set up a path function for each path listed in the config.
         Object.keys(paths).forEach(pathName => {

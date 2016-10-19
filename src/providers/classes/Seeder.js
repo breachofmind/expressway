@@ -9,6 +9,7 @@ var ModelProvider   = app.get('ModelProvider');
 var log             = app.get('log');
 var colors          = require('colors/safe');
 var columnify       = require('columnify');
+var path            = app.get('path');
 
 
 var msg = {
@@ -31,11 +32,11 @@ var seeders = [];
  */
 class Seeder
 {
-    constructor(name, path)
+    constructor(name, seedDir)
     {
         this.cliOptions = app.get('cliOptions');
         this.name = name;
-        this.path = path || app.path('db_path','db') + "seeds/";
+        this.path = seedDir || path.db('seeds/');
 
         /**
          * Dump the database table before seeding?

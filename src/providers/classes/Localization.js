@@ -6,6 +6,7 @@ var debug = app.get('debug');
 var utils = Expressway.utils;
 var glob = require('glob');
 var path = require('path');
+var pathService = app.get('path');
 
 class Localization
 {
@@ -13,9 +14,9 @@ class Localization
     {
         this.index = {};
 
-        this.langPath = app.conf('locales_path', 'lang');
+        this.langPath = pathService.locale('/');
 
-        this.langDirs = glob.sync(app.rootPath(this.langPath+'/*'));
+        this.langDirs = glob.sync(this.langPath + "*");
 
         this.langDirs.forEach(function(dirName) {
             this.setLocaleDir(dirName);
