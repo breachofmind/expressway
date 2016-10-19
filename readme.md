@@ -6,7 +6,8 @@ Any view engine, any mailer solution, etc. Since it's provider-based, every syst
 be swapped out entirely with your own implementation, if you don't like the default implementation.
 
 - Express.js webserver
-- MongoDB Database and mongoose ORM
+- MySQL or MongoDB database drivers
+- IoC (Inversion of Control) dependency injection
 - Controllers and parameter binding
 - Controller-wide and route Middleware
 - Smart response rendering (objects render as JSON)
@@ -20,7 +21,9 @@ be swapped out entirely with your own implementation, if you don't like the defa
 - Extension friendly
 
 ## IOC (Inversion of Control) Dependency Injection
-Do you like how Angular injects services and class instances into your controllers? You can do that. Here's an example:
+Do you like how Angular injects services and class instances into your controllers? You can do that.
+In fact, the source code for dependency injection is taken almost directly from Angular.
+Here's an example:
 ```javascript
 function sayHelloFunc() {
     return "Hello";
@@ -56,16 +59,10 @@ app.call(hello); // "Hello World"
 Get services anytime, if you're using them in modules.
 ```javascript
 var app = require('expressway').instance.app;
-var log = app.get('log');
+var helloWorld = app.get('helloWorld');
+
+console.log(helloWorld.output); // "Hello World"
 ```
 
-## Running the Application
-
-This framework was designed to be super easy to set up. Just require the object in your `index.js` 
-entry point and initialize with your application's root directory.
-
-```javascript
-var Expressway = require('expressway');
- 
-Expressway.init(__dirname+"/app/").bootstrap().server();
-```
+## Documentation
+Check out the [Wiki](https://github.com/breachofmind/expressway/wiki) for way more info.
