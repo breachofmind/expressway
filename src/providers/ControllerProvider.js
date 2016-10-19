@@ -19,7 +19,7 @@ class ControllerProvider extends Expressway.Provider
 
         this.requires = [
             'LoggerProvider',
-            'URLProvider',
+            'CoreProvider',
             'ModelProvider'
         ];
 

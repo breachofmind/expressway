@@ -25,7 +25,7 @@ class ExpressProvider extends Expressway.Provider
         this.requires = [
             'LoggerProvider',
             'ViewProvider',
-            'URLProvider'
+            'CoreProvider'
         ];
 
 

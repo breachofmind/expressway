@@ -19,6 +19,7 @@ class LoggerProvider extends Expressway.Provider
     {
         super(app);
 
+        this.requires = ['CoreProvider'];
         this.order = -1;
 
         this.config = {
@@ -48,19 +49,15 @@ class LoggerProvider extends Expressway.Provider
      * Register the provider with the application.
      * @param app Application
      * @param event EventEmitter
+     * @param path PathService
      */
-    register(app,event)
+    register(app,event,path)
     {
         winston.addColors(this.config.colors);
 
-        var logPath = app.path('logs_path', 'logs') + '/';
-        var logFile = logPath + this.logFileName;
+        var logFile = path.logs(this.logFileName);
 
-        // Create the log path, if it doesn't exist.
-        if (! fs.existsSync(logPath)) {
-            fs.mkdirSync(logPath);
-            fs.writeFileSync(logFile,"");
-        }
+        if (! fs.existsSync(logFile)) fs.writeFileSync(logFile, "");
 
         var logger = new winston.Logger({
             levels: this.config.levels,

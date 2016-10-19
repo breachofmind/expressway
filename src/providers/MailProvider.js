@@ -20,7 +20,7 @@ class MailProvider extends Expressway.Provider
         super(app);
 
         this.requires = [
-            'URLProvider',
+            'CoreProvider',
             'ExpressProvider'
         ];
 

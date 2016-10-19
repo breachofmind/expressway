@@ -22,7 +22,7 @@ class ControllerDefaultsProvider extends Expressway.Provider
             'ControllerProvider',
             'LocaleProvider',
             'AuthProvider',
-            'URLProvider'
+            'CoreProvider'
         ];
 
         this.RESTController = {

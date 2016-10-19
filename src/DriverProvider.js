@@ -10,7 +10,7 @@ class DriverProvider extends Provider
 
         this.requires = [
             'LoggerProvider',
-            'URLProvider'
+            'CoreProvider'
         ];
 
         this.name = "DriverProvider";
