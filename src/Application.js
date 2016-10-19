@@ -203,13 +203,15 @@ class Application
      * @param name {string}
      * @param instance mixed
      * @param description {string} optional
+     * @param call {bool} when injecting a function, do an app.call() first?
      * @returns {Application}
      */
-    register(name, instance, description)
+    register(name, instance, description, call)
     {
         if (this.services.hasOwnProperty(name)) {
             throw new Error (`"${name}" service has already been defined`);
         }
+        if (call === true && typeof instance == 'function') instance.$call = true;
         this.services[name] = instance;
         if (description) {
             this.documentation[name] = description;
@@ -258,6 +260,9 @@ class Application
             var service = this.get(serviceName);
             if (! service) {
                 throw new Error("Service does not exist: " + serviceName);
+            }
+            if (typeof service === 'function' && service.$call) {
+                return this.call(service);
             }
             return service;
         }.bind(this))
