@@ -39,7 +39,7 @@ class DriverProvider extends Provider
      * @param db {*}
      */
     register(db) {
-        this.app.register(this.name, this, "The Driver Provider instance");
+        this.app.register('driverProvider', this, "The Driver Provider instance");
         this.app.register('db', db, "The database object, such as mongoose or sequelize");
     }
 }

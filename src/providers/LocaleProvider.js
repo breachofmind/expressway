@@ -26,25 +26,25 @@ class LocaleProvider extends Expressway.Provider
     /**
      * Register the provider with the application.
      * @param app Application
-     * @param ExpressProvider ExpressProvider
+     * @param middlewareService MiddlewareService
      */
-    register(app, ExpressProvider)
+    register(app, middlewareService)
     {
-        var Localization = require('./classes/Localization');
+        var LocaleService = require('../services/LocaleService');
 
-        var localization = new Localization();
+        var localeService = new LocaleService();
 
-        app.register('localization', localization, "The Localization class, for adding/retrieving locale keys");
+        app.register('localeService', localeService, "Service for adding/retrieving locale keys");
 
         // When each view is created, add the template function.
         app.event.on('view.created', function(view,request) {
-            view.data.lang = localization.helper(request);
+            view.data.lang = localeService.helper(request);
         });
 
-        ExpressProvider.middlewareStack.add('Localization', function (app,server)
-        {
-            server.use(localization.middleware);
-        });
+        // Add the middleware to express.
+        middlewareService.add('Localization', (app,express) => {
+            express.use(localeService.middleware);
+        })
     }
 }
 

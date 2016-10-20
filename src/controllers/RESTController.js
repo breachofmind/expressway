@@ -6,7 +6,7 @@ var utils       = Expressway.utils;
 
 class RESTController extends Expressway.Controller
 {
-    constructor(app, ControllerDefaultsProvider, ModelProvider)
+    constructor(app, ControllerDefaultsProvider, modelService)
     {
         super(app);
 
@@ -37,7 +37,7 @@ class RESTController extends Expressway.Controller
          */
         this.bind('model', function(value,request,response,next)
         {
-            var Model = ModelProvider.bySlug(value);
+            var Model = modelService.bySlug(value);
 
             if (! Model) {
                 return response.api({error:`Model "${value}" doesn't exist.`}, 404);
@@ -86,7 +86,7 @@ class RESTController extends Expressway.Controller
      *
      * GET /api/v1/
      */
-    index(request,response,next,ModelProvider,url,event)
+    index(request,response,next,modelService,url,event)
     {
         var json = {
             message: "Expressway API v1",
@@ -94,7 +94,7 @@ class RESTController extends Expressway.Controller
             index: {}
         };
 
-        ModelProvider.each(function(Model) {
+        modelService.each(function(Model) {
             if ((Model.expose == false && request.user) || Model.expose == true) {
                 json.index[Model.name] = url('api/v1/'+Model.slug);
             }

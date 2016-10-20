@@ -3,8 +3,8 @@
 var Expressway  = require('expressway');
 var Sequelize   = require('Sequelize');
 var app         = Expressway.instance.app;
-var db          = app.get('db');
-var driver      = app.get('DriverProvider');
+
+var [url,db] = app.getServices(['url','db']);
 
 Sequelize.PRIMARY_KEY = {type:Sequelize.INTEGER, unique:true, primaryKey:true, authIncrement:true};
 

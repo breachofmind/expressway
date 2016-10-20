@@ -2,9 +2,9 @@
 
 var Expressway  = require('expressway');
 var app         = Expressway.instance.app;
-var url         = app.get('url');
-var db          = app.get('db');
-var driver      = app.get('DriverProvider');
+
+var [url,db] = app.getServices(['url','db']);
+
 
 /**
  * The mongodb model.

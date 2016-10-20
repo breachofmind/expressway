@@ -1,8 +1,6 @@
 "use strict";
 
 var Expressway = require('expressway');
-var nodemailer = require('nodemailer');
-var stubTransport = require('nodemailer-stub-transport');
 var Promise    = require('bluebird');
 
 /**
@@ -23,10 +21,6 @@ class MailProvider extends Expressway.Provider
             'CoreProvider',
             'ExpressProvider'
         ];
-
-        // Use the configuration setting.
-        // Otherwise, use the stub transport for testing purposes.
-        this.transport = nodemailer.createTransport( app.conf('nodemailer_transport', stubTransport()) );
     }
 
     /**
@@ -36,7 +30,10 @@ class MailProvider extends Expressway.Provider
      */
     register(app,express)
     {
-        var transport = this.transport;
+        var nodemailer    = require('nodemailer');
+        var stubTransport = require('nodemailer-stub-transport');
+
+        var transport = nodemailer.createTransport( app.conf('nodemailer_transport', stubTransport()) );
 
         /**
          * Using a promise, send mail with the given options.

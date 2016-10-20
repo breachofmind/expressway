@@ -22,9 +22,6 @@ class ControllerProvider extends Expressway.Provider
             'CoreProvider',
             'ModelProvider'
         ];
-
-        this.controllers = {};
-
     }
 
     /**
@@ -34,74 +31,39 @@ class ControllerProvider extends Expressway.Provider
      */
     register(app,event)
     {
-        var Controller = require('./classes/Controller');
+        var ControllerService = require('../services/ControllerService');
 
-        app.register('Controller', Controller, 'The base Controller class');
-        app.register('ControllerProvider', this, 'The Controller Provider, for getting/setting controller instances');
+        app.register('controllerService', new ControllerService, 'Stores and fetches controller instances');
 
-        // Expose the controller class.
-        Expressway.Controller = Controller;
+        // Expose the controller class for our wonderful developers.
+        Expressway.Controller = require('../classes/Controller');
 
         // All providers should be registered first,
         // In case we're using a provider that adds a controller.
-        event.on('providers.registered', app => {
-            app.register('controllers', app.call(this,'loadControllers'), "An object containing all loaded Controller instances");
-        });
+        event.on('providers.registered', app => { app.call(this,'load') });
     }
 
     /**
-     * Load all controllers in the app directory.
+     * Load all controllers defined in the ControllerService directories listing.
      * @param app Application
-     * @param debug function
      * @param event EventEmitter
-     * @param path PathService
+     * @param controllerService ControllerService
      * @returns object
      */
-    loadControllers(app,debug,event,path)
+    load(app,event,controllerService)
     {
-        utils.getModules(path.controllers("/"), function(path)
+        controllerService.directories.forEach(dir =>
         {
-            var Class = require(path);
-            var instance = app.call(Class);
-
-            if (! (instance instanceof Expressway.Controller)) {
-                throw (path + " module does not return Controller instance");
-            }
-
-            this.controllers[instance.name] = instance;
-
-            debug(this,'Loaded: %s', instance.name);
-
-        }.bind(this));
+            utils.getModules(dir, modulePath =>
+            {
+                controllerService.add(modulePath);
+            });
+        });
 
         event.emit('controllers.loaded',app);
-
-        return this.controllers;
     }
 
-    /**
-     * Check if the given controller is in the index.
-     * @param controllerName string
-     * @returns {boolean}
-     */
-    hasController(controllerName)
-    {
-        return this.controllers.hasOwnProperty(controllerName);
-    }
 
-    /**
-     * Dispatch a controller.
-     * @param controllerName string
-     * @param method
-     * @returns {array|*}
-     */
-    dispatch(controllerName,method)
-    {
-        if (! this.hasController(controllerName)) {
-            throw new Error(`"${controllerName}" controller does not exist`);
-        }
-        return this.controllers[controllerName].dispatch(method);
-    }
 }
 
 module.exports = ControllerProvider;

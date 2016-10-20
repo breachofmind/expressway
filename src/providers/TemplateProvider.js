@@ -14,7 +14,7 @@ class TemplateProvider extends Expressway.Provider
      */
     register(app)
     {
-        var Template = require('./classes/Template');
+        var Template = require('../classes/Template');
 
         Expressway.Template = Template;
 

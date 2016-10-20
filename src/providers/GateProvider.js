@@ -18,29 +18,28 @@ class GateProvider extends Expressway.Provider
 
         this.requires = [
             'LoggerProvider',
-            'AuthProvider',
             'ModelProvider'
         ];
 
         this.contexts = [CXT_TEST, CXT_WEB];
 
-        app.register('permissionBuilder', function(modelNames) {
-            var out = [];
-            modelNames.forEach(function(model) {
-                ['create','read','update','delete'].forEach(function(action) {
-                    out.push(model+"."+action);
+        app.register('permissionBuilder', modelNames =>
+        {
+            return modelNames.map(model => {
+                return ['create','read','update','delete'].map(action => {
+                    return model+"."+action;
                 })
             });
-            return out;
+
         }, "A helper function for building permissions")
     }
 
     /**
      * Register with the application.
      * @param app Application
-     * @param ModelProvider ModelProvider
+     * @param modelService ModelService
      */
-    register(app, ModelProvider)
+    register(app, modelService)
     {
         // Permission index.
         var permissions = buildPermissions();
@@ -53,7 +52,7 @@ class GateProvider extends Expressway.Provider
         {
             var items = ['superuser'];
             var crud = ['create','read','update','delete'];
-            ModelProvider.each(function(model) {
+            modelService.each(function(model) {
                 crud.map(function(action){ items.push(`${model.name}.${action}`); });
                 if (model.managed) {
                     items.push(`${model.name}.manage`);
@@ -62,10 +61,9 @@ class GateProvider extends Expressway.Provider
             return items;
         }
 
-        var Gate = require('./classes/Gate');
-        var gate = new Gate(permissions);
+        var Gate = require('../classes/Gate');
 
-        app.register('gate', gate);
+        app.register('gate', new Gate(permissions), "A service for checking user permissions via policies");
     }
 
 }

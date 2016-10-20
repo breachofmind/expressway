@@ -3,7 +3,7 @@
 var Expressway          = require('expressway');
 var app                 = Expressway.instance.app;
 var utils               = Expressway.utils;
-var ControllerProvider  = app.get('ControllerProvider');
+var controllerService   = app.get('controllerService');
 
 /**
  * Controller class.
@@ -12,10 +12,9 @@ var ControllerProvider  = app.get('ControllerProvider');
  */
 class Controller
 {
-    constructor(app)
+    constructor()
     {
         this.name = this.constructor.name;
-        this.app  = app;
 
         this._middleware = [];
     }
@@ -36,28 +35,27 @@ class Controller
         if (! method || !arguments.length) {
             return this;
         }
-        var controller = this;
 
-        this.app.event.once('controllers.loaded', function(app) {
-
+        app.event.once('controllers.loaded', app =>
+        {
             if (typeof stack == 'undefined') {
                 if (typeof method == 'object') {
                     // Object has route: middlewares.
-                    Object.keys(method).forEach(function(route){
+                    Object.keys(method).forEach(route =>
+                    {
                         let stack = method[route];
-                        controller._middleware.push({method: route, middleware: utils.getRouteFunctions(stack, ControllerProvider)})
+                        this._middleware.push({method: route, middleware: utils.getRouteFunctions(stack, controllerService)})
                     })
 
                 } else if (typeof method == 'function') {
                     // Assign middleware to all methods.
-                    controller._middleware = controller._middleware.concat(utils.getRouteFunctions(method, ControllerProvider));
+                    this._middleware = this._middleware.concat(utils.getRouteFunctions(method, controllerService));
                 }
 
                 // Assign middleware to a single method.
             } else if (typeof method == 'string') {
-                controller._middleware.push({method: method, middleware: utils.getRouteFunctions(stack, ControllerProvider)})
+                this._middleware.push({method: method, middleware: utils.getRouteFunctions(stack, controllerService)})
             }
-
         });
 
         return this;
@@ -71,7 +69,7 @@ class Controller
      */
     bind(parameter,handler)
     {
-        return this.middleware(function parameterMiddleware(request,response,next) {
+        return this.middleware(function parameterBinding(request,response,next) {
             if (request.params.hasOwnProperty(parameter)) {
                 return handler(request.params[parameter], request,response,next);
             }
@@ -87,7 +85,7 @@ class Controller
      */
     query(parameter,handler)
     {
-        return this.middleware(function queryMiddleware(request,response,next) {
+        return this.middleware(function queryBinding(request,response,next) {
             if (request.query.hasOwnProperty(parameter)) {
                 return handler(request.query[parameter], request,response,next);
             }
@@ -105,13 +103,13 @@ class Controller
      */
     getMiddleware(method, action)
     {
-        var out = this._middleware.reduce(function(memo,value)
+        var out = this._middleware.reduce((memo,value) =>
         {
             // A single function applies to all methods.
             if (typeof value == 'function') {
                 memo.push(value);
 
-                // Controller method middleware, which could be an array.
+            // Controller method middleware, which could be an array.
             } else if (typeof value == 'object' && value.method == method) {
                 memo = memo.concat(value.middleware);
             }
@@ -139,20 +137,20 @@ class Controller
             throw new Error(`"${this.name}" missing method "${method}"`);
         }
 
-        function routeRequest(request,response,next)
+        function route(request,response,next)
         {
             request.setController(controller.name, method);
 
-            if (response.headersSent) {
-                return null;
-            }
-            // ALlows the injection of services into a controller method.
+            if (response.headersSent) return null;
+
+            // Allows the injection of services into a controller method.
             // The first 3 arguments are always the request/response/next params.
             var output = app.call(controller, method, [request,response,next]);
 
             return response.smart( output );
         }
-        return this.getMiddleware(method, routeRequest);
+
+        return this.getMiddleware(method, route);
     }
 }
 

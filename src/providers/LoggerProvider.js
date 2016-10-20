@@ -33,6 +33,7 @@ class LoggerProvider extends Expressway.Provider
                 silly:   6
             },
             colors: {
+                debug:  'cyan',
                 error:  'red',
                 warn:   'yellow',
                 access: 'magenta',
@@ -89,15 +90,15 @@ class LoggerProvider extends Expressway.Provider
             logger.debug(`[${colors[classColor](className)}] ${message}`, ...args);
         }
 
-        event.on('application.bootstrap', function(app){
+        event.on('application.bootstrap', (app) => {
             debug(app, 'booting...');
         });
 
-        event.on('provider.loaded', function(provider) {
+        event.on('provider.loaded', (provider) => {
             debug('Provider', 'Loaded: %s', colors.gray(provider.name));
         });
 
-        event.on('providers.registered', function(app) {
+        event.on('providers.registered', (app) => {
             debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
             debug(app, 'Provider Order... \n%s', app._order.join("\n"));
         })

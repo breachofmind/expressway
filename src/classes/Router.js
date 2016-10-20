@@ -3,9 +3,8 @@
 var Expressway          = require('expressway');
 var utils               = Expressway.utils;
 var app                 = Expressway.instance.app;
-var ControllerProvider  = app.get('ControllerProvider');
-var express             = app.get('express');
-var debug               = app.get('debug');
+
+var [controllerService, express, debug] = app.get('controllerService','express','debug');
 
 const VERBS = ['get','post','put','patch','delete','options'];
 
@@ -80,7 +79,7 @@ class Router
                 // object is a hash: { url: [string, function] }
                 return function(object) {
                     Object.keys(object).forEach(function(url) {
-                        var stack = utils.getRouteFunctions(object[url], ControllerProvider);
+                        var stack = utils.getRouteFunctions(object[url], controllerService);
                         new Route(verb,url,stack).addTo(router);
                     });
                     return router;

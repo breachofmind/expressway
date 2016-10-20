@@ -1,7 +1,7 @@
 "use strict";
 
 var Expressway  = require('expressway');
-var Collection  = require('./support/Collection');
+var Collection  = require('./classes/Collection');
 var _ = require('lodash');
 
 /**
@@ -188,7 +188,7 @@ class Model
      */
     static get(modelName)
     {
-        return Expressway.instance.app.get('ModelProvider').models[modelName];
+        return Expressway.instance.app.get('modelService').models[modelName];
     }
 }
 

@@ -17,7 +17,8 @@ class CLIProvider extends Expressway.Provider
         super(app);
 
         this.requires = [
-            'LoggerProvider'
+            'LoggerProvider',
+            'RouterProvider'
         ];
 
         this.contexts = [CXT_CLI];
@@ -30,7 +31,7 @@ class CLIProvider extends Expressway.Provider
      */
     register(app)
     {
-        var CLI = require('./classes/CLI');
+        var CLI = require('../classes/CLI');
 
         app.register('cli', app.call(CLI), "The CLI class instance");
 

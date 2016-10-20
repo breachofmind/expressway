@@ -2,25 +2,25 @@
 
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
-var debug = app.get('debug');
 var utils = Expressway.utils;
 var glob = require('glob');
-var path = require('path');
-var pathService = app.get('path');
+var Path = require('path');
 
-class Localization
+var [path,debug] = app.get('path','debug');
+
+class LocaleService
 {
     constructor()
     {
         this.index = {};
 
-        this.langPath = pathService.locales('/');
+        this.langPath = path.locales('/');
 
         this.langDirs = glob.sync(this.langPath + "*");
 
-        this.langDirs.forEach(function(dirName) {
+        this.langDirs.forEach(dirName => {
             this.setLocaleDir(dirName);
-        }.bind(this));
+        });
     }
 
     /**
@@ -29,20 +29,19 @@ class Localization
      */
     setLocaleDir(dirName)
     {
-        var localeName = path.basename(dirName);
+        var localeName = Path.basename(dirName);
         this.setLocale(localeName);
 
         var files = utils.getFileBaseNames(dirName+"/");
 
-        files.forEach(function(file)
+        files.forEach(file =>
         {
             var hash = require(dirName+"/"+file);
 
             var count = this.setKeys(localeName, file, hash);
 
             debug(this, "Loaded File: %s.%s (%s keys)", localeName, file, count);
-
-        }.bind(this));
+        });
     }
 
     /**
@@ -54,7 +53,7 @@ class Localization
      */
     setKey(localeName, key, value)
     {
-        var locale = Localization.getLocaleValue(localeName);
+        var locale = LocaleService.getLocaleValue(localeName);
 
         return this.index[locale][key] = value;
     };
@@ -68,11 +67,9 @@ class Localization
      */
     setKeys(localeName, file, hash)
     {
-        var keys = Object.keys(hash);
-        for (let i=0; i< keys.length; i++) {
-            this.setKey(localeName, `${file}.${keys[i]}`, hash[keys[i]]);
-        }
-        return keys.length;;
+        return Object.keys(hash).map(key => {
+            this.setKey(localeName, `${file}.${key}`, hash[key]);
+        }).length;
     }
 
     /**
@@ -84,13 +81,13 @@ class Localization
      */
     getKey(localeName, key, args)
     {
-        var locale =  Localization.getLocaleValue(localeName);
+        var locale =  LocaleService.getLocaleValue(localeName);
 
         if (this.hasLocale(locale)) {
             var value = this.index[locale][key];
 
             if (value) {
-                return args ?  Localization.doReplace(value, args) : value;
+                return args ?  LocaleService.doReplace(value, args) : value;
             }
         }
 
@@ -106,7 +103,7 @@ class Localization
      */
     hasLocale(localeName)
     {
-        return this.index.hasOwnProperty(  Localization.getLocaleValue(localeName) );
+        return this.index.hasOwnProperty(  LocaleService.getLocaleValue(localeName) );
     };
 
     /**
@@ -116,17 +113,17 @@ class Localization
      */
     getLocale(localeName)
     {
-        return this.index[  Localization.getLocaleValue(localeName) ] || null;
+        return this.index[  LocaleService.getLocaleValue(localeName) ] || null;
     };
 
     /**
      * Create a locale index.
      * @param localeName string
-     * @returns {Localization}
+     * @returns {LocaleService}
      */
     setLocale(localeName)
     {
-        this.index[  Localization.getLocaleValue(localeName) ] = {};
+        this.index[  LocaleService.getLocaleValue(localeName) ] = {};
         return this;
     }
 
@@ -175,19 +172,17 @@ class Localization
         return string;
     }
 
-
-
     /**
      * Return some express middleware.
-     * @returns {function(this:Localization)}
+     * @returns {function}
      */
     get middleware()
     {
-        return function (request,response,next) {
+        return (request,response,next) => {
             request.lang = this.helper(request);
             next();
-        }.bind(this);
+        };
     }
 }
 
-module.exports = Localization;
+module.exports = LocaleService;

@@ -3,7 +3,6 @@
 var Expressway = require('expressway');
 var session    = require('express-session');
 
-
 class MongoDriverProvider extends Expressway.DriverProvider
 {
     get alias() { return "mongodb" }
@@ -39,7 +38,7 @@ class MongoDriverProvider extends Expressway.DriverProvider
 
         super.register(db);
 
-        this.setModelClass( require('./drivers/MongoModel') );
+        this.setModelClass( require('../drivers/MongoModel') );
     }
 
     /**

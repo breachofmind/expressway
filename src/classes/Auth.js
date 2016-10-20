@@ -4,7 +4,8 @@ var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
-var Models = app.get('Models');
+
+var [User,log,debug] = app.getServices(['User','log','debug']);
 
 /**
  * Authentication class.
@@ -27,18 +28,15 @@ class Auth
         passport.deserializeUser(this.deserializeUser);
 
         this.strategy = new Strategy(app.call(this,'getStrategyMethod'));
-
-
     }
 
     /**
      * Get the strategy callback.
      * @param app Application
      * @param auth Auth
-     * @param log Winston
      * @returns {Function}
      */
-    getStrategyMethod(app,auth,log)
+    getStrategyMethod(app,auth)
     {
         /**
          * The strategy callback.
@@ -76,10 +74,6 @@ class Auth
                 return done(err);
             });
         }
-
-
-
-
     }
 
 

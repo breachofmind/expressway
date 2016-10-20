@@ -5,12 +5,10 @@ var app             = Expressway.instance.app;
 var Converter       = require("csvtojson").Converter;
 var Promise         = require('bluebird');
 var fs              = require('fs');
-var ModelProvider   = app.get('ModelProvider');
-var log             = app.get('log');
 var colors          = require('colors/safe');
 var columnify       = require('columnify');
-var path            = app.get('path');
 
+var [modelService,path,log] = app.get('modelService','path','log');
 
 var msg = {
     running: `Running Seeder: ${colors.green("%s")}`,
@@ -162,7 +160,7 @@ class Seed
     constructor(model,source,seeder)
     {
         this.model  = model;
-        this.Model  = ModelProvider.get(this.model);
+        this.Model  = modelService.get(this.model);
         this.source = source;
         this.seeder = seeder;
         this.parsed = false;

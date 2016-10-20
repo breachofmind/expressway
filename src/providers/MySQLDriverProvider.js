@@ -24,7 +24,7 @@ class MySQLDriverProvider extends Expressway.DriverProvider
 
         super.register(db);
 
-        this.setModelClass( require('./drivers/MySQLModel') );
+        this.setModelClass( require('../drivers/MySQLModel') );
     }
 
     /**

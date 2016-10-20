@@ -1,3 +1,5 @@
+"use strict";
+
 var glob = require('glob');
 var path = require('path');
 var fs = require('fs');
@@ -106,10 +108,10 @@ module.exports = {
     /**
      * Given a string or functions, return an array of functions for the express router.
      * @param values
-     * @param ControllerProvider ControllerProvider
+     * @param controllerService ControllerService
      * @returns {Array}
      */
-    getRouteFunctions: function(values, ControllerProvider)
+    getRouteFunctions: function(values, controllerService)
     {
         var out = [];
 
@@ -121,7 +123,8 @@ module.exports = {
             // dispatch method should return an array of functions.
             if (typeof value == 'string')
             {
-                var funcs = ControllerProvider.dispatch.apply(ControllerProvider, value.split(".",2));
+                var [controllerName,method] = value.split(".",2);
+                var funcs = controllerService.dispatch(controllerName,method);
                 funcs[funcs.length-1].$route = value;
                 out = out.concat( funcs );
             }

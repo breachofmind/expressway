@@ -1,8 +1,6 @@
 "use strict";
 
-
-var Core            = require('../Core');
-var express         = require('express');
+var Express         = require('express');
 var locale          = require('locale');
 var bodyParser      = require('body-parser');
 var session         = require('express-session');
@@ -27,46 +25,58 @@ class ExpressProvider extends Expressway.Provider
             'ViewProvider',
             'CoreProvider'
         ];
-
-
-
-        this.middlewares = [];
     }
 
     /**
      * Register the provider with the application.
      * @param app Application
      * @param event EventEmitter
+     */
+    register(app,event)
+    {
+        var MiddlewareService = require('../services/MiddlewareService');
+
+        var middleware = new MiddlewareService;
+
+        app.register('middlewareService', middleware, "For storing and retrieving global express middleware");
+
+        app.register('express', Express(), "The express instance");
+
+        app.call(this,'setDefaultMiddleware');
+
+        event.on('application.bootstrap', app.call(this,'onBootstrap'));
+
+        event.on('application.server', app.call(this,'onServerStart'))
+    }
+
+    /**
+     * Set up the default middleware for express.
+     * @param middlewareService MiddlewareService
      * @param debug function
      */
-    register(app,event,debug)
+    setDefaultMiddleware(middlewareService, debug)
     {
-        var MiddlewareStack = require('./classes/MiddlewareStack');
+        var core = require('../Core');
 
-        this.middlewareStack = new MiddlewareStack();
+        middlewareService
 
-        var core = app.call(Core);
-        var server = express();
-
-        this.middlewareStack
-
-            .add('Core', function(app,server)
+            .add('Core', function(app,express)
             {
-                server.use(core.middleware());
+                express.use(core.middleware());
             })
 
-            .add('Ajax', function(app,server)
+            .add('Ajax', function(app,express)
             {
-                server.use(function(request,response,next) {
+                express.use(function(request,response,next) {
                     request.ajax = request.get('x-requested-with') === 'XMLHttpRequest';
                     next();
                 })
             })
 
-            .add('Locale', function(app,server)
+            .add('Locale', function(app,express)
             {
-                server.use(locale( app.conf('lang_support', ['en_us'])) );
-                server.use(function(request,response,next) {
+                express.use(locale( app.conf('lang_support', ['en_us'])) );
+                express.use(function(request,response,next) {
                     if (request.query.cc) {
                         request.locale = request.query.cc.toLowerCase();
                     }
@@ -74,59 +84,52 @@ class ExpressProvider extends Expressway.Provider
                 })
             })
 
-            .add('Static Content', function(app,server)
+            .add('Static Content', function(app,express,path)
             {
-                if (app.conf('static_path')) {
-                    var path = app.path('static_path');
-                    debug('ExpressProvider', 'Using static path: %s', path);
-                    server.use(express.static(path));
+                if (path.public) {
+                    debug('ExpressProvider', 'Using static path: %s', path.public());
+                    express.use(Express.static(path.public()));
                 }
             })
 
-            .add('Body Parser', function(app,server)
+            .add('Body Parser', function(app,express)
             {
-                server.use(bodyParser.json());
-                server.use(bodyParser.urlencoded({extended:true}));
-                server.use(cookieParser(app.conf('appKey', "keyboard cat")));
+                express.use(bodyParser.json());
+                express.use(bodyParser.urlencoded({extended:true}));
+                express.use(cookieParser(app.conf('appKey', "keyboard cat")));
             })
 
-            .add('Session', function(app,server)
+            .add('Session', function(app,express, driverProvider)
             {
-                var driver = app.get('DriverProvider');
-                server.use(session ({
+                express.use(session ({
                     secret: app.conf('appKey', 'keyboard cat'),
                     saveUninitialized: false,
                     resave: false,
-                    store: app.call(driver,'getSessionStore')
+                    store: app.call(driverProvider,'getSessionStore')
                 }));
             })
 
-            .add('Flash', function(app,server)
+            .add('Flash', function(app,express)
             {
-                server.use( flash() );
+                express.use( flash() );
             });
-
-        app.register('express', server, "The express instance");
-        app.register('ExpressProvider', this, "The Express Provider instance, for adding core middleware");
-
-        event.on('application.bootstrap', this.onBootstrap());
-
-        event.on('application.server', app.call(this,'onServerStart'))
     }
 
     /**
      * Called before the server starts.
+     * @param express Express
+     * @param path PathService
+     * @param middlewareService MiddlewareService
      */
-    onBootstrap()
+    onBootstrap(express,path,middlewareService)
     {
         return function(app) {
-            var server = app.get('express');
 
-            server.set('view engine', app.conf('view_engine', 'ejs'));
-            server.set('views', app.path('views_path', 'resources/views'));
+            express.set('view engine', app.conf('view_engine', 'ejs'));
+            express.set('views', path.views());
 
-            this.middleware = this.middlewareStack.load(server);
-        }.bind(this);
+            middlewareService.load();
+        };
     }
 
     /**

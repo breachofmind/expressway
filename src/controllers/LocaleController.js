@@ -6,13 +6,12 @@ class LocaleController extends Expressway.Controller
 {
     constructor(app)
     {
-        super(app, ['ControllerDefaultsProvider']);
+        super();
 
-        this.localization = app.get('localization');
         this.cacheResponses = app.env === ENV_PROD;
     }
 
-    index(request,response)
+    index(request,response,next,localeService)
     {
         if (this.cacheResponses) {
             response.setHeader('Cache-Control', 'public, max-age=' + 7*24*60*60);
@@ -21,7 +20,7 @@ class LocaleController extends Expressway.Controller
 
         return {
             locale: locale,
-            keys: this.localization.getLocale(locale)
+            keys: localeService.getLocale(locale)
         };
     }
 }

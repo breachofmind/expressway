@@ -4,6 +4,8 @@ var Expressway  = require('Expressway');
 var codes       = require('./support/status');
 var utils       = Expressway.utils;
 var http        = require('http');
+var app         = Expressway.instance.app;
+var log         = app.get('log');
 
 /**
  * The controller object name.
@@ -86,17 +88,6 @@ http.ServerResponse.prototype.view = function(file,data)
 class Core
 {
     /**
-     * Constructor
-     * @param app Application
-     * @param log Winston
-     */
-    constructor(app,log)
-    {
-        this.app = app;
-        this.logger = log;
-    }
-
-    /**
      * When the response completes, fire this event.
      * @param request
      * @param response
@@ -104,8 +95,6 @@ class Core
      */
     onResponseComplete(request,response)
     {
-        var core = this;
-
         return function()
         {
             var type = 'info';
@@ -115,7 +104,7 @@ class Core
             // Not Modified, who cares
             if (response.statusCode == 304) return;
 
-            core.logger.log(type,"%s %s %d '%s' %s %s %s",
+            log[type] ("%s %s %d '%s' %s %s %s",
                 request.ip,
                 request.method,
                 response.statusCode,
@@ -139,11 +128,11 @@ class Core
              * Handle the response value smartly.
              * @returns void
              */
-            response.smart = function(value,status) {
+            response.smart = (value,status) => {
                 this.handleReturnValue(value,status,request,response);
-            }.bind(this);
+            };
 
-            response.redirectWithFlash = function(to, key, body)
+            response.redirectWithFlash = (to, key, body) =>
             {
                 if (response.ajax) {
                     return response.smart(body);
@@ -158,7 +147,7 @@ class Core
              * @param status Number
              * @param metadata object, optional
              */
-            response.api = function(data,status,metadata)
+            response.api = (data,status,metadata) =>
             {
                 response.status(status);
 
@@ -186,7 +175,7 @@ class Core
              * @param err
              * @param status number
              */
-            response.apiError = function(err,status)
+            response.apiError = (err,status) =>
             {
                 if (! err) err = {};
                 var out = err.toJSON ? err.toJSON() : err;
@@ -260,4 +249,4 @@ class Core
     }
 }
 
-module.exports = Core;
+module.exports = new Core;

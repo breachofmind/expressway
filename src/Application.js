@@ -257,7 +257,8 @@ class Application
         if (! args) args = [];
         if (! Array.isArray(array)) array = [];
 
-        return array.map(function(serviceName,i) {
+        return array.map((serviceName,i) =>
+        {
             if (args[i]) return args[i];
             var service = this.get(serviceName);
             if (! service) {
@@ -267,7 +268,7 @@ class Application
                 return this.call(service);
             }
             return service;
-        }.bind(this))
+        })
     }
 
     /**
@@ -284,12 +285,16 @@ class Application
 
     /**
      * Get a provider or class instance by name.
-     * @param service string
+     * Can also pass multiple arguments to return an array of services.
+     * @param services string
      * @returns {Provider|object|null}
      */
-    get(service)
+    get(...services)
     {
-        return this.has(service) ? this.services[service] : null;
+        if(services.length > 1) {
+            return services.map(service => { return this.get(service) });
+        }
+        return this.has(services[0]) ? this.services[services[0]] : null;
     }
 
     /**

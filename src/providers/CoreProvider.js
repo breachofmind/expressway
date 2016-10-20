@@ -1,10 +1,6 @@
 "use strict";
 
 var Expressway = require('expressway');
-var _ = require('lodash/string');
-var URL = require('url');
-var path = require('path');
-var fs = require('fs');
 
 /**
  * Provides some basic core functions the application will need.
@@ -35,6 +31,7 @@ class CoreProvider extends Expressway.Provider
      */
     getURLServices(app)
     {
+        var URLService = require('../services/URLService');
         var appUrl = URLService(app);
 
         // Attach to the application.
@@ -49,6 +46,7 @@ class CoreProvider extends Expressway.Provider
      */
     getPathServices(app)
     {
+        var PathService = require('../services/PathService');
         var pathService = new PathService;
         var paths = {
             resources:  "resources_path",
@@ -75,85 +73,6 @@ class CoreProvider extends Expressway.Provider
 
         app.register('path', pathService, "A helper service for returning paths to files in the application");
     }
-}
-
-/**
- * Helper service for creating paths to files in the application.
- */
-class PathService
-{
-    constructor()
-    {
-        this._paths = {};
-    }
-
-    /**
-     * Create a new path method.
-     * @param pathName string
-     * @param dir string
-     * @param createPath boolean
-     * @returns string
-     */
-    set(pathName, dir, createPath=false)
-    {
-        var setPath = _.trimEnd(path.normalize( dir ), "/");
-
-        // Create the path if it doesn't exist.
-        if (createPath && ! fs.existsSync(setPath)) fs.mkdirSync(setPath);
-
-        this._paths[pathName] = setPath;
-
-        this[pathName] = (uri) => {
-            return this.path(pathName, uri);
-        };
-
-        return setPath;
-    }
-
-    /**
-     * Create a path to the given uri.
-     * @param pathName string
-     * @param uri string
-     * @returns {string}
-     */
-    path(pathName, uri="")
-    {
-        if (! this._paths[pathName]) {
-            throw new Error(`Path name "${pathName}" is not set`);
-        }
-        return this._paths[pathName] + "/" + uri;
-    }
-}
-
-/**
- * Service for parsing the base URL and returning a url relative to the base url.
- * @param app Application
- * @returns {applicationUrl}
- */
-function URLService(app)
-{
-    var config = app.config;
-
-    // Set up a service to return the application URL.
-    var baseurl = _.trimEnd(config.proxy ? config.proxy : config.url + ":" +config.port, "/");
-
-    /**
-     * Return a url to the given path.
-     * @return string
-     */
-    function applicationUrl (uri)
-    {
-        if (!uri) uri = "";
-        uri = _.trim(uri,"/");
-        return `${baseurl}/${uri}`;
-    }
-
-    var parsed = URL.parse(baseurl);
-    Object.keys(parsed).map(key => {
-        applicationUrl[key] = parsed[key];
-    });
-
-    return applicationUrl;
 }
 
 

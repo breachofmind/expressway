@@ -34,13 +34,13 @@ class RouterProvider extends Expressway.Provider
     register(app, Template, express, event)
     {
         var routes = require(app.rootPath('config/routes'));
-        var Router = require('./classes/Router');
+        var Router = require('../classes/Router');
         var router = new Router(app);
 
         app.register('router', router, "The Router instance, for adding routes to express");
 
         // After express is loaded, add the routes to it.
-        event.once('application.bootstrap', function(app)
+        event.once('application.bootstrap', app =>
         {
             app.call(routes, [router]);
 
