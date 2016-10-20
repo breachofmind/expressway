@@ -98,6 +98,14 @@ class Expressway
          * @type {null|Application}
          */
         this.app = new Application(this);
+
+        var systemProviders = utils.getModulesAsHash(__dirname+'/src/providers/', true);
+        var userProviders = utils.getModulesAsHash(this.app.path('providers_path', 'providers'), true);
+
+        var systemConfig = require(rootPath + 'config/system') (this.app, {Provider: systemProviders}, {Provider: userProviders});
+
+        this.config.providers = systemConfig.providers;
+        this.config.middleware = systemConfig.middleware;
     }
 
     /**
@@ -140,10 +148,7 @@ class Expressway
         // Return the instance if it exists already.
         if (Expressway.instance) return Expressway.instance;
 
-        var systemProviders = utils.getModulesAsHash(__dirname+'/src/providers/', true);
-        var userProviders = utils.getModulesAsHash(rootPath + "providers/", true);
-
-        var config = require(rootPath + 'config/config') (systemProviders, userProviders);
+        var config = require(rootPath + 'config/config');
 
         return Expressway.instance = new Expressway(rootPath, config, context);
     }

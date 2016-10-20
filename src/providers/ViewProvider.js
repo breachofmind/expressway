@@ -1,6 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
+var http = require('http');
 
 /**
  * Provides a view helper class.
@@ -35,5 +36,16 @@ class ViewProvider extends Expressway.Provider
         app.register('View', View, "A wrapper class around HTML views and templates");
     }
 }
+
+/**
+ * Alias to create a view.
+ * @param file string
+ * @param data object|null optional
+ * @returns {View}
+ */
+http.ServerResponse.prototype.view = function(file,data)
+{
+    return Expressway.View.create(file,data);
+};
 
 module.exports = ViewProvider;

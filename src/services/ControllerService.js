@@ -1,7 +1,10 @@
 "use strict";
 
 var Expressway = require('expressway');
+var utils = Expressway.utils;
+var Path = require('path');
 var app = Expressway.instance.app;
+var trimEnd = require('lodash').trimEnd;
 var [debug,path] = app.get('debug','path');
 
 /**
@@ -14,8 +17,10 @@ class ControllerService
     constructor()
     {
         this.controllers = {};
+        this.middlewares = {};
+
         this.directories = [
-            path.controllers("/")
+            path.controllers()
         ];
     }
 
@@ -31,9 +36,9 @@ class ControllerService
 
     /**
      * Add a new controller class.
-     * @param Controller string|Controller
+     * @param Controller string|Controller|Middleware
      * @throws Error
-     * @returns {Controller}
+     * @returns {Controller|Middleware}
      */
     add(Controller)
     {
@@ -43,12 +48,30 @@ class ControllerService
             Controller = require(path);
         }
         var instance = app.call(Controller);
-        if (! (instance instanceof Expressway.Controller)) {
-            throw new Error("Unable to add controller, not a Controller instance: "+path);
-        }
-        debug(this,'Loaded: %s', instance.name);
 
-        return this.controllers[instance.name] = instance;
+        if (instance instanceof Expressway.Controller || instance instanceof Expressway.Middleware)
+        {
+            var type = instance.constructor.__proto__.name;
+
+            this[type.toLowerCase()+"s"][instance.name] = instance;
+
+            debug(this,`Loaded ${type}: %s`, instance.name);
+
+            return instance;
+        }
+
+        throw new Error("Unable to add controller, not a Controller or Middleware instance: "+path);
+    }
+
+    /**
+     * Add all files in a directory.
+     * @param dir string
+     */
+    addDirectory(dir)
+    {
+        utils.getModules(Path.normalize(dir), moduleName => {
+            this.add(moduleName);
+        });
     }
 
     /**
@@ -63,6 +86,16 @@ class ControllerService
             throw new Error(`"${controllerName}" controller does not exist`);
         }
         return this.controllers[controllerName];
+    }
+
+    /**
+     * Get a middleware by name.
+     * @param middlewareName string
+     * @returns {null|Middleware}
+     */
+    getMiddleware(middlewareName)
+    {
+        return this.middlewares.hasOwnProperty(middlewareName) ? this.middlewares[middlewareName] : null;
     }
 
     /**

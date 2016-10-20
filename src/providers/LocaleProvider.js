@@ -40,11 +40,6 @@ class LocaleProvider extends Expressway.Provider
         app.event.on('view.created', function(view,request) {
             view.data.lang = localeService.helper(request);
         });
-
-        // Add the middleware to express.
-        middlewareService.add('Localization', (app,express) => {
-            express.use(localeService.middleware);
-        })
     }
 }
 

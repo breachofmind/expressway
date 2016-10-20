@@ -195,7 +195,6 @@ class Application
     destruct()
     {
         this._booted = false;
-        this._providers = [];
         this.event.emit('application.destruct');
         this.event.removeAllListeners();
     }

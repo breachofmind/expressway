@@ -43,8 +43,8 @@ class AuthProvider extends Expressway.Provider
 
             var auth = app.call(Auth);
 
-            middlewareService.add('Basic Authentication', (app,server) => {
-                auth.middleware(server);
+            middlewareService.add('Basic Authentication', function (app,express) {
+                auth.middleware(express);
             });
         });
 

@@ -7,6 +7,7 @@ var fs = require('fs');
 const FN_ARGS = /\s*[^\(]*\(\s*([^\)]*)\)/m;
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(.+?)\1\s*$/;
+const FN_CONSTRUCTOR = /^\s*constructor\(([^\)]*)\)/m;
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 
 /**
@@ -24,14 +25,23 @@ module.exports = {
     {
         var $inject,
             fnText,
+            fnMatch = FN_ARGS,
             argDecl;
 
         if (typeof fn == 'function')
         {
             if (! ($inject = fn.$inject) ) {
                 $inject = [];
-                fnText = fn.toString().replace(STRIP_COMMENTS, '');
-                argDecl = fnText.match(FN_ARGS);
+                fnText = fn.toString().replace(STRIP_COMMENTS, '').trim();
+
+                if (fnText.startsWith("class")) {
+                    fnMatch = FN_CONSTRUCTOR;
+                    while(! FN_CONSTRUCTOR.test(fnText)) {
+                        fn = fn.prototype.__proto__.constructor;
+                        fnText = fn.toString().replace(STRIP_COMMENTS, '').trim();
+                    }
+                }
+                argDecl = fnText.match(fnMatch);
                 var parts = argDecl[1].split(FN_ARG_SPLIT);
                 parts.forEach(function(arg){
                     arg.replace(FN_ARG, function(all, underscore, name){

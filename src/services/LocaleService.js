@@ -171,18 +171,6 @@ class LocaleService
         }
         return string;
     }
-
-    /**
-     * Return some express middleware.
-     * @returns {function}
-     */
-    get middleware()
-    {
-        return (request,response,next) => {
-            request.lang = this.helper(request);
-            next();
-        };
-    }
 }
 
 module.exports = LocaleService;
