@@ -60,7 +60,7 @@ class CLIProvider extends Expressway.Provider
 
             cli.template(templateFile, destFile , {name:opts, _:_string});
 
-            process.exit(1);
+            process.exit();
         });
 
         /**
@@ -112,7 +112,9 @@ class CLIProvider extends Expressway.Provider
          */
         cli.command('services', "List all services in the application").action((env,opts) =>
         {
-
+            var conf = {
+                description: {maxWidth:60}
+            }
             var serviceNames = Object.keys(app.services).sort((a,b) => {
                 return a.localeCompare(b);
             });
@@ -128,9 +130,9 @@ class CLIProvider extends Expressway.Provider
                     description: doc,
                 }
             });
-            console.log(columnify(columns));
+            console.log(columnify(columns, {config:conf}));
             console.log(`\nRetrieve a service using ${colors.cyan('app.get("serviceName")')}`);
-            process.exit(1);
+            process.exit();
         });
 
         /**
@@ -160,7 +162,7 @@ class CLIProvider extends Expressway.Provider
                 console.log("Context: " + colors.green(opts.context.toString()));
                 console.log(LINE);
                 console.log(columnify(columns));
-                process.exit(1);
+                process.exit();
             });
 
         /**

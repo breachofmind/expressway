@@ -28,24 +28,15 @@ class ViewProvider extends Expressway.Provider
      */
     register(app)
     {
-        var View = require('../classes/View');
+        // Expose as a public class.
+        Expressway.View = require('../classes/View');
 
-        Expressway.View = View;
+        function createView (name,data) {
+            return new Expressway.View(name,data);
+        }
 
-        // Attach the View class to the application.
-        app.register('View', View, "A wrapper class around HTML views and templates");
+        app.register('view', createView, "Helper function for creating a view class instance")
     }
 }
-
-/**
- * Alias to create a view.
- * @param file string
- * @param data object|null optional
- * @returns {View}
- */
-http.ServerResponse.prototype.view = function(file,data)
-{
-    return Expressway.View.create(file,data);
-};
 
 module.exports = ViewProvider;

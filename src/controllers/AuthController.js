@@ -20,15 +20,14 @@ class AuthController extends Expressway.Controller
      *
      * Display the login form.
      */
-    login(request,response,next)
+    login(request,response,next,view)
     {
         if (request.user) {
             response.redirect(this.successURI);
         }
         var flash = request.flash('message');
 
-        return response
-            .view('auth/login')
+        return view('auth/login')
             .set({title: "Login"})
             .use({message: flash[0] || "", username:request.query.username || ""});
     }
@@ -38,12 +37,11 @@ class AuthController extends Expressway.Controller
      *
      * For when user forgets their password.
      */
-    forgot(request,response,next)
+    forgot(request,response,next,view)
     {
         var flash = request.flash('message');
 
-        return response
-            .view('auth/forgot')
+        return view('auth/forgot')
             .set({title: "Reset Password"})
             .use({message: flash[0] || ""});
     }
@@ -53,13 +51,13 @@ class AuthController extends Expressway.Controller
      *
      * Look up a user's reset token.
      */
-    lookup(request,response,next,User)
+    lookup(request,response,next,User,view)
     {
         return User.findOne({reset_token: request.params.hash}).exec().then(user => {
             if (! user) {
                 return next();
             }
-            return response.view('auth/reset', {requester: user});
+            return view('auth/reset', {requester: user});
         })
     }
 

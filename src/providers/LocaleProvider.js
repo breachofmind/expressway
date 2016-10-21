@@ -26,9 +26,8 @@ class LocaleProvider extends Expressway.Provider
     /**
      * Register the provider with the application.
      * @param app Application
-     * @param middlewareService MiddlewareService
      */
-    register(app, middlewareService)
+    register(app)
     {
         var LocaleService = require('../services/LocaleService');
 
@@ -38,7 +37,7 @@ class LocaleProvider extends Expressway.Provider
 
         // When each view is created, add the template function.
         app.event.on('view.created', function(view,request) {
-            view.data.lang = localeService.helper(request);
+            view.data.lang = request.lang.bind(request);
         });
     }
 }

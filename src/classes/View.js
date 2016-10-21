@@ -74,17 +74,6 @@ class View
 
         return response.render(this.file, this.data);
     }
-
-    /**
-     * Named constructor.
-     * @param file string
-     * @param data object
-     * @returns {View}
-     */
-    static create(file,data)
-    {
-        return new View(file,data);
-    }
 }
 
 module.exports = View;

@@ -63,6 +63,9 @@ class ExpressProvider extends Expressway.Provider
 
             express.set('view engine', app.conf('view_engine', 'ejs'));
             express.set('views', path.views());
+            if (app.env === ENV_PROD) {
+                express.set('env', 'production');
+            }
 
             middlewareService.load();
         };
