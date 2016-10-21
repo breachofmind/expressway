@@ -1,7 +1,6 @@
 "use strict";
 
 var Expressway = require('expressway');
-var csrf       = require('csurf');
 
 class AuthController extends Expressway.Controller
 {
@@ -13,7 +12,7 @@ class AuthController extends Expressway.Controller
         this.forgotURI = "/login/reset";
         this.successURI = "/";
 
-        this.middleware( csrf() );
+        this.middleware('CSRFMiddleware');
     }
 
     /**

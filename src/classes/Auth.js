@@ -78,17 +78,6 @@ class Auth
 
 
     /**
-     * Middleware to return to Express.
-     */
-    middleware(server)
-    {
-        this.passport.use(this.strategy);
-        server.use(this.passport.initialize());
-        server.use(this.passport.session());
-    }
-
-
-    /**
      * Serializes user from the user id.
      * @param user User model
      * @param done function

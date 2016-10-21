@@ -1,0 +1,26 @@
+"use strict";
+
+var Expressway = require('expressway');
+
+class <%=name%> extends Expressway.Middleware
+{
+    /**
+     * Handler that is passed to express.use() or express route.
+     * @returns void
+     */
+    method(request,response,next)
+    {
+        //
+    }
+
+    /**
+     * If passed to the global middlewareService, this will be fired.
+     * @returns void
+     */
+    load()
+    {
+        //
+    }
+}
+
+module.exports = <%=name%>;

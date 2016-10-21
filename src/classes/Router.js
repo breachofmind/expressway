@@ -18,17 +18,17 @@ class Route
      * Constructor
      * @param verb string
      * @param url string
-     * @param methods func|array|string
+     * @param stack {Array}
      */
-    constructor(verb,url,methods)
+    constructor(verb,url,stack)
     {
         this.index = null;
         this.verb = verb.toLowerCase();
         this.url = url;
-        this.methods = methods;
+        this.stack = stack;
 
-        if(! methods.length) {
-            throw new Error("Route declaration missing handler: "+url);
+        if(! stack.length) {
+            throw new Error("Route declaration missing routes: "+url);
         }
     }
 
@@ -40,13 +40,13 @@ class Route
     {
         this.index = router.routes.length;
 
-        express[this.verb].apply(express, [this.url].concat(this.methods));
+        express[this.verb].apply(express, [this.url].concat(this.stack));
 
         debug(this,'#%s: %s - %s (%s Middleware)',
             this.index,
             this.verb.toUpperCase(),
             this.url,
-            this.methods.length
+            this.stack.length
         );
         router.routes.push(this);
     }
@@ -79,26 +79,13 @@ class Router
                 // object is a hash: { url: [string, function] }
                 return function(object) {
                     Object.keys(object).forEach(function(url) {
-                        var stack = utils.getRouteFunctions(object[url], controllerService);
-                        new Route(verb,url,stack).addTo(router);
+                        new Route(verb,url,controllerService.getRouteFunctions(object[url])).addTo(router);
                     });
                     return router;
                 }
             })(verb);
         });
     }
-
-    /**
-     * The default not found 404 handler.
-     * Overwrite with a custom function if needed.
-     * @param request
-     * @param response
-     * @param next
-     */
-    notFound(request,response,next)
-    {
-        return response.smart(response.view('error/404'),404);
-    };
 
     /**
      * Return a list of routes as a string by index.

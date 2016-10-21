@@ -6,6 +6,11 @@ var _           = require('lodash');
 
 var [log,controllerService,debug] = app.get('log','controllerService','debug');
 
+/**
+ * Service for handling the global middleware stack for express.
+ * @author Mike Adamczyk <mike@bom.us>
+ * @constructor
+ */
 class MiddlewareService
 {
     constructor()
@@ -21,12 +26,7 @@ class MiddlewareService
      */
     add(name, func)
     {
-        if (typeof func !== "function") {
-            func = controllerService.getMiddleware(name);
-            if (! func) {
-                throw new Error("Middleware not found: "+name);
-            }
-        }
+        if (! func) func = controllerService.getMiddleware(name);
         this.stack.push( func );
         return this;
     }
@@ -50,15 +50,21 @@ class MiddlewareService
      */
     load()
     {
-        return this.stack.map( middleware =>
-        {
-            if (middleware instanceof Expressway.Middleware) {
-                app.call(middleware,'load');
-            } else {
-                app.call(middleware);
-            }
-            debug(this, "Using Middleware: %s", middleware.name);
+        return this.stack.map( middleware => {
+            return this.use(middleware);
         });
+    }
+
+    use(middleware)
+    {
+        if (typeof middleware == 'string') middleware = controllerService.getMiddleware(middleware);
+
+        if (middleware instanceof Expressway.Middleware) {
+            app.call(middleware,'boot');
+        } else {
+            app.call(middleware);
+        }
+        debug(this, "Using Middleware: %s", middleware.name);
     }
 }
 

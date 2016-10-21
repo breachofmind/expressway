@@ -3,11 +3,18 @@
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
 var locale = require('locale');
-var localeService = app.get('localeService');
 
 class LocaleMiddleware extends Expressway.Middleware
 {
-    dispatch(request,response,next)
+    /**
+     * Checks for the ?cc query and attaches a
+     * helper method to the request object.
+     * @param request
+     * @param response
+     * @param next
+     * @param localeService LocaleService
+     */
+    method(request,response,next,localeService)
     {
         if (request.query.cc) {
             request.locale = request.query.cc.toLowerCase();
@@ -21,10 +28,10 @@ class LocaleMiddleware extends Expressway.Middleware
      * Load into express, if using globally.
      * @param express
      */
-    load(express)
+    boot(express)
     {
         express.use(locale( app.conf('lang_support', ['en_us'])) );
-        super.load(express);
+        super.boot(express);
     }
 }
 

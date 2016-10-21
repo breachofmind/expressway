@@ -6,7 +6,14 @@ var log = app.get('log');
 
 class CoreMiddleware extends Expressway.Middleware
 {
-    dispatch(request,response,next)
+    /**
+     * Attaches some helpful methods to the response and request objects.
+     * @param request
+     * @param response
+     * @param next
+     * @returns {*}
+     */
+    method(request,response,next)
     {
         /**
          * Handle the response value smartly.

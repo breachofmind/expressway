@@ -4,7 +4,7 @@ var Expressway = require('expressway');
 
 class AjaxMiddleware extends Expressway.Middleware
 {
-    dispatch(request,response,next)
+    method(request,response,next)
     {
         request.ajax = request.get('x-requested-with') === 'XMLHttpRequest';
         next();

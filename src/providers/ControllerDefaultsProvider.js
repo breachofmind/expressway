@@ -27,7 +27,6 @@ class ControllerDefaultsProvider extends Expressway.Provider
 
         this.RESTController = {
             requireUser : true, // Require logged in user to create/delete/update?
-            middleware  : null,
             routes: function(router)
             {
                 router.get({
@@ -46,7 +45,6 @@ class ControllerDefaultsProvider extends Expressway.Provider
         };
 
         this.LocaleController = {
-            middleware: null,
             routes: function(router)
             {
                 router.get({

@@ -6,15 +6,13 @@ var Express = require('express');
 
 class StaticContentMiddleware extends Expressway.Middleware
 {
-    constructor() { super() }
-
     /**
      * Load into express, if using globally.
      * @param express
      * @param path PathService
      * @param debug function
      */
-    load(express,path,debug)
+    boot(express,path,debug)
     {
         if (path.public) {
             debug(this, 'Using static path: %s', path.public());

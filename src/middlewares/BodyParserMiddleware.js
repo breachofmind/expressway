@@ -3,17 +3,15 @@
 var Expressway = require('expressway');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
+var app = Expressway.instance.app;
 
 class BodyParserMiddleware extends Expressway.Middleware
 {
-    constructor() { super() }
-
     /**
      * Load into express, if using globally.
      * @param express
-     * @param app Application
      */
-    load(express,app)
+    boot(express)
     {
         express.use(bodyParser.json());
         express.use(bodyParser.urlencoded({extended:true}));

@@ -6,13 +6,9 @@ var flash = require('connect-flash');
 
 class FlashMiddleware extends Expressway.Middleware
 {
-    /**
-     * Load into express, if using globally.
-     * @param express
-     */
-    load(express)
+    dispatch()
     {
-        express.use( flash() );
+        return flash();
     }
 }
 

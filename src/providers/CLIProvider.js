@@ -43,9 +43,11 @@ class CLIProvider extends Expressway.Provider
      * @param app Application
      * @param cli CLI
      * @param log Winston
+     * @param middlewareService MiddlewareService
      */
-    setDefaultActions(app,cli,log)
+    setDefaultActions(app,cli,log,middlewareService)
     {
+        var LINE = "\n"+Array(20).join("-")+"\n";
         /**
          * Create a new model, controller or provider.
          * @usage ./bin/cli new model ModelName
@@ -68,6 +70,15 @@ class CLIProvider extends Expressway.Provider
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
             var router = app.get('router');
+            var globals = middlewareService.stack.map((middleware,i) => {
+                if (! middleware.name) {
+                    console.log(middleware.toString());
+                }
+                return {
+                    index: i,
+                    middleware:colors.green(middleware.name)
+                };
+            });
             var columns = router.routes.map(function(route) {
                 var verbColor = colors.gray;
                 switch (route.verb) {
@@ -79,11 +90,14 @@ class CLIProvider extends Expressway.Provider
                     index: route.index,
                     verb: verbColor(route.verb.toUpperCase()),
                     url: route.url,
-                    middleware: colors.blue(route.methods.map(method => { return method.$route; }).join(" -> "))
+                    middleware: colors.blue(route.stack.map(method => { return method.$route; }).join(" -> "))
                 }
             });
+            console.log("Global Middleware"+LINE);
+            console.log(columnify(globals));
+            console.log("Route Middleware"+LINE);
             console.log(columnify(columns));
-            process.exit(1);
+            process.exit();
         });
 
         /**

@@ -116,40 +116,6 @@ module.exports = {
     },
 
     /**
-     * Given a string or functions, return an array of functions for the express router.
-     * @param values
-     * @param controllerService ControllerService
-     * @returns {Array}
-     */
-    getRouteFunctions: function(values, controllerService)
-    {
-        var out = [];
-
-        if (! Array.isArray(values)) values = [values];
-
-        values.forEach(function(value)
-        {
-            // "indexController.index"
-            // dispatch method should return an array of functions.
-            if (typeof value == 'string')
-            {
-                var [controllerName,method] = value.split(".",2);
-                var funcs = controllerService.dispatch(controllerName,method);
-                funcs[funcs.length-1].$route = value;
-                out = out.concat( funcs );
-            }
-            // function(request,response,next) {...}
-            if (typeof value == 'function') {
-                value.$route = value.name || 'anonymous';
-                out.push(value);
-            }
-        });
-
-        // Return the stack of middleware and the route request.
-        return out;
-    },
-
-    /**
      * Return just the file basenames (without the .js).
      * @param dir string
      * @returns {*}

@@ -33,10 +33,11 @@ class Application
          * Event emitter class.
          * @type {*|EventEmitter}
          */
-        this.event = new events.EventEmitter();
         this.config = expressway.config;
         this.env = expressway.env;
         this.context = expressway.context;
+        this.event = new events.EventEmitter();
+        this.event.setMaxListeners(this.conf('max_listeners',50));
 
         this.register('package', this._package, "The NPM package.json");
         this.register('app', this, "The Application instance");

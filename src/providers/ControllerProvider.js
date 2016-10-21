@@ -80,12 +80,12 @@ http.IncomingMessage.prototype.controller = {name: null, method:null};
 
 /**
  * Set the controller name and method.
- * @param name string
+ * @param controller Controller
  * @param method string
  */
-http.IncomingMessage.prototype.setController = function(name,method)
+http.IncomingMessage.prototype.setController = function(controller,method)
 {
-    this.controller.name = name;
+    this.controller.name = controller.name;
     this.controller.method = method;
 };
 

@@ -10,73 +10,21 @@ class RESTController extends Expressway.Controller
     {
         super(app);
 
-        var RESTDefaults = ControllerDefaultsProvider.RESTController;
-
-        /**
-         * Special middleware for certain routes on this controller.
-         * @param request
-         * @param response
-         * @param next
-         */
-        function apiAuthenticationMiddleware(request,response,next)
-        {
-            if (! request.user && RESTDefaults.requireUser) {
-                return response.api({error:`You are not authorized to perform this operation`}, 401);
+        function idBinding(request,response,next) {
+            if (request.Model && request.params.id) {
+                request.Object = request.Model.findOne({_id: request.params.id});
             }
             return next();
         }
 
-        this.middleware('update', apiAuthenticationMiddleware);
-        this.middleware('create', apiAuthenticationMiddleware);
-        this.middleware('trash', apiAuthenticationMiddleware);
-
-
-        /**
-         * If a model parameter is given,
-         * check if it is a model and attach the object to the request.
-         */
-        this.bind('model', function(value,request,response,next)
-        {
-            var Model = modelService.bySlug(value);
-
-            if (! Model) {
-                return response.api({error:`Model "${value}" doesn't exist.`}, 404);
-            }
-
-            if (Model.expose == false && ! request.user) {
-                return response.api({error:`You must be logged in to view "${Model.name}" models`}, 401);
-            }
-
-            request.Model = Model;
-
-            return next();
-
-        }.bind(this));
-
-        /**
-         * Bind to the url parameter "id"
-         * Attach a promise to the request for later use.
-         */
-        this.bind('id', function(value,request,response,next)
-        {
-            if (request.Model && value) {
-                request.Object = request.Model.findOne({_id: value});
-            }
-            return next();
+        this.middleware({
+            update:    ['APIAuthMiddleware', 'ModelRequestMiddleware', idBinding],
+            create:    ['APIAuthMiddleware', 'ModelRequestMiddleware'],
+            trash:     ['APIAuthMiddleware', 'ModelRequestMiddleware', idBinding],
+            fetchOne:  ['ModelRequestMiddleware', idBinding],
+            fetchAll:  ['ModelRequestMiddleware','ModelPagingMiddleware'],
+            search:    ['ModelRequestMiddleware','ModelPagingMiddleware'],
         });
-
-        /**
-         * Bind to the query value, ?p
-         * This is used for paging.
-         */
-        this.query('p', function(value,request,response,next)
-        {
-            request.query.filter = request.Model.paging( utils.fromBase64(value) );
-            return next();
-        });
-
-        // Assign any user-defined middlewares.
-        this.middleware(RESTDefaults.middleware);
     }
 
 

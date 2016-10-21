@@ -1,28 +1,60 @@
 "use strict";
 
 var Expressway = require('expressway');
+var app = Expressway.instance.app;
 
 class Middleware
 {
     constructor()
     {
+        /**
+         * The name of the middleware.
+         * @type {String}
+         */
         this.name = this.constructor.name;
-        this.order = 0;
+    }
 
-        this.dispatch.$route = this.name;
+    /**
+     * The method to return to express.
+     * This function can have services injected in it.
+     * @param request
+     * @param response
+     * @param next
+     */
+    method(request,response,next)
+    {
+        throw new Error("Middleware.method() is unimplemented");
     }
 
     /**
      * Register the middleware with express.
+     * @returns {Function}
      */
-    dispatch(request,response,next)
+    dispatch()
     {
-        throw new Error("Middleware.dispatch() unimplemented");
+        var self = this;
+
+        function middleware(request,response,next)
+        {
+            if (response.headersSent) return null;
+
+            return app.call(self,'method', [request,response,next]);
+        }
+
+        middleware.$route = this.name;
+
+        return middleware;
     }
 
-    load(express)
+    /**
+     * When loading middleware globally, this method can be used
+     * to load middleware into express via express.use().
+     * @param express
+     * @returns {null}
+     */
+    boot(express)
     {
-        express.use(this.dispatch.bind(this));
+        express.use( this.dispatch() );
     }
 }
 

@@ -31,7 +31,7 @@ class RouterProvider extends Expressway.Provider
      * @param express Express
      * @param event EventEmitter
      */
-    register(app, Template, express, event)
+    register(app, Template, express, event, middlewareService)
     {
         var routes = require(app.rootPath('config/routes'));
         var Router = require('../classes/Router');
@@ -43,9 +43,8 @@ class RouterProvider extends Expressway.Provider
         event.once('application.bootstrap', app =>
         {
             app.call(routes, [router]);
+            middlewareService.use('NotFoundMiddleware');
 
-            // Not Found is the last route to use.
-            express.use(router.notFound);
         });
     }
 }
