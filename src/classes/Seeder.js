@@ -51,7 +51,7 @@ class Seeder
 
         // Allow the user to disable this seeder
         // from the command line utility.
-        if (this.cliOptions.seeder && this.cliOptions.seeder !== this.name) {
+        if ((this.cliOptions.seeder && this.cliOptions.seeder !== this.name) || this.cliOptions.parseonly) {
             this.active = false;
         }
 
@@ -209,7 +209,7 @@ class Seed
     {
         var seed = this;
 
-        if (seed.parsed || seed.seeder.active === false) return seed;
+        if (seed.parsed) return seed;
 
         if (Array.isArray(seed.source)) {
             this.setData(seed.source);

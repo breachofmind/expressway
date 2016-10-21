@@ -47,7 +47,7 @@ class CLIProvider extends Expressway.Provider
      */
     setDefaultActions(app,cli,log,middlewareService)
     {
-        var LINE = "\n"+Array(20).join("-")+"\n";
+        var LINE = Array(20).join("-")+"\n";
         /**
          * Create a new model, controller or provider.
          * @usage ./bin/cli new model ModelName
@@ -86,16 +86,22 @@ class CLIProvider extends Expressway.Provider
                     case "delete": verbColor = colors.red; break;
                     case "put": verbColor = colors.magenta; break;
                 }
+                var routes = route.stack.map((method,i) => {
+                    var c = i==route.stack.length-1 ? "white" : "gray";
+                    return colors[c](method.$route);
+                });
                 return {
                     index: route.index,
                     verb: verbColor(route.verb.toUpperCase()),
                     url: route.url,
-                    middleware: colors.blue(route.stack.map(method => { return method.$route; }).join(" -> "))
+                    middleware: routes.join(" -> ")
                 }
             });
-            console.log("Global Middleware"+LINE);
-            console.log(columnify(globals));
-            console.log("Route Middleware"+LINE);
+            console.log("Global Middleware");
+            console.log(LINE);
+            console.log(columnify(globals)+"\n");
+            console.log("Route Middleware");
+            console.log(LINE);
             console.log(columnify(columns));
             process.exit();
         });
@@ -149,8 +155,10 @@ class CLIProvider extends Expressway.Provider
                         dependencies: provider.requires
                     }
                 });
+                console.log(LINE);
                 console.log("Environment: " + colors.green(opts.environment.toString()));
                 console.log("Context: " + colors.green(opts.context.toString()));
+                console.log(LINE);
                 console.log(columnify(columns));
                 process.exit(1);
             });
@@ -163,6 +171,7 @@ class CLIProvider extends Expressway.Provider
             .option('-s, --seeder [name]', "Run only the given seeder name")
             .option('-d, --dump', "Dump all models before seeding")
             .option('-l, --list', "List the parsed data array in a column view")
+            .option('-p, --parseonly', "Run the parser but do not seed the database")
             .action((env,opts) =>
             {
                 if (app.env == ENV_PROD) {
