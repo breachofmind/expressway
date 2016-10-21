@@ -63,6 +63,9 @@ class ControllerProvider extends Expressway.Provider
         // User defined middleware
         controllerService.addDirectory(path.middlewares());
         // User defined controllers
+        controllerService.addDirectory(path.controllers());
+
+        // Any other directories to look in
         controllerService.directories.forEach(dir =>
         {
             controllerService.addDirectory(dir);

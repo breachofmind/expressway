@@ -100,7 +100,7 @@ class LoggerProvider extends Expressway.Provider
 
         event.on('providers.registered', (app) => {
             debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
-            debug(app, 'Provider Order... \n%s', app._order.join("\n"));
+            debug(app, 'Provider Order... \n%s', app._order.map((name,i) => { return `#${i} - ${name}`; }).join("\n"));
         })
     }
 

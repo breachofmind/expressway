@@ -1,10 +1,11 @@
 "use strict";
 
 var Expressway = require('expressway');
+var app = Expressway.instance.app;
 
 class LocaleController extends Expressway.Controller
 {
-    constructor(app)
+    constructor()
     {
         super();
 

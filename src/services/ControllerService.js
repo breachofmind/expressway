@@ -32,10 +32,7 @@ class ControllerService
          * Directories to look for Controller or Middleware classes.
          * @type {Array<String>}
          */
-        this.directories = [
-            path.middlewares(),
-            path.controllers()
-        ];
+        this.directories = [];
     }
 
     /**
