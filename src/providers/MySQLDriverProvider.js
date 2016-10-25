@@ -11,16 +11,18 @@ class MySQLDriverProvider extends Expressway.DriverProvider
      * Register the driver with the application.
      * @param app Application
      * @param debug function
+     * @param config function
      */
-    register(app,debug)
+    register(debug,config)
     {
         var Sequelize = require('sequelize');
 
-        var db = new Sequelize(app.config.db, {
+        var db = new Sequelize(config('db'), {
             timestamps: false,
             underscored: true,
         });
-        debug('MySQLDriverProvider','Connected to MySQL: %s', app.config.db);
+
+        debug('MySQLDriverProvider','Connected to MySQL: %s', config('db'));
 
         super.register(db);
 

@@ -33,6 +33,10 @@ function URLService(app)
         applicationUrl[key] = parsed[key];
     });
 
+    applicationUrl.prototype.toString = function() {
+        return applicationUrl();
+    };
+
     return applicationUrl;
 }
 

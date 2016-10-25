@@ -1,102 +1,71 @@
 "use strict";
 
-var Expressway          = require('expressway');
-var utils               = Expressway.utils;
-var app                 = Expressway.instance.app;
+var Expressway = require('expressway');
+var Express    = require('express');
+var utils      = Expressway.utils;
+var app        = Expressway.instance.app;
 
-var [controllerService, express, debug] = app.get('controllerService','express','debug');
+var [controllerService, debug] = app.get('controllerService','debug');
 
-const VERBS = ['get','post','put','patch','delete','options'];
 
-/**
- * A singular Route object.
- * Used with the Router class.
- */
-class Route
-{
-    /**
-     * Constructor
-     * @param verb string
-     * @param url string
-     * @param stack {Array}
-     */
-    constructor(verb,url,stack)
-    {
-        this.index = null;
-        this.verb = verb.toLowerCase();
-        this.url = url;
-        this.stack = stack;
-
-        if(! stack.length) {
-            throw new Error("Route declaration missing routes: "+url);
-        }
-    }
-
-    /**
-     * Add the route to the router and to Express.
-     * @param router Router
-     */
-    addTo(router)
-    {
-        this.index = router.routes.length;
-
-        express[this.verb].apply(express, [this.url].concat(this.stack));
-
-        debug(this,'#%s: %s - %s (%s Middleware)',
-            this.index,
-            this.verb.toUpperCase(),
-            this.url,
-            this.stack.length
-        );
-        router.routes.push(this);
-    }
-}
-
-/**
- * Router class.
- * A customized way to define routes for the application.
- * @author Mike Adamczyk <mike@bom.us>
- */
 class Router
 {
-    /**
-     * Constructor
-     * @param app Application
-     */
-    constructor(app)
+    constructor()
     {
-        var router = this;
+        this.applications = {};
+        this.aliases = {};
+    }
 
-        this.app = app;
+    alias(name,route)
+    {
+        this.aliases[name] = route;
+    }
 
-        this.routes = [];
-
-        // Verb method setup.
-        // Exposed to developer in routes.js config.
-        VERBS.map(function(verb) {
-            router[verb] = (function(verb){
-
-                // object is a hash: { url: [string, function] }
-                return function(object) {
-                    Object.keys(object).forEach(function(url) {
-                        new Route(verb,url,controllerService.getRouteFunctions(object[url])).addTo(router);
-                    });
-                    return router;
-                }
-            })(verb);
-        });
+    to(alias,uri="")
+    {
+        return this.aliases[alias] + uri;
     }
 
     /**
-     * Return a list of routes as a string by index.
-     * @returns {Array}
+     * Mount a new router.
+     * Attaches function with the given name which provides
+     * an easy way of declaring routes for parts of the application.
+     * @param name string
+     * @param $express Express
+     * @param options Object for express.Router
+     * @returns {Router}
      */
-    list()
+    mount(name, $express, options={})
     {
-        return this.routes.map(function(route) {
-            return `#${route.index}\t${route.verb.toUpperCase()}\t${route.url}`;
-        });
-    };
+        this.applications[name] = $express;
+
+        this[name] = function(base,routes)
+        {
+            if (! routes) {
+                routes = base;
+                base = "/";
+            }
+
+            var router = Express.Router(options);
+
+            utils.toRouteMap(routes).forEach((middleware,opts) => {
+
+                var stack = controllerService.getRouteFunctions(middleware);
+
+                if (! stack.length) throw new Error("Route declaration missing routes: "+opts.url);
+
+                // Add the routes to the express router.
+                router[opts.verb].apply(router, [opts.url].concat(stack) );
+            });
+
+            router.$basepath = base == "/" ? "" : base;
+
+            // Add the router to the express application.
+            $express.use(base,router);
+        };
+
+        return this;
+    }
 }
 
 module.exports = Router;

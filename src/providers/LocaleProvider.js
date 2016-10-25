@@ -19,7 +19,9 @@ class LocaleProvider extends Expressway.Provider
         this.requires = [
             'LoggerProvider',
             'ViewProvider',
-            'ExpressProvider'
+            'ExpressProvider',
+            'RouterProvider',
+            'ControllerProvider',
         ];
     }
 
@@ -29,16 +31,14 @@ class LocaleProvider extends Expressway.Provider
      */
     register(app)
     {
-        var LocaleService = require('../services/LocaleService');
-
-        var localeService = new LocaleService();
-
-        app.register('localeService', localeService, "Service for adding/retrieving locale keys");
-
         // When each view is created, add the template function.
         app.event.on('view.created', function(view,request) {
             view.data.lang = request.lang.bind(request);
         });
+
+        app.singleton('localeService', __dirname+'/../services/LocaleService', "Service for adding/retrieving locale keys");
+
+        app.register('LocaleController',require('../controllers/LocaleController'), "The default Locale controller");
     }
 }
 

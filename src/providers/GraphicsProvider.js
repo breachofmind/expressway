@@ -31,7 +31,7 @@ class GraphicsProvider extends Expressway.Provider
     {
         var MediaService = require('../services/MediaService');
 
-        var media = new MediaService({
+        var mediaService = new MediaService({
 
             "original" : function(image,meta,Sharp) {
                 // We can't be storing giant images on the server.
@@ -55,11 +55,11 @@ class GraphicsProvider extends Expressway.Provider
         // Attach an image helper to the view.
         event.on('view.created', function(view) {
             view.data.getImage = function(name, size = "original") {
-                return media.url(name,size);
+                return mediaService.url(name,size);
             }
         });
 
-        app.register('media', media, "Image manipulation service");
+        app.register('media', mediaService, "Image manipulation service");
     }
 }
 

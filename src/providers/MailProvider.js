@@ -26,14 +26,17 @@ class MailProvider extends Expressway.Provider
     /**
      * Register the mail function with the application.
      * @param app Application
-     * @param express Express
+     * @param $app Express
+     * @param config function
      */
-    register(app,express)
+    register(app,$app,config)
     {
-        var nodemailer    = require('nodemailer');
+        // This is inside the register method in
+        // case the user didn't load it.
+        var nodemailer = require('nodemailer');
         var stubTransport = require('nodemailer-stub-transport');
 
-        var transport = nodemailer.createTransport( app.conf('nodemailer_transport', stubTransport()) );
+        var transport = nodemailer.createTransport( config('nodemailer_transport', stubTransport()) );
 
         /**
          * Using a promise, send mail with the given options.
@@ -47,7 +50,7 @@ class MailProvider extends Expressway.Provider
                     return err ? reject(err) : resolve(info);
                 };
                 if (options.view) {
-                    return express.render(options.view, options.data || {}, function(err,html) {
+                    return $app.render(options.view, options.data || {}, function(err,html) {
                         if (err) return reject(err);
                         options.html = html;
                         transport.sendMail(options,callback);

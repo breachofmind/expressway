@@ -66,8 +66,12 @@ class ControllerService
         var path = typeof Controller == "string" ? Controller : null,
             type;
 
-        if (path) Controller = require(path);
-        var instance = app.call(Controller);
+        try {
+            if (path) Controller = require(path);
+            var instance = app.call(Controller);
+        } catch (err) {
+            throw new Error(`Error loading Controller or Middleware: ${err.message} + ${path}`);
+        }
 
         if (instance instanceof Expressway.Controller) {
             type = "Controller";
@@ -132,6 +136,7 @@ class ControllerService
     {
         var middleware = this.getMiddleware(middlewareName);
         var func = middleware.dispatch();
+
         // Just in case we're using a custom dispatch() method.
         // We want to be able to see the middleware name in the route listing.
         if (! func.$route) func.$route = middleware.name;

@@ -8,8 +8,8 @@ class AuthController extends Expressway.Controller
     {
         super(app);
 
-        this.loginURI = "/login";
-        this.forgotURI = "/login/reset";
+        this.loginURI = "/auth/login";
+        this.forgotURI = "/auth/login/reset";
         this.successURI = "/";
 
         this.middleware('CSRFMiddleware');
@@ -214,5 +214,15 @@ class AuthController extends Expressway.Controller
         return true;
     }
 }
+
+AuthController.routes = {
+    'GET  /login'                : 'AuthController.login',
+    'GET  /logout'               : 'AuthController.logout',
+    'GET  /login/reset'          : 'AuthController.forgot',
+    'GET  /login/reset/:hash'    : 'AuthController.lookup',
+    'POST /login'                : 'AuthController.authenticate',
+    'POST /login/reset'          : 'AuthController.request_reset',
+    'POST /login/reset/:hash'    : 'AuthController.perform_reset',
+};
 
 module.exports = AuthController;

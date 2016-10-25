@@ -2,6 +2,8 @@
 
 var Expressway = require('expressway');
 
+const CRUD = ['create','read','update','delete'];
+
 /**
  * Provides a gate that checks user permissions.
  * @author Mike Adamczyk <mike@bom.us>
@@ -21,17 +23,7 @@ class GateProvider extends Expressway.Provider
             'ModelProvider'
         ];
 
-        this.contexts = [CXT_TEST, CXT_WEB];
-
-        app.register('permissionBuilder', modelNames =>
-        {
-            return modelNames.map(model => {
-                return ['create','read','update','delete'].map(action => {
-                    return model+"."+action;
-                })
-            });
-
-        }, "A helper function for building permissions")
+        app.register('permissionBuilder', this.permissionBuilder, "A helper function for building permissions");
     }
 
     /**
@@ -41,9 +33,6 @@ class GateProvider extends Expressway.Provider
      */
     register(app, modelService)
     {
-        // Permission index.
-        var permissions = buildPermissions();
-
         /**
          * Stores the permission index.
          * This comes from basic CRUD operations for each model.
@@ -51,9 +40,9 @@ class GateProvider extends Expressway.Provider
         function buildPermissions()
         {
             var items = ['superuser'];
-            var crud = ['create','read','update','delete'];
+
             modelService.each(function(model) {
-                crud.map(function(action){ items.push(`${model.name}.${action}`); });
+                CRUD.map(function(action){ items.push(`${model.name}.${action}`); });
                 if (model.managed) {
                     items.push(`${model.name}.manage`);
                 }
@@ -63,9 +52,20 @@ class GateProvider extends Expressway.Provider
 
         var Gate = require('../classes/Gate');
 
-        app.register('gate', new Gate(permissions), "A service for checking user permissions via policies");
+        app.register('gate', new Gate( buildPermissions() ), "A service for checking user permissions via policies");
     }
 
+    /**
+     * A helper function for building permissions.
+     * @param modelNames {Array}
+     * @returns {Array}
+     */
+    permissionBuilder(modelNames = [])
+    {
+        return modelNames.map(model => {
+            return CRUD.map(action => { return model+"."+action })
+        });
+    }
 }
 
 module.exports = GateProvider;

@@ -6,7 +6,7 @@ var utils       = Expressway.utils;
 
 class RESTController extends Expressway.Controller
 {
-    constructor(app, ControllerDefaultsProvider, modelService)
+    constructor(app, modelService)
     {
         super(app);
 
@@ -239,5 +239,15 @@ class RESTController extends Expressway.Controller
         });
     }
 }
+
+RESTController.routes = {
+    "GET    /"              : 'RESTController.index',
+    "GET    /:model"        : 'RESTController.fetchAll',
+    "POST   /:model"        : 'RESTController.create',
+    "POST   /:model/search" : 'RESTController.search',
+    "GET    /:model/:id"    : 'RESTController.fetchOne',
+    "PUT    /:model/:id"    : 'RESTController.update',
+    "DELETE /:model/:id"    : 'RESTController.trash',
+};
 
 module.exports = RESTController;

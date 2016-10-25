@@ -29,19 +29,17 @@ class Application
         this.services      = {};
         this.documentation = {};
 
-        /**
-         * Event emitter class.
-         * @type {*|EventEmitter}
-         */
         this.config = expressway.config;
+        var config = utils.objectAccessor(this.config);
         this.env = expressway.env;
         this.context = expressway.context;
         this.event = new events.EventEmitter();
-        this.event.setMaxListeners(this.conf('max_listeners',50));
+        this.event.setMaxListeners(config('max_listeners',50));
 
         this.register('package', this._package, "The NPM package.json");
         this.register('app', this, "The Application instance");
         this.register('event', this.event, "Application event emitter instance");
+        this.register('config', config, "Helper function for accessing the config file");
     }
 
 
@@ -57,38 +55,36 @@ class Application
         if (! providers) providers = this.config.providers;
 
         // Instantiate and index all providers first.
-        var objects = providers.map(function(ProviderClass) {
+        var objects = providers.map( ProviderClass => {
             try {
                 var instance = new ProviderClass(this);
                 this.providers[instance.name] = instance;
                 this.event.emit(instance.name+".construct", instance);
             } catch (e) {
-                console.error(ProviderClass);
-                throw (e);
+                throw new ApplicationError("Error loading provider", ProviderClass);
             }
 
             return instance;
 
-        }.bind(this)).sort(function ascending(a,b) {
+        }).sort(function ascending(a,b) {
             return a.order == b.order ? 0 : (a.order > b.order ? 1: -1);
         });
 
         // Register all providers and their dependencies.
-        objects.forEach(function(provider) {
-            this.load(provider);
-        }.bind(this));
+        objects.forEach( provider => { this.load(provider) });
 
         this.event.emit('providers.registered', this);
 
-        this._booted = true;
+        // Boot all providers.
+        this._order.forEach( provider => { this.boot(provider) });
 
-        this.event.emit('application.bootstrap', this);
+        this._booted = true;
 
         return this;
     }
 
     /**
-     * Boot a provider into the application.
+     * Call the register() method on the given provider, and register any dependencies.
      * @param provider Provider
      * @returns {boolean}
      */
@@ -99,7 +95,7 @@ class Application
         this.event.emit('provider.loading', provider);
 
         // Load any dependencies first.
-        provider.requires.forEach(function(dependencyName)
+        provider.requires.forEach( dependencyName =>
         {
             var dependency = this.providers[dependencyName];
 
@@ -111,12 +107,11 @@ class Application
             }
             this.load(dependency);
 
-        }.bind(this));
+        });
 
-        // Call provider.register() with any services
         this.call(provider,"register");
 
-        this._order.push(provider.name);
+        this._order.push(provider);
 
         provider.loaded = true;
 
@@ -125,6 +120,23 @@ class Application
         return true;
     }
 
+    /**
+     * Call the boot() method on the given provider and inject any services.
+     * @param provider Provider
+     * @returns {boolean}
+     */
+    boot(provider)
+    {
+        if (! provider.loaded || provider.booted) return false;
+
+        this.call(provider,'boot');
+
+        provider.booted = true;
+
+        this.event.emit('provider.booted', provider);
+
+        return true;
+    }
 
 
     /**
@@ -136,30 +148,20 @@ class Application
     {
         this.event.emit('application.server', this);
 
-        if (typeof listening == 'function') listening(this);
+        if (typeof listening == 'function') this.call(listening);
 
         return this;
     };
 
     /**
      * Return a path relative to the root path.
-     * @param filepath string
+     * @param filePath string
      * @returns {string}
      */
-    rootPath(filepath)
+    rootPath(filePath)
     {
-        return this._expressway.rootPath(filepath);
+        return this._expressway.rootPath(filePath);
 
-    }
-
-    /**
-     * Return a path relative to the public path.
-     * @param filepath string
-     * @returns {string}
-     */
-    publicPath(filepath)
-    {
-        return this.path('static_path', '../public') + (filepath || "");
     }
 
     /**
@@ -170,55 +172,43 @@ class Application
      */
     path(conf,defaultPath)
     {
-        return this.rootPath( this.conf(conf,defaultPath) ) + "/";
+        var config = this.get('config');
+        return this.rootPath( config(conf,defaultPath) ) + "/";
     }
 
-    /**
-     * Reach into the configuration.
-     * @param key string
-     * @param defaultValue mixed
-     * @returns {*}
-     */
-    conf(key,defaultValue)
-    {
-        if (this.config[key]) {
-            return this.config[key];
-        }
-        return defaultValue;
-    }
-
-
-
-    /**
-     * Destroy the application and connections.
-     * @returns void
-     */
-    destruct()
-    {
-        this._booted = false;
-        this.event.emit('application.destruct');
-        this.event.removeAllListeners();
-    }
 
     /**
      * Register a service or other object.
-     * @param name {string}
+     * @param serviceName {string}
      * @param instance mixed
      * @param description {string} optional
      * @param call {bool} when injecting a function, do an app.call() first?
      * @returns {Application}
      */
-    register(name, instance, description, call)
+    register(serviceName, instance, description, call)
     {
-        if (this.services.hasOwnProperty(name)) {
-            throw new Error (`"${name}" service has already been defined`);
+        if (this.has(serviceName)) {
+            throw new Error (`"${serviceName}" service has already been defined`);
         }
         if (call === true && typeof instance == 'function') instance.$call = true;
-        this.services[name] = instance;
+        this.services[serviceName] = instance;
         if (description) {
-            this.documentation[name] = description;
+            this.documentation[serviceName] = description;
         }
         return this;
+    }
+
+    /**
+     * Register a Class singleton.
+     * @param name string
+     * @param Class string|Function
+     * @param description string
+     * @returns {Application}
+     */
+    singleton(name,Class,description)
+    {
+        if (typeof Class === 'string') Class = require(Class);
+        return this.register(name,new Class,description);
     }
 
     /**
@@ -228,21 +218,26 @@ class Application
      * @param context object|function
      * @param method string
      * @param args Array - optional arguments
+     * @throws Error
      * @returns {*}
      */
     call(context,method,args)
     {
-        if (! context) {
-            throw new Error("Context missing for method "+method);
-        }
-        if (typeof context === 'function') {
+        if (! context) throw new ApplicationCallError("Missing context");
+
+        if (typeof context === 'function')
+        {
             if (context.constructor) {
                 var svc = this.injectServices(context.prototype.constructor, args);
                 return new context(...svc);
             }
             return context.apply(context, this.injectServices(context, args));
+
+        } else if (typeof context === 'object' && typeof method === 'string' && typeof context[method] === 'function') {
+            return context[method].apply(context, this.injectServices(context[method], args));
         }
-        return context[method].apply(context, this.injectServices(context[method], args));
+
+        throw new ApplicationCallError("Context must be a function or object");
     }
 
     /**
@@ -260,11 +255,15 @@ class Application
         return array.map((serviceName,i) =>
         {
             if (args[i]) return args[i];
-            var service = this.get(serviceName);
-            if (! service) {
-                throw new Error("Service does not exist: " + serviceName);
+
+            if (! this.has(serviceName)) {
+                throw new Error(`Service does not exist: ${serviceName}`);
             }
+
+            var service = this.services[serviceName];
+
             if (typeof service === 'function' && service.$call) {
+
                 return this.call(service);
             }
             return service;
@@ -279,8 +278,7 @@ class Application
      */
     injectServices(fn,args)
     {
-        var names = utils.annotate(fn);
-        return this.getServices(names,args);
+        return this.getServices(utils.annotate(fn),args);
     }
 
     /**
@@ -291,10 +289,8 @@ class Application
      */
     get(...services)
     {
-        if(services.length > 1) {
-            return services.map(service => { return this.get(service) });
-        }
-        return this.has(services[0]) ? this.services[services[0]] : null;
+        var objects = this.getServices(services);
+        return objects.length === 1 ? objects[0] : objects;
     }
 
     /**
@@ -311,7 +307,7 @@ class Application
      * Get the Expressway version.
      * @returns {string}
      */
-    getVersion()
+    get version()
     {
         return this._version;
     }

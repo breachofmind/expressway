@@ -31,8 +31,7 @@ class CoreProvider extends Expressway.Provider
      */
     getURLServices(app)
     {
-        var URLService = require('../services/URLService');
-        var appUrl = URLService(app);
+        var appUrl = require('../services/URLService')(app);
 
         // Attach to the application.
         app.register('url', appUrl, "Function for returning the url/proxy url");

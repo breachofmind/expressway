@@ -8,9 +8,9 @@ var Expressway = require('expressway');
  */
 class NotFoundMiddleware extends Expressway.Middleware
 {
-    method(request,response,next)
+    method(request,response,next,view)
     {
-        return response.smart(response.view('error/404'),404);
+        return response.smart(view('error/404'), 404);
     }
 }
 

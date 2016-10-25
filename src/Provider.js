@@ -17,6 +17,7 @@ class Provider
         this.name           = this.constructor.name;
         this.active         = true;
         this.loaded         = false;
+        this.booted         = false;
         this.order          = 1;
         this.requires       = [];
         this.environments   = ENV_ALL;
@@ -24,8 +25,7 @@ class Provider
     }
 
     /**
-     * Stub for provider extensions.
-     * Called when all providers have been loaded.
+     * Called when all providers have been instantiated.
      * @returns {null}
      */
     register()
@@ -33,6 +33,14 @@ class Provider
         return null;
     }
 
+    /**
+     * Called when all providers have been registered.
+     * @returns {null}
+     */
+    boot()
+    {
+        return null;
+    }
 
     /**
      * Check if this provider can be loaded.

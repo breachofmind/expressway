@@ -32,9 +32,8 @@ class ModelProvider extends Expressway.Provider
      * @param app Application
      * @param debug function
      * @param driverProvider DriverProvider
-     * @param event EventEmitter
      */
-    register(app,debug,driverProvider,event)
+    register(app,debug,driverProvider)
     {
         var ModelService = require('../services/ModelService');
 
@@ -44,9 +43,6 @@ class ModelProvider extends Expressway.Provider
 
         // Expose the Driver model class.
         Expressway.Model = driverProvider.Model;
-
-        // When all the providers are registered, then load the models.
-        event.once('providers.registered', app => { app.call(this,'load'); });
     }
 
     /**
@@ -57,7 +53,7 @@ class ModelProvider extends Expressway.Provider
      * @param modelService ModelService
      * @returns {object}
      */
-    load(app, path, event, modelService)
+    boot(app,path,event,modelService)
     {
         utils.getModules(path.models("/"), modulePath =>
         {

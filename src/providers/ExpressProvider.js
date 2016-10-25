@@ -27,75 +27,56 @@ class ExpressProvider extends Expressway.Provider
      * Register the provider with the application.
      * @param app Application
      * @param event EventEmitter
+     * @param config function
+     * @param path PathService
+     * @param log Winston
+     * @param url URLService
      */
-    register(app,event)
+    register(app,event,config,path,log,url)
     {
         var MiddlewareService = require('../services/MiddlewareService');
-
         var middlewareService = new MiddlewareService;
+        var $app = Express();
+
+        app.register('$app', $app, "The main express app instance");
 
         app.register('middlewareService', middlewareService, "For storing and retrieving global express middleware");
 
-        app.register('express', Express(), "The express instance");
-
-        // Add the user-defined middleware stack.
-        event.once('providers.registered', app => {
-            app.config.middleware.forEach(name => {
-                middlewareService.add(name);
-            });
-        });
-
-        event.once('application.bootstrap', app.call(this,'onBootstrap'));
-
-        event.once('application.server', app.call(this,'onServerStart'))
-    }
-
-
-    /**
-     * Called before the server starts.
-     * @param express Express
-     * @param path PathService
-     * @param middlewareService MiddlewareService
-     */
-    onBootstrap(express,path,middlewareService)
-    {
-        return function(app) {
-
-            express.set('view engine', app.conf('view_engine', 'ejs'));
-            express.set('views', path.views());
-            if (app.env === ENV_PROD) {
-                express.set('env', 'production');
-            }
-
-            middlewareService.load();
-        };
-    }
-
-    /**
-     * Called when the server starts.
-     * @param log Winston
-     * @param url Function
-     * @param event EventEmitter
-     * @param express Express
-     */
-    onServerStart(log,url,event,express)
-    {
-        return function(app)
+        event.once('application.server', app =>
         {
-            var config = app.config;
-
-            express.listen(config.port, function()
+            $app.listen(config('port'), function()
             {
-                log.info('Using root path: %s', app.rootPath());
+                log.info('Using root path: %s', path.root());
                 log.info(`Starting %s server v.%s on %s (%s)...`,
                     app.env,
                     app._version,
-                    app.conf('url'),
+                    config('url'),
                     url());
 
-                event.emit('express.listening', express);
+                event.emit('express.listening', $app);
             });
-        }
+        })
+    }
+
+
+    /**
+     * Fire when all providers have been loaded.
+     * @param app Application
+     * @param config function
+     * @param middlewareService MiddlewareService
+     * @param $app Express
+     * @param path PathService
+     */
+    boot(app,config,middlewareService,$app,path)
+    {
+        $app.set('views', path.views());
+        $app.set('view engine', config('view_engine','ejs'));
+        $app.set('env', app.env === ENV_PROD ? 'production' : 'development');
+
+        // Add the user-defined middleware stack.
+        config('middleware', []).forEach(name => { middlewareService.add(name) });
+
+        middlewareService.load();
     }
 }
 

@@ -13,23 +13,22 @@ class LocaleMiddleware extends Expressway.Middleware
      * @param request
      * @param response
      * @param next
-     * @param localeService LocaleService
      */
     method(request,response,next)
     {
         if (request.query.cc) {
             request.locale = request.query.cc.toLowerCase();
         }
-        //request.lang = localeService.helper(request);
         next();
     }
 
     /**
      * Load into express, if using globally.
-     * @param express
+     * @param $app Express
      * @param localeService LocaleService
+     * @param config Function
      */
-    boot(express,localeService)
+    boot($app,localeService,config)
     {
         http.IncomingMessage.prototype.lang = function(key,args)
         {
@@ -39,8 +38,10 @@ class LocaleMiddleware extends Expressway.Middleware
             return localeService.getKey(loc,key,args);
         };
 
-        express.use(locale( app.conf('lang_support', ['en_us'])) );
-        super.boot(express);
+        $app.use(function LocaleParser(...args) {
+            return locale( config('lang_support', ['en_us']))(...args);
+        });
+        super.boot($app);
     }
 }
 

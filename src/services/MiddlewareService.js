@@ -15,7 +15,7 @@ class MiddlewareService
 {
     constructor()
     {
-        this.stack = [];
+        this.queue = [];
     }
 
     /**
@@ -27,7 +27,7 @@ class MiddlewareService
     add(name, func)
     {
         if (! func) func = controllerService.getMiddleware(name);
-        this.stack.push( func );
+        this.queue.push( func );
         return this;
     }
 
@@ -38,7 +38,7 @@ class MiddlewareService
      */
     remove(name)
     {
-        this.stack = _.filter(this.stack, object => {
+        this.queue = _.filter(this.queue, object => {
             return object.name.toLowerCase() !== name.toLowerCase();
         });
         return true;
@@ -50,11 +50,15 @@ class MiddlewareService
      */
     load()
     {
-        return this.stack.map( middleware => {
+        return this.queue.map( middleware => {
             return this.use(middleware);
         });
     }
 
+    /**
+     * Call the middleware function or boot() method.
+     * @param middleware string|Middleware
+     */
     use(middleware)
     {
         if (typeof middleware == 'string') middleware = controllerService.getMiddleware(middleware);
@@ -64,7 +68,6 @@ class MiddlewareService
         } else {
             app.call(middleware);
         }
-        debug(this, "Using Middleware: %s", middleware.name);
     }
 }
 

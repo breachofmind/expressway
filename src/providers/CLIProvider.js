@@ -5,6 +5,7 @@ var Expressway = require('expressway');
 var _string  = require('lodash/string');
 var columnify = require('columnify');
 var colors = require('colors');
+var _ = require('lodash');
 
 /**
  * Provides a Command Line interface module.
@@ -31,11 +32,7 @@ class CLIProvider extends Expressway.Provider
      */
     register(app)
     {
-        var CLI = require('../classes/CLI');
-
-        app.register('cli', app.call(CLI), "The CLI class instance");
-
-        app.call(this,'setDefaultActions');
+        app.singleton('cli', __dirname+'/../classes/CLI', "The CLI Class instance");
     }
 
     /**
@@ -44,8 +41,9 @@ class CLIProvider extends Expressway.Provider
      * @param cli CLI
      * @param log Winston
      * @param middlewareService MiddlewareService
+     * @param path PathService
      */
-    setDefaultActions(app,cli,log,middlewareService)
+    boot(app,cli,log,middlewareService,path)
     {
         var LINE = Array(20).join("-")+"\n";
         /**
@@ -56,7 +54,7 @@ class CLIProvider extends Expressway.Provider
         {
             var type = env.trim().toLowerCase();
             var templateFile = __dirname + `/../templates/${type}.template`;
-            var destFile = app.path(type+"s_path", type+"s") + opts +".js";
+            var destFile = path[type+"s"] (opts + ".js");
 
             cli.template(templateFile, destFile , {name:opts, _:_string});
 
@@ -69,39 +67,32 @@ class CLIProvider extends Expressway.Provider
          */
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
-            var router = app.get('router');
-            var globals = middlewareService.stack.map((middleware,i) => {
-                if (! middleware.name) {
-                    console.log(middleware.toString());
-                }
-                return {
-                    index: i,
-                    middleware:colors.green(middleware.name)
-                };
-            });
-            var columns = router.routes.map(function(route) {
-                var verbColor = colors.gray;
-                switch (route.verb) {
-                    case "post": verbColor = colors.green; break;
-                    case "delete": verbColor = colors.red; break;
-                    case "put": verbColor = colors.magenta; break;
-                }
-                var routes = route.stack.map((method,i) => {
+            var stack = app.get('stack');
+
+            var columns = stack.map((route,i) =>
+            {
+                var methods = route.methods.map(method => {
+                    var name = method.toUpperCase();
+                    switch (method) {
+                        case "post": return colors.green(name);
+                        case "delete": return colors.red(name);
+                        case "put": return colors.magenta(name);
+                        default: return colors.gray(name);
+                    }
+                });
+
+                var routes = route.stack.map((name,i) => {
                     var c = i==route.stack.length-1 ? "white" : "gray";
-                    return colors[c](method.$route);
+                    return colors[c](name);
                 });
                 return {
-                    index: route.index,
-                    verb: verbColor(route.verb.toUpperCase()),
-                    url: route.url,
+                    index: i,
+                    methods: methods.join(","),
+                    path: route.path,
                     middleware: routes.join(" -> ")
                 }
             });
-            console.log("Global Middleware");
-            console.log(LINE);
-            console.log(columnify(globals)+"\n");
-            console.log("Route Middleware");
-            console.log(LINE);
+
             console.log(columnify(columns));
             process.exit();
         });

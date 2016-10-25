@@ -26,4 +26,8 @@ class LocaleController extends Expressway.Controller
     }
 }
 
+LocaleController.routes = {
+    'GET /locale' : 'LocaleController.index',
+};
+
 module.exports = LocaleController;

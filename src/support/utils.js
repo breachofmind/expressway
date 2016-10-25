@@ -3,6 +3,7 @@
 var glob = require('glob');
 var path = require('path');
 var fs = require('fs');
+var _ = require('lodash');
 
 const FN_ARGS = /\s*[^\(]*\(\s*([^\)]*)\)/m;
 const FN_ARG_SPLIT = /,/;
@@ -90,14 +91,34 @@ module.exports = {
     },
 
     /**
-     * Read in a JSON text file.
-     * @param file string
-     * @return object
+     * Create a Map out of a object.
+     * @param object {Object}
+     * @param manipulateKey {Function} optional
+     * @returns {Map}
      */
-    readJSON: function(file)
+    toMap: function(object, manipulateKey)
     {
-        var contents = fs.readFileSync(file);
-        return JSON.parse(contents);
+        var map = new Map();
+        Object.keys(object).forEach(key => {
+            map.set(
+                typeof manipulateKey == 'function' ? manipulateKey(key) : key,
+                object[key]
+            );
+        });
+        return map;
+    },
+
+    /**
+     * Convert an object of VERB ROUTE -> MIDDLEWARE to a parsed Map object.
+     * @param routes
+     * @return Map
+     */
+    toRouteMap: function(routes)
+    {
+        return this.toMap(routes, (key) => {
+            var [verb,url] = key.split(/\s+/);
+            return {verb:verb.toLowerCase().trim(), url:url.trim()};
+        });
     },
 
     /**
@@ -161,5 +182,93 @@ module.exports = {
             out[name] = callback === true ? require(modulePath) : callback(modulePath,dir,name);
         });
         return out;
+    },
+
+    /**
+     * Return a lodash accessor helper for an object.
+     * @param object
+     * @returns {Function}
+     */
+    objectAccessor: function(object)
+    {
+        return function (property,defaultValue=null) {
+            return _.get(object,property, defaultValue);
+        }
+    },
+
+    /**
+     * Given an express app, return an array of routes.
+     * @param express App
+     * @returns {Array}
+     */
+    getMiddlewareStack: function(express)
+    {
+        if (! express._router) {
+            throw ("Express app does not have a router");
+        }
+        var stack = express._router.stack;
+
+        var routes = stack.map(function(middleware) {
+
+            switch(middleware.name)
+            {
+                case "router" :
+                    return middleware.handle.stack.map(layer => {
+                        return {
+                            path: middleware.handle.$basepath + layer.route.path,
+                            methods: Object.keys(layer.route.methods),
+                            stack: layer.route.stack.map(middleware => {
+                                return middleware.handle.$route;
+                            })
+                        };
+                    });
+                case "middleware" :
+                    return {
+                        path: "*",
+                        methods: ["*"],
+                        stack: [middleware.handle.$route]
+                    };
+                default:
+                    return {
+                        path: "*",
+                        methods: ["*"],
+                        stack: [middleware.name]
+                    }
+            }
+        });
+
+        return _.compact(_.flatten(routes));
     }
 };
+
+
+
+Object.defineProperty(global, '__stack', {
+    get: function() {
+        var orig = Error.prepareStackTrace;
+        Error.prepareStackTrace = function(_, stack) {
+            return stack;
+        };
+        var err = new Error;
+        Error.captureStackTrace(err);
+        var stack = err.stack;
+        Error.prepareStackTrace = orig;
+        return stack;
+    }
+});
+
+Object.defineProperty(global, '__line', {
+    get: function() {
+        return function(n=1) {
+            return __stack[n].getLineNumber()
+        };
+    }
+});
+
+Object.defineProperty(global, '__function', {
+    get: function() {
+        return function(n=1) {
+            return __stack[n].getFunctionName();
+        }
+    }
+});

@@ -3,6 +3,7 @@
 var crypto   = require('crypto');
 var Expressway = require('expressway');
 
+
 /**
  * Provides basic authentication with passport.
  * @author Mike Adamczyk <mike@bom.us>
@@ -19,40 +20,40 @@ class AuthProvider extends Expressway.Provider
 
         this.requires = [
             'ModelProvider',
-            "LoggerProvider",
-            "ExpressProvider"
+            'LoggerProvider',
+            'RouterProvider',
+            'ControllerProvider',
+            'ExpressProvider'
         ];
     }
 
     /**
-     * Register with express.
+     * Register with the application.
      * @param app Application
-     * @param modelService ModelService
-     * @param middlewareService MiddlewareService
      * @param event EventEmitter
      */
-    register(app, modelService, middlewareService, event)
+    register(app,event)
     {
-        event.once('providers.registered', app => {
-
-            if (! modelService.has('User')) {
-                throw ('"User" model is required to use basic Auth functionality.');
-            }
-
-            var Auth = require('../classes/Auth');
-
-            var auth = app.call(Auth);
-
-            middlewareService.add('BasicAuthMiddleware');
-        });
-
-
         // Attach the authenticated user to the view for use in templates.
         event.on('view.created', (view,request) => {
             view.data.user = request.user;
         });
 
         app.register('encrypt', this.encrypt, "Function for encrypting passwords securely");
+
+        app.register('AuthController', require('../controllers/AuthController'), "Default user authentication controller");
+    }
+
+
+    /**
+     * Boot after all providers have been loaded.
+     * @param modelService ModelService
+     */
+    boot(modelService)
+    {
+        if (! modelService.has('User')) {
+            throw ('"User" model is required to use basic Auth functionality.');
+        }
     }
 
     /**

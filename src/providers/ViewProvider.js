@@ -1,7 +1,6 @@
 "use strict";
 
 var Expressway = require('expressway');
-var http = require('http');
 
 /**
  * Provides a view helper class.
@@ -17,8 +16,6 @@ class ViewProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = ['TemplateProvider'];
-
         this.contexts = [CXT_TEST, CXT_WEB];
     }
 
@@ -30,6 +27,8 @@ class ViewProvider extends Expressway.Provider
     {
         // Expose as a public class.
         Expressway.View = require('../classes/View');
+
+        Expressway.Template = require('../classes/Template');
 
         function createView (name,data) {
             return new Expressway.View(name,data);

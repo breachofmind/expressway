@@ -80,29 +80,31 @@ class LoggerProvider extends Expressway.Provider
         app.register('log', logger, "The main Winston logger instance");
         app.register('debug', debug, "Console logging function for debugging");
 
+        /**
+         * Debugging helper function.
+         * @param className string
+         * @param message string
+         * @param args string
+         */
         function debug(className, message, ...args)
         {
             if (app.config.debug !== true) return;
             if (typeof className == 'object') className = className.constructor.name;
             args = args.map(function(arg) { return colors.green(arg) });
-            var classColor = "magenta";
-            if (className == "Application") classColor = "yellow";
-            logger.debug(`[${colors[classColor](className)}] ${message}`, ...args);
+            logger.debug(`[${colors['magenta'](className)}] ${message}`, ...args);
         }
 
-        event.on('application.bootstrap', (app) => {
-            debug(app, 'booting...');
-        });
-
-        event.on('provider.loaded', (provider) => {
+        event.once('provider.loaded', provider => {
             debug('Provider', 'Loaded: %s', colors.gray(provider.name));
         });
 
-        event.on('providers.registered', (app) => {
+        event.once('providers.registered', app => {
             debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
-            debug(app, 'Provider Order... \n%s', app._order.map((name,i) => { return `#${i} - ${name}`; }).join("\n"));
+            debug(app, 'Provider Order... \n%s', app._order.map((provider,i) => { return `#${i} - ${provider.name}`; }).join("\n"));
+            debug(app, 'Booting...');
         })
     }
+
 
     /**
      * Decide which level to report to the console
@@ -111,10 +113,12 @@ class LoggerProvider extends Expressway.Provider
      */
     getConsoleLevel()
     {
+        var config = this.app.get('config');
+
         switch (this.app.context) {
             case CXT_TEST: return 'warn';
             case CXT_CLI: return 'info';
-            default: return this.app.conf('debug') == true ? 'debug' : 'info';
+            default: return config('debug') == true ? 'debug' : 'info';
         }
     }
 }

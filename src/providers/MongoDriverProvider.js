@@ -2,6 +2,7 @@
 
 var Expressway = require('expressway');
 var session    = require('express-session');
+var Promise    = require('bluebird');
 
 class MongoDriverProvider extends Expressway.DriverProvider
 {
@@ -13,28 +14,24 @@ class MongoDriverProvider extends Expressway.DriverProvider
      * @param debug function
      * @param log Winston
      * @param event EventEmitter
+     * @param config function
      */
-    register(app,debug,log,event)
+    register(app,debug,log,event,config)
     {
-        var db     = require('mongoose');
-        db.Promise = require('bluebird');
+        var db = require('mongoose');
+        db.Promise = Promise;
 
         db.connection.on('error', function(err){
-            log.error('Connection error: %s on %s', err.message, app.config.db);
+            log.error('Connection error: %s on %s', err.message, config('db'));
             process.exit(0);
         });
 
         db.connection.on('open', function(){
-            debug('MongoDriverProvider','Connected to MongoDB: %s', app.config.db);
+            debug('MongoDriverProvider','Connected to MongoDB: %s', config('db'));
             event.emit('database.connected', app);
         });
 
-        event.on('application.destruct', function(){
-            db.disconnect();
-            debug('MongoDriverProvider','Connection closed');
-        });
-
-        db.connect(app.config.db);
+        db.connect(config('db'));
 
         super.register(db);
 

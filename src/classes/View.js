@@ -20,6 +20,8 @@ class View
         this.file = file;
         this.data = data||{};
 
+        this.data.appVersion = app.version;
+
         this.template = Expressway.Template.create(this);
     }
 
@@ -59,18 +61,16 @@ class View
 
     /**
      * Render the view response.
-     * @param request
      * @param response
      * @returns {*}
      */
-    render(request,response)
+    render(response)
     {
-        this.data.request = request;
+        this.data.request = response.req;
         this.data.template = this.template;
-        this.data.appVersion = app._version;
         this.data._ = _string;
 
-        app.event.emit('view.created', this, request);
+        app.event.emit('view.created', this, response.req);
 
         return response.render(this.file, this.data);
     }

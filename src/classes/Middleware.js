@@ -49,12 +49,12 @@ class Middleware
     /**
      * When loading middleware globally, this method can be used
      * to load middleware into express via express.use().
-     * @param express
+     * @param $app Express
      * @returns {null}
      */
-    boot(express)
+    boot($app)
     {
-        express.use( this.dispatch() );
+        $app.use( this.dispatch() );
     }
 }
 

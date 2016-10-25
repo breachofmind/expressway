@@ -6,6 +6,7 @@ var app = Expressway.instance.app;
 var ejs = require('ejs');
 var fs = require('fs');
 var _ = require('lodash');
+var path = app.get('path');
 
 var styles = {
     close: ejs.compile("<<%-element%> <%-attributes%>><%-text%></<%-element%>>"),
@@ -157,7 +158,7 @@ class TemplateElement
      */
     mtime(attr)
     {
-        var publicPath = app.publicPath( _.trim(this.attributes[attr],"/") );
+        var publicPath = path.public( _.trim(this.attributes[attr],"/") );
         if (this.attributes[attr] && fs.existsSync(publicPath)) {
             var mtime = fs.statSync(publicPath).mtime.getTime();
             this.attributes[attr] += "?m="+mtime;

@@ -4,16 +4,19 @@ var Expressway = require('expressway');
 var app = Expressway.instance.app;
 var session = require('express-session');
 var driverProvider = app.get('driverProvider');
+var config = app.get('config');
 
 class SessionMiddleware extends Expressway.Middleware
 {
-    dispatch()
+    boot($app)
     {
-        return session ({
-            secret: app.conf('appKey', 'keyboard cat'),
-            saveUninitialized: false,
-            resave: false,
-            store: app.call(driverProvider,'getSessionStore')
+        $app.use(function Session(...args) {
+            return session ({
+                secret: config('appKey', 'keyboard cat'),
+                saveUninitialized: false,
+                resave: false,
+                store: app.call(driverProvider,'getSessionStore')
+            })(...args);
         })
     }
 }
