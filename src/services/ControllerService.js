@@ -90,11 +90,11 @@ class ControllerService
 
     /**
      * Add all files in a directory.
-     * @param dir string
+     * @param dir string|PathObject
      */
     addDirectory(dir)
     {
-        utils.getModules(Path.normalize(dir), moduleName => {
+        utils.getModules(dir.toString(), moduleName => {
             this.add(moduleName);
         });
     }

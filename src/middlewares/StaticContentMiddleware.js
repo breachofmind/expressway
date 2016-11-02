@@ -13,9 +13,11 @@ class StaticContentMiddleware extends Expressway.Middleware
      */
     boot($app,path,debug)
     {
+
         if (path.public) {
-            debug(this, 'Using static path: %s', path.public());
-            $app.use(Express.static(path.public()));
+            let dir = path.public().get();
+            debug(this, 'Using static path: %s', dir);
+            $app.use(Express.static(dir));
         }
     }
 }

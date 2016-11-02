@@ -118,7 +118,7 @@ http.ServerResponse.prototype.logResponse = function(app)
 http.ServerResponse.prototype.smart = function(value,status)
 {
     // Headers were sent already or being handled differently.
-    if (this.headersSent || value === true || value === undefined) {
+    if (this.headersSent || value === true || typeof value === 'undefined') {
         return null;
     }
 
@@ -126,7 +126,7 @@ http.ServerResponse.prototype.smart = function(value,status)
 
     if (value === false || value === null) {
         // Does not exist.
-        return this.view('error/404', {}, 404);
+        return this.sendStatus(404);
 
     } else if (value instanceof Promise) {
         // Execute the promise, and then recursively try again.

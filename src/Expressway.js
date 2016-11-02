@@ -6,7 +6,6 @@ var Provider        = require('./Provider');
 var DriverProvider  = require('./DriverProvider');
 var Model           = require('./Model');
 var utils           = require('./support/utils');
-var GulpBuilder     = require('./support/GulpBuilder');
 
 global.ApplicationError = require('./exceptions/ApplicationError');
 global.ApplicationCallError = require('./exceptions/ApplicationCallError');
@@ -89,6 +88,20 @@ class Expressway
     }
 
     /**
+     * Create a gulp helper object.
+     * @param rootPath string
+     * @param gulp Gulp
+     * @returns {GulpHelper}
+     */
+    static gulp(rootPath,gulp)
+    {
+        let app    = Expressway.cli(rootPath);
+        let Helper = require('./support/gulp');
+
+        return new Helper(gulp);
+    }
+
+    /**
      * Initialize the application.
      * @param rootPath string
      * @param context string, optional
@@ -111,6 +124,5 @@ Expressway.Provider         = Provider;
 Expressway.DriverProvider   = DriverProvider;
 Expressway.Application      = Application;
 Expressway.utils            = utils;
-Expressway.GulpBuilder      = GulpBuilder;
 
 module.exports = Expressway;

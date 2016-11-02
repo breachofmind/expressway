@@ -225,17 +225,22 @@ class Application
     {
         if (! context) throw new ApplicationCallError("Missing context");
 
-        if (typeof context === 'function')
-        {
-            if (context.constructor) {
-                var svc = this.injectServices(context.prototype.constructor, args);
-                return new context(...svc);
-            }
-            return context.apply(context, this.injectServices(context, args));
+        try {
+            if (typeof context === 'function')
+            {
+                if (context.constructor) {
+                    var svc = this.injectServices(context.prototype.constructor, args);
+                    return new context(...svc);
+                }
+                return context.apply(context, this.injectServices(context, args));
 
-        } else if (typeof context === 'object' && typeof method === 'string' && typeof context[method] === 'function') {
-            return context[method].apply(context, this.injectServices(context[method], args));
+            } else if (typeof context === 'object' && typeof method === 'string' && typeof context[method] === 'function') {
+                return context[method].apply(context, this.injectServices(context[method], args));
+            }
+        } catch (err) {
+            throw new ApplicationCallError(err.message + ` Context: ${context.name}, Method: ${method}`);
         }
+
 
         throw new ApplicationCallError("Context must be a function or object");
     }
@@ -257,7 +262,7 @@ class Application
             if (args[i]) return args[i];
 
             if (! this.has(serviceName)) {
-                throw new Error(`Service does not exist: ${serviceName}`);
+                throw new Error(`Service does not exist: ${serviceName} in [${array.join(",")}]`);
             }
 
             var service = this.services[serviceName];

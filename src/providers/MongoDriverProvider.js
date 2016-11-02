@@ -23,7 +23,7 @@ class MongoDriverProvider extends Expressway.DriverProvider
 
         db.connection.on('error', function(err){
             log.error('Connection error: %s on %s', err.message, config('db'));
-            process.exit(0);
+            process.exit(1);
         });
 
         db.connection.on('open', function(){

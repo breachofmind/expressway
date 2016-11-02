@@ -30,7 +30,7 @@ class MediaService
      * Resolves to a lesser file size if the given file size doesn't exist.
      * @param fileName string
      * @param size string
-     * @returns {string|null}
+     * @returns {PathObject|null}
      */
     path(fileName, size)
     {
@@ -38,7 +38,7 @@ class MediaService
         if (! resolvedSize) {
             return null;
         }
-        return path.uploads(resolvedSize+"/"+fileName);
+        return path.uploads(resolvedSize+"/"+fileName).get();
     }
 
     /**
@@ -75,7 +75,7 @@ class MediaService
             var file = path.uploads(this.degradation[index]+"/"+fileName);
 
             // This file size does exist.
-            if (fs.existsSync(file)) {
+            if (file.exists) {
                 return this.degradation[index];
             }
         }
@@ -137,7 +137,7 @@ class MediaService
         {
             return this.generate(size, inputFile, function(filePath, meta) {
                 var fileName = Path.basename(filePath);
-                return path.uploads(size+"/"+fileName);
+                return path.uploads(size+"/"+fileName).get();
             })
         });
 
@@ -155,7 +155,7 @@ class MediaService
 
         this.sizes[name] = manipulator;
 
-        path.set("uploads_"+name, path.uploads(name), true);
+        path.set("uploads_"+name, path.uploads(name).get(), true);
 
         this[name] = function(inputFile,outputFile) {
             return this.generate(name, inputFile, outputFile);

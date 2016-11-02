@@ -10,7 +10,9 @@ class NotFoundMiddleware extends Expressway.Middleware
 {
     method(request,response,next,view)
     {
-        return response.smart(view('error/404'), 404);
+        response.status(404);
+
+        return view('error/404');
     }
 }
 

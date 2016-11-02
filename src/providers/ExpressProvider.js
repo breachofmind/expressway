@@ -46,7 +46,7 @@ class ExpressProvider extends Expressway.Provider
         {
             $app.listen(config('port'), function()
             {
-                log.info('Using root path: %s', path.root());
+                log.info('Using root path: %s', path.root().get());
                 log.info(`Starting %s server v.%s on %s (%s)...`,
                     app.env,
                     app._version,
@@ -69,7 +69,7 @@ class ExpressProvider extends Expressway.Provider
      */
     boot(app,config,middlewareService,$app,path)
     {
-        $app.set('views', path.views());
+        $app.set('views', path.views().get());
         $app.set('view engine', config('view_engine','ejs'));
         $app.set('env', app.env === ENV_PROD ? 'production' : 'development');
 

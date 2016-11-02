@@ -238,6 +238,15 @@ module.exports = {
         });
 
         return _.compact(_.flatten(routes));
+    },
+
+    /**
+     * Convert each item in an array to a string.
+     * @param array Array
+     * @returns {Array}
+     */
+    toStringEach: function(array) {
+        return array.map(item => { return item.toString() });
     }
 };
 

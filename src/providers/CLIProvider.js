@@ -56,7 +56,7 @@ class CLIProvider extends Expressway.Provider
             var templateFile = __dirname + `/../templates/${type}.template`;
             var destFile = path[type+"s"] (opts + ".js");
 
-            cli.template(templateFile, destFile , {name:opts, _:_string});
+            cli.template(templateFile, destFile.toString() , {name:opts, _:_string});
 
             process.exit();
         });

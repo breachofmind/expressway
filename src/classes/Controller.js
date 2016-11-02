@@ -37,30 +37,27 @@ class Controller
             return this;
         }
 
-        app.event.once('controllers.loaded', app =>
+        if (typeof stack == 'undefined')
         {
-            if (typeof stack == 'undefined')
+            // method is a hash of object -> middlewares.
+            if (typeof method == 'object')
             {
-                // method is a hash of object -> middlewares.
-                if (typeof method == 'object')
+                Object.keys(method).forEach(route =>
                 {
-                    Object.keys(method).forEach(route =>
-                    {
-                        let stack = method[route];
-                        this._middleware.push({method: route, middleware: controllerService.getRouteFunctions(stack)})
-                    })
+                    let stack = method[route];
+                    this._middleware.push({method: route, middleware: stack})
+                })
 
-                } else {
-                    // "method" could be a string or function.
-                    // Assign middleware to all methods.
-                    this._middleware = this._middleware.concat(controllerService.getRouteFunctions(method));
-                }
-
-                // Assign middleware to a single method.
-            } else if (typeof method == 'string') {
-                this._middleware.push({method: method, middleware: controllerService.getRouteFunctions(stack)})
+            } else {
+                // "method" could be a string or function.
+                // Assign middleware to all methods.
+                this._middleware.push({method: "*", middleware: method});
             }
-        });
+
+            // Assign middleware to a single method.
+        } else if (typeof method == 'string') {
+            this._middleware.push({method: method, middleware: stack})
+        }
 
         return this;
     };
@@ -110,15 +107,14 @@ class Controller
      */
     getMiddleware(method, action)
     {
-        var out = _.map(this._middleware, value => {
-            // A single function applies to all methods.
-            if (typeof value == 'function') return value;
-            // Controller method middleware, which could be an array.
-            if (typeof value == 'object' && value.method == method) return value.middleware;
+        var out = this._middleware.map(value =>
+        {
+            if (value.method == "*" || value.method == method)
+                return controllerService.getRouteFunctions(value.middleware);
         });
 
         // The last middleware in the stack is the actual request.
-        out.push(action);
+        if (action) out.push(action);
 
         return _.compact(out);
     };
@@ -148,7 +144,7 @@ class Controller
             // The first 3 arguments are always the request/response/next params.
             var output = app.call(controller, method, [request,response,next]);
 
-            return response.smart( output );
+            return response.smart(output);
         }
 
         route.$route = this.name+"."+method;
