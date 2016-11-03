@@ -8,7 +8,7 @@ var [User,log] = app.get('User','log');
 
 class BasicAuthMiddleware extends Expressway.Middleware
 {
-    boot($app)
+    boot($app,app)
     {
         passport.use(new Strategy(this.strategy));
         passport.serializeUser(this.serialize);

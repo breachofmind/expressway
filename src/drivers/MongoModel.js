@@ -3,7 +3,7 @@
 var Expressway  = require('expressway');
 var app         = Expressway.instance.app;
 
-var [url,db] = app.getServices(['url','db']);
+var [url,db] = app.get('url','db');
 
 
 /**

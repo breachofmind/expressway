@@ -10,6 +10,8 @@ class <%=name%> extends Expressway.Model
      */
     constructor(app)
     {
+        super(app);
+
         this.title      = 'id';
         this.expose     = false;
         this.guarded    = [];

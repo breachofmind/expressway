@@ -38,6 +38,8 @@ class Middleware
         {
             if (response.headersSent) return null;
 
+            response.$route = middleware.$route;
+
             let val = app.call(self,'method', [request,response,next]);
 
             if (val) return response.smart(val);

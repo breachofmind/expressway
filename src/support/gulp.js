@@ -45,7 +45,7 @@ class GulpHelper
                 .pipe(buffer());
 
             if (opts.sourcemaps) {
-                stream.pipe(sourcemaps.init({loadMaps:true}))
+                stream = stream.pipe(sourcemaps.init({loadMaps:true}))
                     .pipe(sourcemaps.write('./'));
             }
 

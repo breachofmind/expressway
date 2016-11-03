@@ -35,6 +35,10 @@ class MongoDriverProvider extends Expressway.DriverProvider
 
         super.register(db);
 
+        // Register a commonly used type.
+        app.register('ObjectId', db.Types.ObjectId, 'MongoDB ObjectId constructor');
+        app.register('ObjectIdType', db.Schema.Types.ObjectId, 'MongoDB ObjectId Schema type');
+
         this.setModelClass( require('../drivers/MongoModel') );
     }
 

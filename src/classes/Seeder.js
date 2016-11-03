@@ -132,6 +132,8 @@ class Seeder
      */
     static prepareAll(done)
     {
+        if (! done) done = function(result) {};
+        
         return Promise.all( seeders.map(seeder => { return seeder.prepare(); })).then(result => {
             return done(result);
         }).catch(err => {
@@ -180,7 +182,9 @@ class Seed
     {
         for (let i=0; i<array.length; i++)
         {
-            array[i].id = Seeder.getId();
+            if (! array[i].hasOwnProperty('id')) {
+                array[i].id = Seeder.getId();
+            }
             array[i] = this.parse(array[i], i);
         }
 

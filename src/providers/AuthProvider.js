@@ -3,7 +3,6 @@
 var crypto   = require('crypto');
 var Expressway = require('expressway');
 
-
 /**
  * Provides basic authentication with passport.
  * @author Mike Adamczyk <mike@bom.us>

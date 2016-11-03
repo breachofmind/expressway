@@ -128,7 +128,7 @@ class Controller
      */
     dispatch(method)
     {
-        var controller = this;
+        var self = this;
 
         if (! typeof this[method] === 'function') {
             throw new Error(`"${this.name}" missing method "${method}"`);
@@ -136,13 +136,13 @@ class Controller
 
         function route(request,response,next)
         {
-            request.setController(controller, method);
+            response.$route = route.$route;
 
             if (response.headersSent) return null;
 
             // Allows the injection of services into a controller method.
             // The first 3 arguments are always the request/response/next params.
-            var output = app.call(controller, method, [request,response,next]);
+            var output = app.call(self, method, [request,response,next]);
 
             return response.smart(output);
         }

@@ -102,7 +102,7 @@ http.ServerResponse.prototype.logResponse = function(app)
             colors[methodColor] (this.req.method),
             colors.blue(this.statusCode),
             this.phrase(),
-            colors.green(this.req.controllerToString()) ,
+            colors.green(this.$route) ,
             this.req.url,
             this.req.user ? colors.gray(this.req.user.id) : ""
         );
