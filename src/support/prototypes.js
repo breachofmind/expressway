@@ -6,35 +6,6 @@ var Promise = require('bluebird');
 var colors = require('colors/safe');
 
 /**
- * The controller object name.
- * @type {{name: null, method: null}}
- */
-http.IncomingMessage.prototype.controller = {name: null, method:null};
-
-/**
- * Set the controller name and method.
- * @param controller Controller
- * @param method string
- */
-http.IncomingMessage.prototype.setController = function(controller,method)
-{
-    this.controller.name = controller.name;
-    this.controller.method = method;
-};
-
-/**
- * Return the name of the request controller name and method.
- * @returns {string}
- */
-http.IncomingMessage.prototype.controllerToString = function()
-{
-    if (! this.controller.name) {
-        return 'static';
-    }
-    return this.controller.name + "." + this.controller.method;
-};
-
-/**
  * Return a query string value or the default value.
  * @param property string
  * @param defaultValue optional
