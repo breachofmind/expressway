@@ -20,6 +20,7 @@ class MongoModel extends Expressway.BaseModel
     {
         super(app);
         this.Types = db.Schema.Types;
+        this.primaryKey = "_id";
     }
 
     get(args) {
@@ -78,10 +79,10 @@ class MongoModel extends Expressway.BaseModel
         var schema = new db.Schema(this.schema, {collection: this.table});
         this.onBoot(schema);
         if (!this.methods.toJSON) this.methods.toJSON = toJSON(this);
+        schema.virtual('$base').get(() => {return this});
         if (this.fillable.length == 0) this.fillable = Object.keys(this.schema);
         schema.methods = this.methods;
         this.model = db.model(this.name, schema);
-
         return super.boot();
     }
 }

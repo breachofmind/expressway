@@ -2,7 +2,7 @@
 
 var Expressway = require('expressway');
 
-class APIAuthMiddleware extends Expressway.Middleware
+class APIAuth extends Expressway.Middleware
 {
     method(request,response,next)
     {
@@ -13,4 +13,4 @@ class APIAuthMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = APIAuthMiddleware;
+module.exports = APIAuth;

@@ -6,7 +6,7 @@ var session = require('express-session');
 var driverProvider = app.get('driverProvider');
 var config = app.get('config');
 
-class SessionMiddleware extends Expressway.Middleware
+class Session extends Expressway.Middleware
 {
     boot($app)
     {
@@ -21,5 +21,5 @@ class SessionMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = SessionMiddleware;
+module.exports = Session;
 

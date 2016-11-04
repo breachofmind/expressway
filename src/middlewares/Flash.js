@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var flash = require('connect-flash');
 
-class FlashMiddleware extends Expressway.Middleware
+class Flash extends Expressway.Middleware
 {
     dispatch()
     {
@@ -13,5 +13,5 @@ class FlashMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = FlashMiddleware;
+module.exports = Flash;
 

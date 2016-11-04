@@ -6,7 +6,7 @@ var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
 var [User,log] = app.get('User','log');
 
-class BasicAuthMiddleware extends Expressway.Middleware
+class BasicAuth extends Expressway.Middleware
 {
     boot($app,app)
     {
@@ -86,4 +86,4 @@ class BasicAuthMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = BasicAuthMiddleware;
+module.exports = BasicAuth;

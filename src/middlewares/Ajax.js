@@ -2,7 +2,7 @@
 
 var Expressway = require('expressway');
 
-class AjaxMiddleware extends Expressway.Middleware
+class Ajax extends Expressway.Middleware
 {
     method(request,response,next)
     {
@@ -11,5 +11,5 @@ class AjaxMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = AjaxMiddleware;
+module.exports = Ajax;
 

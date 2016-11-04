@@ -12,7 +12,7 @@ class AuthController extends Expressway.Controller
         this.forgotURI = "/auth/login/reset";
         this.successURI = "/";
 
-        this.middleware('CSRFMiddleware');
+        this.middleware('CSRF');
     }
 
     /**

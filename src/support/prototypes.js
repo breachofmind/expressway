@@ -95,9 +95,9 @@ http.ServerResponse.prototype.smart = function(value,status)
 
     if (status) this.status(status);
 
-    if (value === false || value === null) {
-        // Does not exist.
-        return this.sendStatus(404);
+    if (value === false || value === null || typeof value === 'number') {
+        // Does not exist or is a number.
+        return this.sendStatus(! value ? 404 : value);
 
     } else if (value instanceof Promise) {
         // Execute the promise, and then recursively try again.

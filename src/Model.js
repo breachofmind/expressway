@@ -10,6 +10,10 @@ var _ = require('lodash');
  */
 class Model
 {
+    get name() {
+        return this.constructor.name;
+    }
+
     /**
      * Constructor.
      * @param app Application
@@ -25,16 +29,10 @@ class Model
         this.app = app;
 
         /**
-         * Instance of the database class being used.
-         * @type *
+         * The default primary key field name.
+         * @type {string}
          */
-        this.db = app.get('db');
-
-        /**
-         * The name of the model, which is usually the constructor name.
-         * @type string
-         */
-        this.name = this.constructor.name;
+        this.primaryKey = "id";
 
         /**
          * The slugified version of the model name, for use in URL's.
@@ -123,6 +121,8 @@ class Model
          * @type {{}}
          */
         this.methods = {};
+
+        app.register(this.name, this, `The ${this.name} model`);
     }
 
     /**

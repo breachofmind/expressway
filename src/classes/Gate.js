@@ -2,7 +2,10 @@
 
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
+var _ = require('lodash');
 var debug = app.get('debug');
+var modelService = app.get('modelService');
+
 
 /**
  * Gate class
@@ -14,76 +17,63 @@ class Gate
      * Constructor.
      * @param permissions Array
      */
-    constructor(permissions)
+    constructor()
     {
-        this.permissions = permissions;
-        this.policies = [];
+        this.policies = {};
     }
 
     /**
-     * Add a gate to the queue.
-     * @param name string
-     * @param policy function
-     * @returns Gate
-     */
-    policy(name, policy)
-    {
-        this.policies.push ( new Policy(name,policy,this) );
-        return this;
-    };
-
-    /**
-     * Check if the gate has the permission stored.
-     * @param key
-     * @returns {*|boolean}
-     */
-    contains(key)
-    {
-        return this.permissions.indexOf(key) > -1;
-    };
-
-    /**
-     * Check if a user has permission.
-     * @param user User model
-     * @param object string
-     * @param action string
-     * @param args mixed - optional
+     * Check if the gate allows the user to proceed given the ability and object.
+     * @param user User
+     * @param object mixed
+     * @param ability string
      * @returns {boolean}
      */
-    check(user,object,action,args)
+    allows(user, object, ability)
     {
-        for (let i=0; i<this.policies.length; i++)
-        {
-            var passed = this.policies[i].check(user,object,action,args);
-            if (typeof passed === 'boolean') {
-                return passed;
-            }
+        if (typeof object === 'string' && modelService.has(object)) {
+            object = modelService.get(object);
         }
-        return true;
-    };
-}
+        var policy = object instanceof Expressway.Model
+            ? this.policy(object.name)
+            : this.policy(ability);
 
-/**
- * Policy class.
- */
-class Policy
-{
-    constructor(name,method,gate)
-    {
-        this.gate = gate;
-        this.name = name;
-        this.method = method;
-
-        debug("Gate", "Adding Policy: %s", this.name);
+        if (policy instanceof Expressway.Policy) {
+            if (typeof policy.before == 'function') {
+                let passed = app.call(policy, 'before', [user, object, ability]);
+                if (typeof passed === 'boolean') {
+                    return passed;
+                }
+            }
+            return app.call(policy, ability, [user, object, ability]);
+        }
+        return app.call(policy,null,[user,object, ability]);
     }
 
-    check(user,object,action,args)
+    /**
+     * Define a custom policy.
+     * @param ability string
+     * @param policy function|Policy
+     * @returns {Gate}
+     */
+    define(ability, policy)
     {
-        var passed = this.method.apply(this.gate, [user,object,action,args]);
-        if (typeof passed === 'boolean') {
-            return passed;
+        this.policies[ability] = policy;
+        debug(this, "Policy defined: %s.%s", policy.name, ability);
+        return this;
+    }
+
+    /**
+     * Get a policy.
+     * @param name string
+     * @returns {Policy|Function}
+     */
+    policy(name)
+    {
+        if (! this.policies.hasOwnProperty(name)) {
+            throw new Error(`Policy "${name}" does not exist`);
         }
-        return null;
+        return this.policies[name];
     }
 }
 

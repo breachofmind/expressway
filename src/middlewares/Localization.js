@@ -5,7 +5,7 @@ var app = Expressway.instance.app;
 var locale = require('locale');
 var http = require('http');
 
-class LocaleMiddleware extends Expressway.Middleware
+class Localization extends Expressway.Middleware
 {
     /**
      * Checks for the ?cc query and attaches a
@@ -47,5 +47,5 @@ class LocaleMiddleware extends Expressway.Middleware
 
 
 
-module.exports = LocaleMiddleware;
+module.exports = Localization;
 

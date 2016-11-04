@@ -10,20 +10,13 @@ class RESTController extends Expressway.Controller
     {
         super(app);
 
-        function idBinding(request,response,next) {
-            if (request.Model && request.params.id) {
-                request.Object = request.Model.findOne({_id: request.params.id});
-            }
-            return next();
-        }
-
         this.middleware({
-            update:    ['APIAuthMiddleware', 'ModelRequestMiddleware', idBinding],
-            create:    ['APIAuthMiddleware', 'ModelRequestMiddleware'],
-            trash:     ['APIAuthMiddleware', 'ModelRequestMiddleware', idBinding],
-            fetchOne:  ['ModelRequestMiddleware', idBinding],
-            fetchAll:  ['ModelRequestMiddleware','ModelPagingMiddleware'],
-            search:    ['ModelRequestMiddleware','ModelPagingMiddleware'],
+            update:    ['APIAuth', 'ModelRequest', 'ModelById'],
+            create:    ['APIAuth', 'ModelRequest'],
+            trash:     ['APIAuth', 'ModelRequest', 'ModelById'],
+            fetchOne:  ['ModelRequest', 'ModelById'],
+            fetchAll:  ['ModelRequest','Paging'],
+            search:    ['ModelRequest','Paging', 'ModelSearch'],
         });
     }
 
@@ -42,9 +35,9 @@ class RESTController extends Expressway.Controller
             index: {}
         };
 
-        modelService.each(function(Model) {
-            if ((Model.expose == false && request.user) || Model.expose == true) {
-                json.index[Model.name] = url('api/v1/'+Model.slug);
+        modelService.each(model => {
+            if ((model.expose == false && request.user) || model.expose == true) {
+                json.index[model.name] = url('api/v1/'+model.slug);
             }
         });
 
@@ -61,18 +54,8 @@ class RESTController extends Expressway.Controller
      */
     fetchOne(request,response,next)
     {
-        return request.Object.exec().then(function(data) {
-
-            var meta = {
-                labels: request.Model.labels,
-                model: request.Model.name
-            };
-
-            return response.api(data, (! data ? 404 : 200), meta);
-
-        }, function(err) {
-
-            return response.apiError(err);
+        return response.api(request.params.object, 200, {
+            model: request.params.model.name
         })
     }
 
@@ -84,42 +67,19 @@ class RESTController extends Expressway.Controller
      */
     fetchAll(request,response,next,app)
     {
-        var paging = {
-            count:      0,
-            total:      0,
-            limit:      app.config.limit || 10000,
-            filter:     request.getQuery('filter', null),
-            sort:       request.getQuery('sort', request.Model.range),
-            next:       null
-        };
-        /**
-         * Sets up the paging object with the next URL string.
-         * @param data array
-         * @returns object
-         */
-        paging.setNext = function(data)
-        {
-            if (data.length) {
-                var lastValue = data[data.length-1][request.Model.key];
-            }
-            this.count = data.length;
-            this.next = this.total > this.limit
-                ? utils.toBase64(lastValue.toString())
-                : null;
-
-            return this;
-        };
+        let model = request.params.model;
+        let paging = request.params.paging;
 
         // Find the total record count first, then find the range.
-        return request.Model.count(paging.filter).exec().then(function(count) {
+        return model.count(paging.filter).exec().then(function(count) {
 
             paging.total = count;
 
-            var promise = request.Model
+            var promise = model
                 .find       (paging.filter)
                 .sort       (paging.sort)
                 .limit      (paging.limit)
-                .populate   (request.Model.populate)
+                .populate   (model.populate)
                 .exec();
 
             // After finding the count, find the records.
@@ -129,19 +89,18 @@ class RESTController extends Expressway.Controller
 
                 return response.api(data,200, {
                     pagination: paging,
-                    labels: request.Model.labels,
-                    model: request.Model.name
+                    model: model.name
                 });
 
             }, function(err) {
 
-                // Model.find() error
+                // model.find() error
                 return response.apiError(err);
             });
 
         }, function(err) {
 
-            // Model.count() error
+            // model.count() error
             return response.apiError(err);
         });
     }
@@ -154,18 +113,9 @@ class RESTController extends Expressway.Controller
      */
     search(request,response,next,app)
     {
-        var search = request.body;
-
-        var promise = request.Model
-            .find(search.where)
-            .sort(search.sort)
-            .limit(search.limit || app.config.limit)
-            .populate(search.populate || request.Model.populate)
-            .exec();
-
-        return promise.then(function(data)
+        return request.params.query.exec().then(function(data)
         {
-            return response.api(data,200, {search:search});
+            return response.api(data,200, {search:request.body});
 
         }, function(err) {
 
@@ -181,13 +131,16 @@ class RESTController extends Expressway.Controller
      */
     update(request,response)
     {
+        let object = request.params.object;
+        let model = request.params.model;
+
         if (request.body._id) delete request.body._id; // Mongoose has problems with this.
 
         request.body.modified_at = Date.now();
 
-        return request.Model
-            .findByIdAndUpdate(request.params.id, request.body, {new:true})
-            .populate(request.Model.populate)
+        return object
+            .update(request.params.id, request.body, {new:true})
+            .populate(model.populate)
             .exec()
             .then(function(data) {
 
@@ -207,7 +160,7 @@ class RESTController extends Expressway.Controller
      */
     create(request,response)
     {
-        return request.Model.create(request.body).then(function(data)
+        return request.params.model.create(request.body).then(function(data)
         {
             return response.api(data,200);
 
@@ -225,10 +178,13 @@ class RESTController extends Expressway.Controller
      */
     trash(request,response)
     {
-        return request.Model.remove({_id:request.params.id}).then(function(results) {
+        let object = request.params.object;
+        let model = request.params.model;
+
+        return model.remove({_id: object.id}).then(function(results) {
             var data = {
                 results: results,
-                objectId : request.params.id
+                objectId : object.id
             };
             return response.api(data,200);
 

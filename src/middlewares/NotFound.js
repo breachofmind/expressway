@@ -6,7 +6,7 @@ var Expressway = require('expressway');
  * The default not found 404 handler.
  * Overwrite with a custom function if needed.
  */
-class NotFoundMiddleware extends Expressway.Middleware
+class NotFound extends Expressway.Middleware
 {
     method(request,response,next,view)
     {
@@ -16,5 +16,5 @@ class NotFoundMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = NotFoundMiddleware;
+module.exports = NotFound;
 

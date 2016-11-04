@@ -238,7 +238,7 @@ class Application
                 return context[method].apply(context, this.injectServices(context[method], args));
             }
         } catch (err) {
-            throw new ApplicationCallError(err.message + ` Context: ${context.name}, Method: ${method}`);
+            throw new ApplicationCallError(err.message + ` ${context.name}.${method}`);
         }
 
 

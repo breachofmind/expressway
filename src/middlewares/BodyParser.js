@@ -4,7 +4,7 @@ var Expressway = require('expressway');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 
-class BodyParserMiddleware extends Expressway.Middleware
+class BodyParser extends Expressway.Middleware
 {
     /**
      * Load into express, if using globally.
@@ -25,5 +25,5 @@ class BodyParserMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = BodyParserMiddleware;
+module.exports = BodyParser;
 

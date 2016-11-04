@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var Express = require('express');
 
-class StaticContentMiddleware extends Expressway.Middleware
+class StaticContent extends Expressway.Middleware
 {
     method(request,response,next,path)
     {
@@ -24,4 +24,4 @@ class StaticContentMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = StaticContentMiddleware;
+module.exports = StaticContent;

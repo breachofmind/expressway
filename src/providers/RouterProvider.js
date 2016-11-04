@@ -62,7 +62,9 @@ class RouterProvider extends Expressway.Provider
 
         app.call(routes, [router]);
 
-        middlewareService.use('NotFoundMiddleware');
+        // The default Not Found route handler,
+        // when no matching route is found.
+        middlewareService.use('NotFound');
 
         function getStack() {
             return Expressway.utils.getMiddlewareStack($app);

@@ -29,30 +29,24 @@ class GateProvider extends Expressway.Provider
     /**
      * Register with the application.
      * @param app Application
-     * @param modelService ModelService
      */
-    register(app, modelService)
+    register(app)
     {
-        /**
-         * Stores the permission index.
-         * This comes from basic CRUD operations for each model.
-         */
-        function buildPermissions()
-        {
-            var items = ['superuser'];
-
-            modelService.each(function(model) {
-                CRUD.map(function(action){ items.push(`${model.name}.${action}`); });
-                if (model.managed) {
-                    items.push(`${model.name}.manage`);
-                }
-            });
-            return items;
-        }
-
         var Gate = require('../classes/Gate');
 
-        app.register('gate', new Gate( buildPermissions() ), "A service for checking user permissions via policies");
+        Expressway.Policy = require('../classes/Policy');
+
+        app.register('gate', new Gate, "A service for checking user permissions via policies");
+    }
+
+    /**
+     * Load default permissions.
+     * @param gate Gate
+     * @param modelService ModelService
+     */
+    boot(gate,modelService)
+    {
+
     }
 
     /**

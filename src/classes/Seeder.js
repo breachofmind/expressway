@@ -17,7 +17,7 @@ var msg = {
     prepare: `Preparing Seed: ${colors.green("%s")}`,
     created: `Created Models: ${colors.green("%s")} in table ${colors.green("%s")}, ${colors.blue("%s")} objects`,
     dumping: `Dumping models: ${colors.green("%s")}`,
-    err_noModel:  `Error seeding, no model or data: ${colors.red("%s")}`,
+    err_noModel:  `Error seeding, no model: ${colors.red("%s")}`,
     err_creating: `Error creating models: ${colors.red("%s")}`,
     err_dumping:  `Error dumping models: ${colors.red("%s")}`
 };
@@ -172,6 +172,15 @@ class Seed
         this.dump  = seeder.dump ? true : false;
     }
 
+    setId(row)
+    {
+        var primaryKey = this.model.primaryKey;
+        if (! row.hasOwnProperty(primaryKey)) {
+            row[primaryKey] = Seeder.getId();
+        }
+        return row;
+    }
+
     /**
      * Set the parsed data array.
      * The data array can be created into models.
@@ -182,9 +191,7 @@ class Seed
     {
         for (let i=0; i<array.length; i++)
         {
-            if (! array[i].hasOwnProperty('id')) {
-                array[i].id = Seeder.getId();
-            }
+            array[i] = this.setId(array[i]);
             array[i] = this.parse(array[i], i);
         }
 
@@ -248,7 +255,7 @@ class Seed
         if (this.seeder.active === false) {
             return false;
         }
-        if (! this.Model || ! this.data.length)
+        if (! this.model)
         {
             log.warn(msg.err_noModel, this.model);
             return false;
@@ -272,6 +279,7 @@ class Seed
             if (this.dump) {
                 log.info(msg.dumping, seed.model);
                 return seed.Model.remove().then(response => {
+                    if (! seed.data.length) return resolve(seed);
                     return seed.create(resolve).then(models => {
                         resolve(seed);
                     });

@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var csrf = require('csurf');
 
-class CSRFMiddleware extends Expressway.Middleware
+class CSRF extends Expressway.Middleware
 {
     dispatch()
     {
@@ -11,4 +11,4 @@ class CSRFMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = CSRFMiddleware;
+module.exports = CSRF;

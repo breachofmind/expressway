@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
 
-class CoreMiddleware extends Expressway.Middleware
+class ConsoleLogging extends Expressway.Middleware
 {
     method(request,response,next)
     {
@@ -13,5 +13,5 @@ class CoreMiddleware extends Expressway.Middleware
     }
 }
 
-module.exports = CoreMiddleware;
+module.exports = ConsoleLogging;
 
