@@ -23,7 +23,7 @@ class ModelSearch extends Expressway.Middleware
             .populate(search.populate || model.populate);
 
         // Based on permissions, only show models the user owns.
-        if(model.managed && ! request.user.hasPermission(model.name+".manage")) {
+        if(request.user.cannot(model,'manage')) {
             request.params.query.where(model.managed).equals(request.user.id);
         }
 

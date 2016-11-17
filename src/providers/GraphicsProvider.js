@@ -27,7 +27,7 @@ class GraphicsProvider extends Expressway.Provider
      * @param app Application
      * @param event EventEmitter
      */
-    register(app, event)
+    register(app)
     {
         var MediaService = require('../services/MediaService');
 
@@ -53,7 +53,7 @@ class GraphicsProvider extends Expressway.Provider
         });
 
         // Attach an image helper to the view.
-        event.on('view.created', function(view) {
+        app.on('view.created', function(view) {
             view.data.getImage = function(name, size = "original") {
                 return mediaService.url(name,size);
             }

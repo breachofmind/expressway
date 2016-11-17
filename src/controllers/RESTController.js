@@ -139,7 +139,7 @@ class RESTController extends Expressway.Controller
         request.body.modified_at = Date.now();
 
         return object
-            .update(request.params.id, request.body, {new:true})
+            .update(request.body, {new:true})
             .populate(model.populate)
             .exec()
             .then(function(data) {

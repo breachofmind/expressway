@@ -38,6 +38,10 @@ class Gate
             ? this.policy(object.name)
             : this.policy(ability);
 
+        if (! policy) {
+            return false;
+        }
+
         if (policy instanceof Expressway.Policy) {
             if (typeof policy.before == 'function') {
                 let passed = app.call(policy, 'before', [user, object, ability]);
@@ -45,8 +49,12 @@ class Gate
                     return passed;
                 }
             }
+            if (typeof policy[ability] !== 'function') {
+                throw new Error(`Policy method ${policy.name}.${ability} does not exist`);
+            }
             return app.call(policy, ability, [user, object, ability]);
         }
+
         return app.call(policy,null,[user,object, ability]);
     }
 

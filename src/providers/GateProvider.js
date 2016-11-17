@@ -32,22 +32,11 @@ class GateProvider extends Expressway.Provider
      */
     register(app)
     {
-        var Gate = require('../classes/Gate');
-
         Expressway.Policy = require('../classes/Policy');
 
-        app.register('gate', new Gate, "A service for checking user permissions via policies");
+        app.singleton('gate', require('../classes/Gate'), "A service for checking user permissions via policies");
     }
 
-    /**
-     * Load default permissions.
-     * @param gate Gate
-     * @param modelService ModelService
-     */
-    boot(gate,modelService)
-    {
-
-    }
 
     /**
      * A helper function for building permissions.

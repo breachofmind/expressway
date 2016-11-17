@@ -6,6 +6,7 @@ var Provider        = require('./Provider');
 var DriverProvider  = require('./DriverProvider');
 var Model           = require('./Model');
 var utils           = require('./support/utils');
+var _               = require('lodash');
 
 global.ApplicationError = require('./exceptions/ApplicationError');
 global.ApplicationCallError = require('./exceptions/ApplicationCallError');
@@ -16,7 +17,7 @@ global.ApplicationCallError = require('./exceptions/ApplicationCallError');
  */
 class Expressway
 {
-    constructor(rootPath, config, context)
+    constructor(rootPath,configPath=null)
     {
         /**
          * The root path of the application.
@@ -26,36 +27,69 @@ class Expressway
         this._rootPath = rootPath;
 
         /**
-         * The configuration file.
-         * @type {{}}
-         */
-        this.config = config;
-
-        /**
-         * The default environment.
+         * Path where configuration files are kept.
          * @type {string}
+         * @private
          */
-        this.env = config.environment;
-
-        /**
-         * The environment context.
-         * @type {string}
-         */
-        this.context = context || CXT_WEB;
+        this._configPath = configPath || rootPath+'config/';
 
         /**
          * The Application instance.
          * @type {null|Application}
+         * @private
          */
-        this.app = new Application(this);
+        this._app = null;
 
-        var systemProviders = utils.getModulesAsHash(__dirname+'/providers/', true);
-        var userProviders = utils.getModulesAsHash(this.app.path('providers_path', 'providers'), true);
+        /**
+         * Paths to locate provider modules.
+         * @type {{}}
+         * @private
+         */
+        this._providerPaths = {};
+    }
 
-        var systemConfig = require(rootPath + 'config/system') (this.app, {Provider: systemProviders}, {Provider: userProviders});
+    /**
+     * Create an instance of the Application class.
+     * @param context
+     * @returns {Expressway}
+     */
+    createApplication(context = CXT_WEB)
+    {
+        var appConfig = require(this._configPath + "config");
+        var sysConfig = require(this._configPath + "system");
 
-        this.config.providers = systemConfig.providers;
-        this.config.middleware = systemConfig.middleware;
+        this._providerPaths['User'] = this.rootPath(appConfig.providers_path +"/");
+        this._providerPaths['System'] = __dirname+'/providers/';
+
+        // Merge the provider classes with the config.
+        let providerList = {};
+        Object.keys(this._providerPaths).forEach(key => {
+            providerList[key] = utils.getModulesAsHash(this._providerPaths[key], true);
+        });
+
+        _.merge(appConfig, sysConfig(providerList));
+
+        this._app = new Application(this,appConfig,context);
+
+        return this;
+    }
+
+    /**
+     * Return the Expressway app instance, if loaded.
+     * @returns {Application|null}
+     */
+    static get app()
+    {
+        return Expressway.instance.app;
+    }
+
+    /**
+     * Get the protected Application instance.
+     * @returns {null|Application}
+     */
+    get app()
+    {
+        return this._app;
     }
 
     /**
@@ -63,9 +97,9 @@ class Expressway
      * @param filePath string
      * @returns {string}
      */
-    rootPath(filePath)
+    rootPath(filePath="")
     {
-        return path.normalize( this._rootPath + (filePath||"") );
+        return path.normalize( this._rootPath + filePath );
     }
 
     /**
@@ -74,7 +108,7 @@ class Expressway
      */
     bootstrap()
     {
-        return this.app.bootstrap();
+        return this._app.bootstrap();
     }
 
     /**
@@ -105,16 +139,19 @@ class Expressway
      * Initialize the application.
      * @param rootPath string
      * @param context string, optional
+     * @param configPath string, optional
      * @returns {Expressway}
      */
-    static init(rootPath, context)
+    static init(rootPath, context, configPath=null)
     {
         // Return the instance if it exists already.
         if (Expressway.instance) return Expressway.instance;
 
-        var config = require(rootPath + 'config/config');
+        var instance = new Expressway(rootPath,configPath);
 
-        return Expressway.instance = new Expressway(rootPath, config, context);
+        instance.createApplication(context);
+
+        return Expressway.instance = instance;
     }
 }
 

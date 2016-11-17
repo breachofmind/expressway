@@ -30,10 +30,15 @@ class GulpHelper
 
     /**
      * Set up watchify/browserify bundler.
+     * @param task string
      * @param options Object
      */
-    js(options)
+    js(task, options)
     {
+        if (arguments.length === 1) {
+            options = task;
+            task = "js";
+        }
         let opts = _.assign({}, watchify.args, options);
         opts.entries = utils.toStringEach(opts.entries);
         let b = watchify(browserify(opts));
@@ -55,7 +60,7 @@ class GulpHelper
         b.on('update', bundle);
         b.on('log', gutil.log);
 
-        this.gulp.task('js', bundle);
+        this.gulp.task(task, bundle);
     }
 
     /**

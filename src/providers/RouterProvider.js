@@ -29,9 +29,8 @@ class RouterProvider extends Expressway.Provider
      * Register the provider with the application.
      * @param app Application
      * @param $app Express
-     * @param event EventEmitter
      */
-    register(app,$app,event)
+    register(app,$app)
     {
         var Router = require('../classes/Router');
         var router = new Router;
@@ -41,7 +40,7 @@ class RouterProvider extends Expressway.Provider
         app.register('router', router,
             "The Router instance, for adding routes to the core application");
 
-        event.on('view.created', function(view,request) {
+        app.on('view.created', function(view,request) {
             view.data.route = function(name, uri) {
                 return router.to(name,uri);
             }

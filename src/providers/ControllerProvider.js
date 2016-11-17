@@ -43,11 +43,10 @@ class ControllerProvider extends Expressway.Provider
     /**
      * Load all controllers defined in the ControllerService directories listing.
      * @param app Application
-     * @param event EventEmitter
      * @param path PathService
      * @param controllerService ControllerService
      */
-    boot(app,event,path,controllerService)
+    boot(app,path,controllerService)
     {
         // System middleware
         controllerService.addDirectory(__dirname+"/../middlewares/");
@@ -61,7 +60,7 @@ class ControllerProvider extends Expressway.Provider
             controllerService.addDirectory(dir);
         });
 
-        event.emit('controllers.loaded',app);
+        app.emit('controllers.loaded',app,controllerService);
     }
 }
 

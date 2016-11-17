@@ -35,9 +35,7 @@ class ModelProvider extends Expressway.Provider
      */
     register(app,debug,driverProvider)
     {
-        var ModelService = require('../services/ModelService');
-
-        app.register('modelService', new ModelService, "Service for storing and retrieving models");
+        app.singleton('modelService', require('../services/ModelService'), "Service for storing and retrieving models");
 
         debug(this,'Using driver: %s', driverProvider.alias);
 
@@ -49,11 +47,10 @@ class ModelProvider extends Expressway.Provider
      * Load all models.
      * @param app Application
      * @param path PathService
-     * @param event EventEmitter
      * @param modelService ModelService
      * @returns {object}
      */
-    boot(app,path,event,modelService)
+    boot(app,path,modelService)
     {
         utils.getModules(path.models("/"), modulePath =>
         {
@@ -62,7 +59,7 @@ class ModelProvider extends Expressway.Provider
 
         modelService.boot();
 
-        event.emit('models.loaded', app);
+        app.emit('models.loaded', app);
     }
 }
 

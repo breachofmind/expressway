@@ -70,7 +70,7 @@ class View
         this.data.template = this.template;
         this.data._ = _string;
 
-        app.event.emit('view.created', this, response.req);
+        app.emit('view.created', this, response.req);
 
         return response.render(this.file, this.data);
     }

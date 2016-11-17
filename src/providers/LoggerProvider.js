@@ -49,10 +49,9 @@ class LoggerProvider extends Expressway.Provider
     /**
      * Register the provider with the application.
      * @param app Application
-     * @param event EventEmitter
      * @param path PathService
      */
-    register(app,event,path)
+    register(app,path)
     {
         winston.addColors(this.config.colors);
 
@@ -94,11 +93,11 @@ class LoggerProvider extends Expressway.Provider
             logger.debug(`[${colors['magenta'](className)}] ${message}`, ...args);
         }
 
-        event.once('provider.loaded', provider => {
+        app.once('provider.loaded', provider => {
             debug('Provider', 'Loaded: %s', colors.gray(provider.name));
         });
 
-        event.once('providers.registered', app => {
+        app.once('providers.registered', app => {
             debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
             debug(app, 'Provider Order... \n%s', app._order.map((provider,i) => { return `#${i} - ${provider.name}`; }).join("\n"));
             debug(app, 'Booting...');

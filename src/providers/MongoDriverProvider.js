@@ -13,12 +13,12 @@ class MongoDriverProvider extends Expressway.DriverProvider
      * @param app Application
      * @param debug function
      * @param log Winston
-     * @param event EventEmitter
      * @param config function
      */
-    register(app,debug,log,event,config)
+    register(app,debug,log,config)
     {
         var db = require('mongoose');
+
         db.Promise = Promise;
 
         db.connection.on('error', function(err){
@@ -28,7 +28,7 @@ class MongoDriverProvider extends Expressway.DriverProvider
 
         db.connection.on('open', function(){
             debug('MongoDriverProvider','Connected to MongoDB: %s', config('db'));
-            event.emit('database.connected', app);
+            app.emit('database.connected', app);
         });
 
         db.connect(config('db'));

@@ -29,12 +29,11 @@ class AuthProvider extends Expressway.Provider
     /**
      * Register with the application.
      * @param app Application
-     * @param event EventEmitter
      */
-    register(app,event)
+    register(app)
     {
         // Attach the authenticated user to the view for use in templates.
-        event.on('view.created', (view,request) => {
+        app.on('view.created', (view,request) => {
             view.data.user = request.user;
         });
 

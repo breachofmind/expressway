@@ -88,6 +88,7 @@ class CLIProvider extends Expressway.Provider
                 return {
                     index: i,
                     methods: methods.join(","),
+                    base: colors.gray(`[${route.rx.flags}]`)+` ${route.rx.path}`,
                     path: route.path,
                     middleware: routes.join(" -> ")
                 }
@@ -105,20 +106,20 @@ class CLIProvider extends Expressway.Provider
         {
             var conf = {
                 description: {maxWidth:60}
-            }
+            };
             var serviceNames = Object.keys(app.services).sort((a,b) => {
                 return a.localeCompare(b);
             });
             var columns = serviceNames.map(function(key) {
                 var svc = app.services[key];
-                var doc = app.documentation[key] || "-";
-                var type = typeof svc;
-                if (type == 'function') type = svc.name || type;
+                var type = typeof svc.value;
+                if (type == 'function') type = svc.value.name || type;
                 return {
                     type: colors.gray(type),
                     service: colors.green(key),
-                    value: type == 'string' ? colors.blue(svc) : "",
-                    description: doc,
+                    value: typeof svc.value !== 'function' ? colors.blue(svc.value.toString()) : "",
+                    description: svc.doc,
+                    call: svc.call ? colors.red("true") : ""
                 }
             });
             console.log(columnify(columns, {config:conf}));

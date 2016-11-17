@@ -66,7 +66,7 @@ class AuthController extends Expressway.Controller
      *
      * Allows the user to securely reset their password.
      */
-    request_reset(request,response,next, User,encrypt,url,log,mail,app,domain)
+    request_reset(request,response,next, User,encrypt,url,log,mail,app,domain,config)
     {
         return User.findOne({email: request.body.username}).exec().then(user =>
         {
@@ -87,7 +87,7 @@ class AuthController extends Expressway.Controller
             var resetLink = url(`${this.forgotURI}/${hash}`);
 
             mail({
-                from:    `Administrator <${app.conf('admin_email', 'info@'+domain)}>`,
+                from:    `Administrator <${config('admin_email', 'info@'+domain)}>`,
                 to:      user.email,
                 subject: 'Password Reset',
                 view:    'email/reset',
@@ -96,7 +96,7 @@ class AuthController extends Expressway.Controller
                 .then(info => {
                     log.access('Mail sent: User requested reset: %s %s', user.id, app.config.debug ? resetLink : "");
                     if (app.config.debug) {
-                        console.log(info.response.toString());
+                        console.log(info);
                     }
                 });
 
@@ -114,7 +114,7 @@ class AuthController extends Expressway.Controller
      *
      * Given the reset token, change the user's password.
      */
-    perform_reset(request,response,next, User, encrypt)
+    perform_reset(request,response,next, User, encrypt,log)
     {
         var newPassword = request.body.password;
 
@@ -137,9 +137,10 @@ class AuthController extends Expressway.Controller
                 });
             }
 
-            return user.update({password: request.body.password}).then(result => {
+            return user.update({password: user.encrypted(newPassword)}).exec().then(result => {
                 user.reset_token = "";
                 user.save();
+                log.warn('User "%s" reset password', user.email);
                 return response.redirectWithFlash(this.loginURI+"?username="+user.email, 'message', {
                     text: request.lang('auth.password_reset'),
                     type: 'success'

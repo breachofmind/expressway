@@ -26,13 +26,12 @@ class ExpressProvider extends Expressway.Provider
     /**
      * Register the provider with the application.
      * @param app Application
-     * @param event EventEmitter
      * @param config function
      * @param path PathService
      * @param log Winston
      * @param url URLService
      */
-    register(app,event,config,path,log,url)
+    register(app,config,path,log,url)
     {
         var MiddlewareService = require('../services/MiddlewareService');
         var middlewareService = new MiddlewareService;
@@ -42,18 +41,18 @@ class ExpressProvider extends Expressway.Provider
 
         app.register('middlewareService', middlewareService, "For storing and retrieving global express middleware");
 
-        event.once('application.server', app =>
+        app.once('application.server', app =>
         {
             $app.listen(config('port'), function()
             {
                 log.info('Using root path: %s', path.root().get());
                 log.info(`Starting %s server v.%s on %s (%s)...`,
                     app.env,
-                    app._version,
+                    app.version,
                     config('url'),
                     url());
 
-                event.emit('express.listening', $app);
+                app.emit('express.listening', $app);
             });
         })
     }
