@@ -8,16 +8,17 @@ var config = app.get('config');
 
 class Session extends Expressway.Middleware
 {
-    boot($app)
+    dispatch()
     {
-        $app.use(function Session(...args) {
-            return session ({
-                secret: config('appKey', 'keyboard cat'),
-                saveUninitialized: false,
-                resave: false,
-                store: app.call(driverProvider,'getSessionStore')
-            })(...args);
-        })
+        var middleware = session ({
+            secret: config('appKey', 'keyboard cat'),
+            saveUninitialized: false,
+            resave: false,
+            store: app.call(driverProvider,'getSessionStore')
+        });
+        return function Session(...args) {
+            return middleware(...args);
+        }
     }
 }
 

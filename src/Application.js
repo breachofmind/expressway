@@ -79,22 +79,25 @@ class Application extends EventEmitter
 
     /**
      * Create and index the provider instances.
-     * @param providers array<Provider>
+     * @param providers Array<Provider|Array>
      * @private
      */
     _createProviderInstances(providers)
     {
-        providers.forEach( ProviderClass => {
-            try {
-                var instance = new ProviderClass(this);
-                this.emit(instance.name+".construct", instance);
+        providers.forEach( ProviderClass =>
+        {
+            if (Array.isArray(ProviderClass)) {
+                return this._createProviderInstances(ProviderClass);
+            }
 
+            try {
+                var providerInstance = new ProviderClass(this);
             } catch (err) {
                 throw new ApplicationError("Error loading provider: "+err.message, ProviderClass);
             }
 
             // Add to the providers index.
-            return this._providers[instance.name] = instance;
+            return this._providers[providerInstance.name] = providerInstance;
         });
     }
 
@@ -112,12 +115,14 @@ class Application extends EventEmitter
 
         providers.forEach(provider => { this.load(provider) });
 
-        this.emit('providers.registered', this);
+        this.emit('providers.registered');
 
         // Boot all providers in order.
         this._order.forEach( provider => { this.boot(provider) });
 
         this._booted = true;
+
+        this.emit('application.booted');
 
         return this;
     }
@@ -130,6 +135,8 @@ class Application extends EventEmitter
     load(provider)
     {
         if (! provider.isLoadable(this.env, this.context) || provider.loaded) return false;
+
+        provider.attachEvents(this);
 
         this.emit('provider.loading', provider);
 
@@ -283,7 +290,7 @@ class Application extends EventEmitter
             throw new ApplicationCallError(err.message + ` ${context.name}.${method}`);
         }
 
-        throw new ApplicationCallError("Context must be a function or object");
+        throw new ApplicationCallError(`Context must be a function or object: ${context.name}.${method}`);
     }
 
     /**

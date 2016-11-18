@@ -32,8 +32,7 @@ class ControllerProvider extends Expressway.Provider
      */
     register(app)
     {
-        app.singleton('controllerService', __dirname+'/../services/ControllerService',
-            'Stores and fetches controller instances');
+        app.singleton('controllerService', require('../services/ControllerService'), 'Stores and fetches controller instances');
 
         // Expose the controller class for our wonderful developers.
         Expressway.Middleware = require('../classes/Middleware');
@@ -50,17 +49,6 @@ class ControllerProvider extends Expressway.Provider
     {
         // System middleware
         controllerService.addDirectory(__dirname+"/../middlewares/");
-        // User defined middleware
-        controllerService.addDirectory(path.middlewares());
-        // User defined controllers
-        controllerService.addDirectory(path.controllers());
-
-        // Any other directories to look in?
-        controllerService.directories.forEach(dir => {
-            controllerService.addDirectory(dir);
-        });
-
-        app.emit('controllers.loaded',app,controllerService);
     }
 }
 

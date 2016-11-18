@@ -27,7 +27,7 @@ class RESTController extends Expressway.Controller
      *
      * GET /api/v1/
      */
-    index(request,response,next,modelService,url,event)
+    index(request,response,next,modelService,url,app)
     {
         var json = {
             message: "Expressway API v1",
@@ -41,7 +41,7 @@ class RESTController extends Expressway.Controller
             }
         });
 
-        event.emit('rest.index', json.index);
+        app.emit('rest.index', json.index);
 
         return json;
     }

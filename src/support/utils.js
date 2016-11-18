@@ -221,7 +221,7 @@ exports.parseRouteRegexp = function(rx)
 exports.getMiddlewareStack = function(express)
 {
     if (! express._router) {
-        throw ("Express app does not have a router");
+        throw new Error ("Express app does not have a router");
     }
     var stack = express._router.stack;
 
@@ -281,10 +281,17 @@ exports.toStringEach = function(array)
  * @param property string
  * @returns {Function}
  */
-exports.sortByDirection = function(direction,property)
+exports.sortByDirection = function(direction=1,property)
 {
     return function(a,b) {
         return a[property] == b[property] ? 0 : (a[property] > b[property] ? direction: -direction);
+    }
+};
+
+exports.sortString = function(direction=1)
+{
+    return function(a,b) {
+        return direction == 1 ? a.localeCompare(b) : b.localeCompare(a);
     }
 };
 

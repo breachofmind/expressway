@@ -7,9 +7,11 @@ class Flash extends Expressway.Middleware
 {
     dispatch()
     {
-        return function Flash(...args) {
-            return flash()(...args);
-        };
+        var middleware = flash();
+        return function Flash(...args)
+        {
+            return middleware(...args);
+        }
     }
 }
 

@@ -8,20 +8,27 @@ var [User,log] = app.get('User','log');
 
 class BasicAuth extends Expressway.Middleware
 {
-    boot($app,app)
+    constructor()
     {
+        super();
+
         passport.use(new Strategy(this.strategy));
         passport.serializeUser(this.serialize);
         passport.deserializeUser(this.deserialize);
 
         app.register('passport', passport, "The passport instance");
+    }
 
-        $app.use(function PassportInitialize(...args) {
-            return passport.initialize()(...args);
-        });
-        $app.use(function PassportSession(...args) {
-            return passport.session()(...args);
-        });
+    dispatch()
+    {
+        return [
+            function PassportInitialize(...args) {
+                return passport.initialize()(...args);
+            },
+            function PassportSession(...args) {
+                return passport.session()(...args);
+            }
+        ]
     }
 
     /**

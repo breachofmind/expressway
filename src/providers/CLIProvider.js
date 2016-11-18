@@ -1,7 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
-
+var utils = Expressway.utils;
 var _string  = require('lodash/string');
 var columnify = require('columnify');
 var colors = require('colors');
@@ -40,10 +40,9 @@ class CLIProvider extends Expressway.Provider
      * @param app Application
      * @param cli CLI
      * @param log Winston
-     * @param middlewareService MiddlewareService
      * @param path PathService
      */
-    boot(app,cli,log,middlewareService,path)
+    boot(app,cli,log,path)
     {
         var LINE = Array(20).join("-")+"\n";
         /**
@@ -67,34 +66,40 @@ class CLIProvider extends Expressway.Provider
          */
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
-            var stack = app.get('stack');
+            var stacks = app.get('stacks');
 
-            var columns = stack.map((route,i) =>
-            {
-                var methods = route.methods.map(method => {
-                    var name = method.toUpperCase();
-                    switch (method) {
-                        case "post": return colors.green(name);
-                        case "delete": return colors.red(name);
-                        case "put": return colors.magenta(name);
-                        default: return colors.gray(name);
+            stacks().forEach(application => {
+
+                var columns = application.stack.map((route,i) =>
+                {
+                    var methods = route.methods.map(method => {
+                        var name = method.toUpperCase();
+                        switch (method) {
+                            case "post": return colors.green(name);
+                            case "delete": return colors.red(name);
+                            case "put": return colors.magenta(name);
+                            default: return colors.gray(name);
+                        }
+                    });
+
+                    var routes = route.stack.map((name,i) => {
+                        var c = i==route.stack.length-1 ? "white" : "gray";
+                        return colors[c](name);
+                    });
+                    return {
+                        index: i,
+                        methods: methods.join(","),
+                        base: colors.gray(`[${route.rx.flags}]`)+` ${route.rx.path}`,
+                        path: route.path,
+                        middleware: routes.join(" -> ")
                     }
                 });
 
-                var routes = route.stack.map((name,i) => {
-                    var c = i==route.stack.length-1 ? "white" : "gray";
-                    return colors[c](name);
-                });
-                return {
-                    index: i,
-                    methods: methods.join(","),
-                    base: colors.gray(`[${route.rx.flags}]`)+` ${route.rx.path}`,
-                    path: route.path,
-                    middleware: routes.join(" -> ")
-                }
+                console.log(colors.blue (`#${application.index}: ${application.name}`));
+                console.log(columnify(columns));
+                console.log(LINE);
             });
 
-            console.log(columnify(columns));
             process.exit();
         });
 
@@ -107,9 +112,7 @@ class CLIProvider extends Expressway.Provider
             var conf = {
                 description: {maxWidth:60}
             };
-            var serviceNames = Object.keys(app.services).sort((a,b) => {
-                return a.localeCompare(b);
-            });
+            var serviceNames = Object.keys(app.services).sort(utils.sortString());
             var columns = serviceNames.map(function(key) {
                 var svc = app.services[key];
                 var type = typeof svc.value;
@@ -177,6 +180,34 @@ class CLIProvider extends Expressway.Provider
                 app.register('cliOptions', opts);
                 require(app.path('db_path', 'db') + "seeder");
             });
+
+        /**
+         * Show all path options.
+         * @usage ./bin/cli paths
+         */
+        cli.command('paths', "Inspect all set paths").action((env,opts) =>
+        {
+            var columns = Object.keys(path.paths).sort(utils.sortString(1)).map(key => {
+                return {
+                    key: colors.green(key),
+                    path: path.paths[key]
+                }
+            });
+
+            console.log(columnify(columns));
+            process.exit();
+        });
+
+        cli.command('events', "List all events and listener count").action((env,opts) => {
+            var columns = app.eventNames().map(eventName => {
+                return {
+                    event: colors.green(eventName),
+                    listeners: colors.blue(app.listenerCount(eventName).toString())
+                }
+            });
+            console.log(columnify(columns));
+            process.exit();
+        })
     }
 }
 

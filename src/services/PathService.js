@@ -15,15 +15,24 @@ class PathService
     }
 
     /**
+     * Get the protected paths object.
+     * @returns {{}}
+     */
+    get paths()
+    {
+        return this._paths;
+    }
+
+    /**
      * Create a new path method.
      * @param pathName string
-     * @param dir string
+     * @param dir string|PathObject
      * @param createPath boolean
      * @returns string
      */
     set(pathName, dir, createPath=false)
     {
-        var setPath = _.trimEnd(path.normalize( dir ), "/");
+        var setPath = _.trimEnd(path.normalize( dir.toString() ), "/");
 
         // Create the path if it doesn't exist.
         if (createPath && ! fs.existsSync(setPath)) fs.mkdirSync(setPath);

@@ -13,34 +13,33 @@ class LocaleService
     constructor()
     {
         this.index = {};
-
-        this.langPath = path.locales('/');
-
-        this.langDirs = glob.sync(this.langPath + "*");
-
-        this.langDirs.forEach(dirName => {
-            this.setLocaleDir(dirName);
-        });
     }
 
     /**
-     * Index a locale directory, where the directory name is the locale name.
-     * @param dirName string
+     * Index a locale directory.
+     * A locale dir should be a directory of locale folders (en, es, en_fr, etc)
+     * Each directory gets added to the index.
+     * @param dir string
      */
-    setLocaleDir(dirName)
+    addLocaleDir(dir)
     {
-        var localeName = Path.basename(dirName);
-        this.setLocale(localeName);
+        let dirs = glob.sync(dir + "*");
 
-        var files = utils.getFileBaseNames(dirName+"/");
+        dirs.forEach(dirName => {
 
-        files.forEach(file =>
-        {
-            var hash = require(dirName+"/"+file);
+            let localeName = Path.basename(dirName);
+            let files = utils.getFileBaseNames(dirName+"/");
 
-            var count = this.setKeys(localeName, file, hash);
+            this.setLocale(localeName);
 
-            debug(this, "Loaded File: %s.%s (%s keys)", localeName, file, count);
+            files.forEach(file =>
+            {
+                let abs = dirName+"/"+file;
+                let hash  = require(abs);
+                let count = this.setKeys(localeName, file, hash);
+
+                debug(this, "Loaded File: %s (%s keys)", abs, count);
+            });
         });
     }
 
@@ -84,7 +83,7 @@ class LocaleService
         var locale =  LocaleService.getLocaleValue(localeName);
 
         if (this.hasLocale(locale)) {
-            var value = this.index[locale][key];
+            let value = this.index[locale][key];
 
             if (value) {
                 return args ?  LocaleService.doReplace(value, args) : value;
@@ -93,8 +92,6 @@ class LocaleService
 
         return "undefined:"+locale+"."+key;
     };
-
-
 
     /**
      * Check if the locale exists in the index.
@@ -123,8 +120,9 @@ class LocaleService
      */
     setLocale(localeName)
     {
-        this.index[  LocaleService.getLocaleValue(localeName) ] = {};
-        return this;
+        if (! this.hasLocale(localeName)) {
+            this.index[ LocaleService.getLocaleValue(localeName) ] = {};
+        }
     }
 
     /**
@@ -134,10 +132,12 @@ class LocaleService
      */
     helper(request)
     {
-        var locale = request.locale.toLowerCase();
-
-        return function(key,args) {
+        return function(key,args)
+        {
             if (! key || key=="") return "";
+
+            let locale = LocaleService.getLocaleValue(request.locale);
+
             if (! locale) locale = "en_us";
 
             return this.getKey(locale,key,args);
