@@ -19,8 +19,6 @@ class LocaleProvider extends Expressway.Provider
         this.requires = [
             'LoggerProvider',
             'ViewProvider',
-            'ExpressProvider',
-            'RouterProvider',
             'ControllerProvider',
         ];
     }

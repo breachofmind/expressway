@@ -2,9 +2,6 @@
 
 var path            = require('path');
 var Application     = require('./Application');
-var Provider        = require('./Provider');
-var DriverProvider  = require('./DriverProvider');
-var Model           = require('./Model');
 var utils           = require('./support/utils');
 var _               = require('lodash');
 
@@ -155,10 +152,12 @@ class Expressway
     }
 }
 
+
 Expressway.instance         = null;
-Expressway.BaseModel        = Model;
-Expressway.Provider         = Provider;
-Expressway.DriverProvider   = DriverProvider;
+Expressway.BaseModel        = require('./Model');
+Expressway.Provider         = require('./Provider');
+Expressway.Driver           = require('./Driver');
+Expressway.Module           = require('./Module');
 Expressway.Application      = Application;
 Expressway.utils            = utils;
 

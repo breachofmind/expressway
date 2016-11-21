@@ -39,25 +39,25 @@ class BasicAuth extends Expressway.Middleware
      */
     strategy(username,password,done)
     {
-        log.access("Login attempt: '%s'", username);
+        log.warn("Login attempt: '%s'", username);
 
         User.findOne({ email: username }).populate(User.populate).exec().then( user =>
         {
             // If user is not found, fail with message.
             if (! user) {
-                log.access("User does not exist: '%s'", username);
+                log.warn("User does not exist: '%s'", username);
                 return done(null, false, { message: 'auth.err_user_missing' });
             }
 
             try {
                 user.authenicate(password);
             } catch(err) {
-                log.access("Login attempt failed: '%s'", username);
+                log.warn("Login attempt failed: '%s'", username);
                 return done(null, false, { message: 'auth.err_'+err });
             }
 
             // If they got this far, they were successfully authenticated.
-            log.access("Login successful: '%s' %s", username, user.id);
+            log.warn("Login successful: '%s' %s", username, user.id);
 
             return done(null, user);
 

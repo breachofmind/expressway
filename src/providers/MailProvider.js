@@ -19,17 +19,17 @@ class MailProvider extends Expressway.Provider
 
         this.requires = [
             'CoreProvider',
-            'ExpressProvider'
+            'AppModule'
         ];
     }
 
     /**
      * Register the mail function with the application.
      * @param app Application
-     * @param $app Express
+     * @param AppModule Module
      * @param config function
      */
-    register(app,$app,config)
+    register(app,config,AppModule)
     {
         // This is inside the register method in
         // case the user didn't load it.
@@ -50,7 +50,7 @@ class MailProvider extends Expressway.Provider
                     return err ? reject(err) : resolve(info);
                 };
                 if (options.view) {
-                    return $app.render(options.view, options.data || {}, function(err,html) {
+                    return AppModule.express.render(options.view, options.data || {}, function(err,html) {
                         if (err) return reject(err);
                         options.html = html;
                         transport.sendMail(options,callback);

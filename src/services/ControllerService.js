@@ -1,6 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
+var Express = require('express');
 var utils = Expressway.utils;
 var Path = require('path');
 var app = Expressway.instance.app;
@@ -160,7 +161,7 @@ class ControllerService
      * @param values {Array|Function|String}
      * @returns {Array}
      */
-    getRouteFunctions(values)
+    getRouteFunctions(values,args)
     {
         if (! Array.isArray(values)) values = [values];
 
@@ -168,6 +169,24 @@ class ControllerService
         {
             switch(typeof value)
             {
+                // Return a Router object to pass to express.
+                // Objects look like: {"GET /": [Routes], ...}
+                case "object" :
+
+                    let router = Express.Router(args);
+
+                    utils.toRouteMap(value).forEach((middleware,opts) =>
+                    {
+                        var stack = this.getRouteFunctions(middleware);
+                        if (! stack.length) throw new Error("Route declaration missing routes: "+opts.url);
+
+                        // Add the routes to the express router.
+                        router[opts.verb].apply(router, [opts.url].concat(stack) );
+                    });
+                    return router;
+
+                    break;
+
                 // Can be Middleware name or Controller.route name.
                 case "string" :
                     if (value.indexOf(".") > -1) {

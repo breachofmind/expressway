@@ -4,7 +4,7 @@ var Expressway = require('expressway');
 var session    = require('express-session');
 var Promise    = require('bluebird');
 
-class MongoDriverProvider extends Expressway.DriverProvider
+class MongoDriverProvider extends Expressway.Driver
 {
     get alias() { return "mongodb" }
 

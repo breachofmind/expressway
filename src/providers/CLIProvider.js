@@ -19,7 +19,7 @@ class CLIProvider extends Expressway.Provider
 
         this.requires = [
             'LoggerProvider',
-            'RouterProvider'
+            'ControllerProvider'
         ];
 
         this.contexts = [CXT_CLI];
@@ -66,9 +66,7 @@ class CLIProvider extends Expressway.Provider
          */
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
-            var stacks = app.get('stacks');
-
-            stacks().forEach(application => {
+            app.stacks().forEach(application => {
 
                 var columns = application.stack.map((route,i) =>
                 {

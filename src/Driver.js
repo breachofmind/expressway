@@ -2,7 +2,7 @@
 
 var Provider = require('./Provider');
 
-class DriverProvider extends Provider
+class Driver extends Provider
 {
     constructor(app)
     {
@@ -13,7 +13,7 @@ class DriverProvider extends Provider
             'CoreProvider'
         ];
 
-        this.name = "DriverProvider";
+        this.name = "Driver";
 
         this.order = 0;
         this.Model = null;
@@ -44,4 +44,4 @@ class DriverProvider extends Provider
     }
 }
 
-module.exports = DriverProvider;
+module.exports = Driver;

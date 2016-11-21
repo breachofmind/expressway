@@ -20,7 +20,7 @@ class ModelProvider extends Expressway.Provider
         this.requires = [
             'LoggerProvider',
             'CoreProvider',
-            'DriverProvider'
+            'Driver'
         ];
 
         this.order = 1;

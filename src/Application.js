@@ -3,6 +3,7 @@
 var path         = require('path');
 var EventEmitter = require('events');
 var Provider     = require('./Provider');
+var Module       = require('./Module');
 var utils        = require('./support/utils');
 
 
@@ -34,6 +35,8 @@ class Application extends EventEmitter
         this._config        = config;
         this._providers     = {};
         this._services      = {};
+        this._modules       = {};
+        this._aliases       = {};
         this._env           = config.environment;
         this._context       = context;
 
@@ -77,6 +80,28 @@ class Application extends EventEmitter
         return this._services;
     }
 
+    get modules()
+    {
+        return this._modules;
+    }
+
+    /**
+     * Get or set an alias.
+     * @param key string
+     * @param value string
+     * @returns {*}
+     */
+    alias(key,value)
+    {
+        if (arguments.length == 1) {
+            return this._aliases[key];
+        }
+        if (typeof value != 'string') {
+            throw new TypeError("2nd argument must be a string");
+        }
+        this._aliases[key] = value;
+    }
+
     /**
      * Create and index the provider instances.
      * @param providers Array<Provider|Array>
@@ -94,6 +119,10 @@ class Application extends EventEmitter
                 var providerInstance = new ProviderClass(this);
             } catch (err) {
                 throw new ApplicationError("Error loading provider: "+err.message, ProviderClass);
+            }
+
+            if (providerInstance instanceof Module) {
+                this._modules[providerInstance.name] = providerInstance;
             }
 
             // Add to the providers index.
@@ -350,6 +379,26 @@ class Application extends EventEmitter
     has(service)
     {
         return this._services.hasOwnProperty(service);
+    }
+
+    /**
+     * Return a human readable list of route stacks for each application.
+     * @returns {Array}
+     */
+    stacks(moduleName)
+    {
+        if (moduleName) {
+            return utils.getMiddlewareStack(this.modules[moduleName].express);
+        }
+
+        return Object.keys(this.modules).map((key,i) => {
+            let provider = this.modules[key];
+            return {
+                index: i,
+                name: key,
+                stack: utils.getMiddlewareStack(provider.express)
+            }
+        });
     }
 }
 

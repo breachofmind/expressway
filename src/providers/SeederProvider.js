@@ -19,7 +19,7 @@ class SeederProvider extends Expressway.Provider
         this.requires = [
             'LoggerProvider',
             'CoreProvider',
-            'DriverProvider'
+            'ModelProvider'
         ];
         this.environments = [ENV_LOCAL, ENV_DEV];
         this.contexts = [CXT_TEST, CXT_CLI];

@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var session = require('express-session');
 
-class MySQLDriverProvider extends Expressway.DriverProvider
+class MySQLDriverProvider extends Expressway.Driver
 {
     get alias() { return "mysql" }
 

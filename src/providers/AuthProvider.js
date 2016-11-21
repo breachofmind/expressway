@@ -20,9 +20,7 @@ class AuthProvider extends Expressway.Provider
         this.requires = [
             'ModelProvider',
             'LoggerProvider',
-            'RouterProvider',
             'ControllerProvider',
-            'ExpressProvider'
         ];
     }
 
