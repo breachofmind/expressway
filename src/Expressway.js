@@ -154,6 +154,7 @@ class Expressway
 
 
 Expressway.instance         = null;
+Expressway.Promise          = require('bluebird');
 Expressway.BaseModel        = require('./Model');
 Expressway.Provider         = require('./Provider');
 Expressway.Driver           = require('./Driver');
