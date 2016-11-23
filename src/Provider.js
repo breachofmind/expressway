@@ -1,5 +1,7 @@
 "use strict";
 
+var assert = require('assert');
+
 /**
  * Provider class.
  * For adding or modifying functionality to the application.
@@ -27,84 +29,68 @@ class Provider
     }
 
     /**
-     * Set the order property.
-     * @param n {number}
+     * Get/set the order.
+     * @param n Number
+     * @returns {Provider|Number}
      */
-    set order(n) {
-        this._order = typeof n != 'number' ? 1 : n;
+    order(n)
+    {
+        if (! arguments.length) return this._order;
+        assert.equal(typeof n, 'number');
+        this._order = n;
+        return this;
     }
 
     /**
-     * Get the order.
-     * @returns {number}
+     * Set the dependencies for this provider.
+     * If passing array, override the current set dependencies.
+     * Pass separate arguments to append to the current dependency set.
+     * @returns {Provider|Array}
      */
-    get order() {
-        return this._order;
+    requires()
+    {
+        if (! arguments.length) return this._requires;
+        this._requires = Array.isArray(arguments[0]) ? arguments[0] : this._requires.concat(...arguments);
+        return this;
+    }
+    /**
+     * Get/set the environments.
+     * @returns {Provider|Array}
+     */
+    environments()
+    {
+        if (! arguments.length) return this._environments;
+        this._environments = Array.isArray(arguments[0]) ? arguments[0] : this._environments.concat(...arguments);
+        return this;
     }
 
     /**
-     * Set the required dependencies.
-     * @param arr {String|Array}
+     * Get/set the contexts.
+     * @returns {Provider|Array}
      */
-    set requires(arr) {
-        this._requires = setArray(arr);
-    }
-    /**
-     * Get the required dependencies.
-     * @returns {String|Array}
-     */
-    get requires() {
-        return this._requires;
+    contexts()
+    {
+        if (! arguments.length) return this._contexts;
+        this._contexts = Array.isArray(arguments[0]) ? arguments[0] : this._contexts.concat(...arguments);
+        return this;
     }
 
     /**
-     * Get the protected environments array.
-     * @returns {Array}
+     * Get/set the events property.
+     * @param obj Object
+     * @returns {Provider|object}
      */
-    get environments() {
-        return this._environments;
-    }
+    events(obj)
+    {
+        if (! arguments.length) return this._events;
 
-    /**
-     * Set the protected environments array.
-     * @param arr {Array}
-     */
-    set environments(arr) {
-        this._environments = setArray(arr);
-    }
+        assert.equal(typeof obj, 'object');
 
+        Object.keys(obj).forEach(eventName => {
+            this._events[eventName] = obj[eventName];
+        });
 
-    /**
-     * Return the protected contexts array.
-     * @returns {Array}
-     */
-    get contexts() {
-        return this._contexts;
-    }
-
-    /**
-     * Set the protected contents array.
-     * @param arr {Array}
-     */
-    set contexts(arr) {
-        this._contexts = setArray(arr);
-    }
-
-
-    /**
-     * Return the protected events object.
-     * @returns {{}}
-     */
-    get events() {
-        return this._events;
-    }
-
-    /**
-     * Set the protected events object.
-     * @param obj {{}}
-     */
-    set events(obj) {
-        if (typeof obj == 'object') this._events = obj;
+        return this;
     }
 
     /**
@@ -115,37 +101,38 @@ class Provider
         return Object.keys(this._events).length > 0;
     }
 
-
     /**
-     * Is the provider active?
-     * @returns {boolean}
+     * Get/set the active property.
+     * @param boolean
+     * @returns {Provider|boolean}
      */
-    get active() {
-        return this._active;
+    active(boolean)
+    {
+        if (! arguments.length) return this._active;
+        assert.equal(typeof boolean, 'boolean');
+        this._active = boolean;
+        return this;
     }
 
     /**
-     * Set the active property.
-     * @param boolean {boolean}
+     * Get/set the loaded property.
+     * @param boolean
+     * @returns {Provider|boolean}
      */
-    set active(boolean) {
-        this._active = typeof boolean != 'boolean' ? false : boolean;
+    loaded(boolean)
+    {
+        if (! arguments.length) return this._loaded;
+        assert.equal(typeof boolean, 'boolean');
+        this._loaded = boolean;
+        return this;
     }
 
-    /**
-     * Is the provider loaded?
-     * @returns {boolean}
-     */
-    get loaded() {
-        return this._loaded;
-    }
-
-    /**
-     * Set the loaded property.
-     * @param boolean {boolean}
-     */
-    set loaded(boolean) {
-        this._loaded = typeof boolean != 'boolean' ? false : boolean;
+    booted(boolean)
+    {
+        if (! arguments.length) return this._booted;
+        assert.equal(typeof boolean, 'boolean');
+        this._booted = boolean;
+        return this;
     }
 
     /**
@@ -194,16 +181,11 @@ class Provider
      */
     isLoadable(env, context)
     {
-        var inEnvironment = this.environments.indexOf(env) > -1;
-        var inContext =  this.contexts.indexOf(context) > -1;
+        var inEnvironment = this._environments.indexOf(env) > -1;
+        var inContext =  this._contexts.indexOf(context) > -1;
 
         return this._active && inEnvironment && inContext;
     }
-}
-
-function setArray(arr) {
-    if (typeof arr == 'string') arr = [arr];
-    return arr;
 }
 
 module.exports = Provider;

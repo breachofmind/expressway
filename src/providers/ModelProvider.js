@@ -17,13 +17,12 @@ class ModelProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = [
+        this.order(1);
+        this.requires(
             'LoggerProvider',
             'CoreProvider',
             'Driver'
-        ];
-
-        this.order = 1;
+        );
     }
 
 

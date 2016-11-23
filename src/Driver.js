@@ -8,14 +8,13 @@ class Driver extends Provider
     {
         super(app);
 
-        this.requires = [
+        this.order(0);
+        this.requires(
             'LoggerProvider',
             'CoreProvider'
-        ];
+        );
 
         this.name = "Driver";
-
-        this.order = 0;
         this.Model = null;
     }
     /**

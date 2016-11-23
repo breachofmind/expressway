@@ -16,11 +16,7 @@ class LocaleProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = [
-            'LoggerProvider',
-            'ViewProvider',
-            'ControllerProvider',
-        ];
+        this.requires('ControllerProvider');
     }
 
     /**

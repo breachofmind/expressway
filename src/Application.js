@@ -140,7 +140,7 @@ class Application extends EventEmitter
 
         // Sort the providers by their load order and
         // call the register method on each.
-        var providers = Object.values(this._providers).sort(utils.sortByDirection(1,'order'));
+        var providers = Object.values(this._providers).sort(utils.sortByDirection(1,'_order'));
 
         providers.forEach(provider => { this.load(provider) });
 
@@ -163,21 +163,21 @@ class Application extends EventEmitter
      */
     load(provider)
     {
-        if (! provider.isLoadable(this.env, this.context) || provider.loaded) return false;
+        if (! provider.isLoadable(this.env, this.context) || provider.loaded()) return false;
 
         provider.attachEvents(this);
 
         this.emit('provider.loading', provider);
 
         // Load any dependencies first.
-        provider.requires.forEach( dependencyName =>
+        provider.requires().forEach( dependencyName =>
         {
             var dependency = this._providers[dependencyName];
 
             if (! dependency) {
                 throw (`Provider ${provider.name} is missing a dependency: ${dependencyName}`);
             }
-            if (! dependency.active) {
+            if (! dependency.active()) {
                 throw (`Provider ${provider.name} dependency needs to be active: ${dependency.name}`);
             }
             this.load(dependency);
@@ -185,7 +185,7 @@ class Application extends EventEmitter
 
         this.call(provider, "register");
 
-        provider.loaded = true;
+        provider.loaded(true);
 
         this._order.push(provider);
 
@@ -201,11 +201,11 @@ class Application extends EventEmitter
      */
     boot(provider)
     {
-        if (! provider.loaded || provider.booted) return false;
+        if (! provider.loaded() || provider.booted()) return false;
 
         this.call(provider,'boot');
 
-        provider.booted = true;
+        provider.booted(true);
 
         this.emit('provider.booted', provider);
 

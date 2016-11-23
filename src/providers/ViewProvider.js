@@ -16,7 +16,7 @@ class ViewProvider extends Expressway.Provider
     {
         super(app);
 
-        this.contexts = [CXT_TEST, CXT_WEB];
+        this.contexts(CXT_TEST, CXT_WEB);
     }
 
     /**

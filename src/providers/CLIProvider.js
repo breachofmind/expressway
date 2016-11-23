@@ -17,12 +17,9 @@ class CLIProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = [
-            'LoggerProvider',
-            'ControllerProvider'
-        ];
+        this.requires('ControllerProvider');
 
-        this.contexts = [CXT_CLI];
+        this.contexts(CXT_CLI);
     }
 
     /**

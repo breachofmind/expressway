@@ -12,7 +12,7 @@ class CoreProvider extends Expressway.Provider
     {
         super(app);
 
-        this.order = -10;
+        this.order(0);
     }
 
     /**

@@ -15,12 +15,9 @@ class Module extends Provider {
     {
         super(app);
 
-        this.order = 50;
+        this.order(50);
+        this.requires('ControllerProvider');
 
-        this.requires = [
-            'CoreProvider',
-            'ControllerProvider',
-        ];
         this.express = Express();
         this.options = null;
         this.routes = [];

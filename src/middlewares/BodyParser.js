@@ -10,15 +10,19 @@ class BodyParser extends Expressway.Middleware
 {
     dispatch()
     {
+        var bodyParseJson  = bodyParser.json();
+        var bodyParseUrl   = bodyParser.urlencoded({extended:true});
+        var cookieParse    = cookieParser(config('appKey', "keyboard cat"));
+
         return [
             function BodyParserJSON(...args) {
-                return bodyParser.json()(...args);
+                return bodyParseJson(...args);
             },
             function BodyParserURLEncoded(...args) {
-                return bodyParser.urlencoded({extended:true})(...args);
+                return bodyParseUrl(...args);
             },
             function CookieParser(...args) {
-                return cookieParser(config('appKey', "keyboard cat"))(...args);
+                return cookieParse(...args);
             }
         ]
     }

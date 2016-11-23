@@ -159,6 +159,7 @@ class ControllerService
      * Given a string or functions, return an array of
      * functions for the express router.
      * @param values {Array|Function|String}
+     * @param args mixed
      * @returns {Array}
      */
     getRouteFunctions(values,args)

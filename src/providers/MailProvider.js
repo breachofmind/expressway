@@ -17,10 +17,7 @@ class MailProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = [
-            'CoreProvider',
-            'AppModule'
-        ];
+        this.requires('AppModule');
     }
 
     /**

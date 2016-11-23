@@ -18,9 +18,11 @@ class Localization extends Expressway.Middleware
             return localeService.getKey(loc,key,args);
         };
 
+        var middleware = locale( config('lang_support', ['en_us']));
+
         return [
             function LocaleParser(...args) {
-                return locale( config('lang_support', ['en_us']))(...args);
+                return middleware(...args);
             },
             function LocaleQuery(request,response,next) {
                 if (request.query.cc) {

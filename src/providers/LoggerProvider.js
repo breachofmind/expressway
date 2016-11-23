@@ -19,8 +19,9 @@ class LoggerProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires    = ['CoreProvider'];
-        this.order       = -1;
+        this.requires('CoreProvider');
+        this.order(0);
+
         this.fileMaxSize = 1000 * 1000 * 10; // 10MB
         this.logFileName = "server.log";
         this.colorize    = true;

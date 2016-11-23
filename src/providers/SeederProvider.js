@@ -16,13 +16,13 @@ class SeederProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = [
+        this.requires(
             'LoggerProvider',
             'CoreProvider',
             'ModelProvider'
-        ];
-        this.environments = [ENV_LOCAL, ENV_DEV];
-        this.contexts = [CXT_TEST, CXT_CLI];
+        );
+        this.environments(ENV_LOCAL, ENV_DEV);
+        this.contexts(CXT_TEST, CXT_CLI);
     }
 
     /**

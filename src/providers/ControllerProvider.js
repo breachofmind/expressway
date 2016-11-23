@@ -18,12 +18,12 @@ class ControllerProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires = [
+        this.requires(
             'LoggerProvider',
             'CoreProvider',
             'ModelProvider',
             'ViewProvider'
-        ];
+        );
     }
 
     /**
