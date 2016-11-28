@@ -10,4 +10,4 @@ class ApplicationError extends Error
     }
 }
 
-module.exports = ApplicationError;
+global.ApplicationError = ApplicationError;

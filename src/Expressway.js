@@ -5,8 +5,9 @@ var Application     = require('./Application');
 var utils           = require('./support/utils');
 var _               = require('lodash');
 
-global.ApplicationError = require('./exceptions/ApplicationError');
-global.ApplicationCallError = require('./exceptions/ApplicationCallError');
+require('./exceptions/ApplicationError');
+require('./exceptions/ApplicationCallError');
+require('./exceptions/ApplicationLoadError');
 
 /**
  * The Express MVC application.

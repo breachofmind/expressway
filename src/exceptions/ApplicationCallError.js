@@ -13,4 +13,4 @@ class ApplicationCallError extends Error
     }
 }
 
-module.exports = ApplicationCallError;
+global.ApplicationCallError = ApplicationCallError;

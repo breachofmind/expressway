@@ -175,10 +175,13 @@ class Application extends EventEmitter
             var dependency = this._providers[dependencyName];
 
             if (! dependency) {
-                throw (`Provider ${provider.name} is missing a dependency: ${dependencyName}`);
+                throw new ApplicationLoadError(`Provider is missing a dependency`, provider, dependencyName);
             }
             if (! dependency.active()) {
-                throw (`Provider ${provider.name} dependency needs to be active: ${dependency.name}`);
+                throw new ApplicationLoadError(`Dependency is not active`, provider,dependency);
+            }
+            if (dependency.requires().indexOf(provider.name) > -1) {
+                throw new ApplicationLoadError(`Providers cannot declare each other as dependencies`, provider, dependency);
             }
             this.load(dependency);
         });

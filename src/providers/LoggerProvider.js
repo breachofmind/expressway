@@ -78,7 +78,7 @@ class LoggerProvider extends Expressway.Provider
         app.register('debug', this.debug.bind(this), "Console logging function for debugging");
 
         // Show debugging messages when providers load.
-        app.once('provider.loaded', provider =>
+        app.on('provider.loaded', provider =>
         {
             this.debug('Provider', 'Loaded: %s', colors.gray(provider.name));
         });
@@ -87,7 +87,6 @@ class LoggerProvider extends Expressway.Provider
         app.once('providers.registered', () =>
         {
             this.debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
-            this.debug(app, 'Provider Order... \n%s', app._order.map((provider,i) => { return `#${i} - ${provider.name}`; }).join("\n"));
             this.debug(app, 'Booting...');
         });
     }

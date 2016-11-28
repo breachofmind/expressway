@@ -186,6 +186,16 @@ class Provider
 
         return this._active && inEnvironment && inContext;
     }
+
+    toValue()
+    {
+        return this.name;
+    }
+
+    toString()
+    {
+        return this.name;
+    }
 }
 
 module.exports = Provider;
