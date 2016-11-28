@@ -34,6 +34,9 @@ class ControllerProvider extends Expressway.Provider
     {
         app.singleton('controllerService', require('../services/ControllerService'), 'Stores and fetches controller instances');
 
+        app.register('controller', app.get('controllerService').controllers, 'Index of controllers');
+        app.register('middleware', app.get('controllerService').middlewares, 'Index of middlewares');
+
         // Expose the controller class for our wonderful developers.
         Expressway.Middleware = require('../classes/Middleware');
         Expressway.Controller = require('../classes/Controller');

@@ -36,13 +36,6 @@ class Expressway
          * @private
          */
         this._app = null;
-
-        /**
-         * Paths to locate provider modules.
-         * @type {{}}
-         * @private
-         */
-        this._providerPaths = {};
     }
 
     /**
@@ -55,16 +48,7 @@ class Expressway
         var appConfig = require(this._configPath + "config");
         var sysConfig = require(this._configPath + "system");
 
-        this._providerPaths['User'] = this.rootPath(appConfig.providers_path +"/");
-        this._providerPaths['System'] = __dirname+'/providers/';
-
-        // Merge the provider classes with the config.
-        let providerList = {};
-        Object.keys(this._providerPaths).forEach(key => {
-            providerList[key] = utils.getModulesAsHash(this._providerPaths[key], true);
-        });
-
-        _.merge(appConfig, sysConfig(providerList));
+        _.merge(appConfig, sysConfig);
 
         this._app = new Application(this,appConfig,context);
 

@@ -21,7 +21,7 @@ class LocaleService
      * Each directory gets added to the index.
      * @param dir string
      */
-    addLocaleDir(dir)
+    addDirectory(dir)
     {
         let dirs = glob.sync(dir + "*");
 

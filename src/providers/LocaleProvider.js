@@ -27,8 +27,6 @@ class LocaleProvider extends Expressway.Provider
     {
         app.singleton('localeService', require('../services/LocaleService'), "Service for adding/retrieving locale keys");
 
-        app.register('LocaleController',require('../controllers/LocaleController'), "The default Locale controller");
-
         // When each view is created, add the template function.
         app.on('view.created', function(view,request) {
             view.data.lang = request.lang.bind(request);
@@ -37,12 +35,31 @@ class LocaleProvider extends Expressway.Provider
 
     /**
      * When all providers loaded, add the default locale path.
-     * @param localeService
-     * @param path
+     * @param app Application
+     * @param localeService LocaleService
+     * @param path PathService
+     * @param config Function
      */
-    boot(localeService,path)
+    boot(app,localeService,path,config)
     {
-        localeService.addLocaleDir(path.locales('/'));
+        // Add a route to the api that returns the locale keys.
+        if (app.loaded('APIModule'))
+        {
+            app.get('APIModule').add({
+                "GET /locale" : function(request,response)
+                {
+                    if (app.config.cache) {
+                        response.setHeader('Cache-Control', 'public, max-age=' + config('cache_max_age', 7*24*60*60));
+                    }
+                    var locale = request.locale.toLowerCase();
+
+                    return {
+                        locale: locale,
+                        keys: localeService.getLocale(locale)
+                    };
+                }
+            })
+        }
     }
 }
 

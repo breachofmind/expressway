@@ -5,6 +5,7 @@ var app                 = Expressway.instance.app;
 var utils               = Expressway.utils;
 var _                   = require('lodash');
 var controllerService   = app.get('controllerService');
+var stack               = require('callsite');
 
 /**
  * Controller class.
@@ -19,7 +20,6 @@ class Controller
 
         this._middleware = [];
     }
-
 
     /**
      * Attach middleware to a method or to all methods.

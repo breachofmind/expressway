@@ -23,11 +23,13 @@ class Middleware
      */
     method(request,response,next)
     {
-        throw new Error("Middleware.method() is unimplemented");
+        throw new Error(`${this.name}.method() is unimplemented`);
     }
 
     /**
      * Register the middleware with express.
+     * Should return a function that express can use:
+     * function(request,response,next) {...}
      * @returns {Function}
      */
     dispatch()
@@ -48,17 +50,6 @@ class Middleware
         middleware.$route = this.name;
 
         return middleware;
-    }
-
-    /**
-     * When loading middleware globally, this method can be used
-     * to load middleware into express via express.use().
-     * @param $app Express
-     * @returns {null}
-     */
-    boot($app)
-    {
-        $app.use( this.dispatch() );
     }
 }
 

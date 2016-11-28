@@ -8,6 +8,12 @@ var Expressway = require('expressway');
  */
 class NotFound extends Expressway.Middleware
 {
+    get type() {
+        return "Core"
+    }
+    get description() {
+        return "The default 404 Not Found response";
+    }
     method(request,response,next,view)
     {
         response.status(404);

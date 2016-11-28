@@ -1,6 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
+var _ = require('lodash');
 
 /**
  * Provides some basic core functions the application will need.
@@ -13,41 +14,8 @@ class CoreProvider extends Expressway.Provider
         super(app);
 
         this.order(0);
-    }
 
-    /**
-     * Register with the application.
-     * @param app Application
-     */
-    register(app)
-    {
-        app.call(this,'getURLServices');
-        app.call(this,'getPathServices');
-    }
-
-    /**
-     * Set up the URL services.
-     * @param app Application
-     */
-    getURLServices(app)
-    {
-        var appUrl = require('../services/URLService')(app);
-
-        // Attach to the application.
-        app.register('url', appUrl, "Function for returning the url/proxy url");
-
-        app.register('domain', appUrl.hostname, "The server or proxy domain name");
-    }
-
-    /**
-     * Set up the path service.
-     * @param app Application
-     */
-    getPathServices(app)
-    {
-        var PathService = require('../services/PathService');
-        var pathService = new PathService;
-        var paths = {
+        this.pathNames = {
             resources:   "resources_path",
             views:       "views_path",
             controllers: "controllers_path",
@@ -59,19 +27,48 @@ class CoreProvider extends Expressway.Provider
             db:          "db_path",
             logs:        "logs_path",
             uploads:     "uploads_path",
-        };
+        }
+    }
 
-        pathService.set('root', app.rootPath());
+    /**
+     * Register with the application.
+     * @param app Application
+     */
+    register(app)
+    {
+        app.singleton('path', require('../services/PathService'), "A helper service for returning paths to files in the application");
+
+        app.call(this,'setupURLService');
+        app.call(this,'setupPathService');
+    }
+
+    /**
+     * Set up the URL services.
+     * @param app Application
+     */
+    setupURLService(app)
+    {
+        var appUrl = require('../services/URLService')(app);
+
+        app.register('url', appUrl, "Function for returning the url/proxy url");
+        app.register('domain', appUrl.hostname, "The server or proxy domain name");
+    }
+
+    /**
+     * Set up the path service.
+     * @param app Application
+     * @param path PathService
+     */
+    setupPathService(app,path)
+    {
+        path.set('root', app.rootPath());
 
         // Set up a path function for each path listed in the config.
-        Object.keys(paths).forEach(pathName => {
-            var value = app.config[paths[pathName]];
-            if (value) {
-                pathService.set(pathName, app.rootPath(app.config[paths[pathName]]), true);
-            }
+        _.each(this.pathNames, (value,pathName) =>
+        {
+            let str = app.config[value];
+            if (str) path.set(pathName, app.rootPath(str), true);
         });
-
-        app.register('path', pathService, "A helper service for returning paths to files in the application");
     }
 }
 

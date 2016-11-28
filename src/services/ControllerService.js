@@ -28,12 +28,6 @@ class ControllerService
          * @type {{}}
          */
         this.middlewares = {};
-
-        /**
-         * Directories to look for Controller or Middleware classes.
-         * @type {Array<String>}
-         */
-        this.directories = [];
     }
 
     /**

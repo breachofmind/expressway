@@ -8,6 +8,13 @@ var config = app.get('config');
 
 class Session extends Expressway.Middleware
 {
+    get type() {
+        return "Core"
+    }
+    get description() {
+        return "Provides a databased session via express-session";
+    }
+
     dispatch()
     {
         var middleware = session ({

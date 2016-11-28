@@ -46,39 +46,6 @@ http.ServerResponse.prototype.view = function(file,data,status = 200)
     return new Expressway.View(file,data).render(this);
 };
 
-/**
- * Turn on logging for this response.
- * @returns void
- */
-http.ServerResponse.prototype.logResponse = function(app)
-{
-    var log = app.get('log');
-
-    this.on('finish', () =>
-    {
-        var type = 'info';
-        if (this.statusCode >= 400) type = 'warn';
-        if (this.statusCode >= 500) type = 'error';
-
-        // Not Modified, who cares
-        if (this.statusCode == 304) return;
-
-        var methodColor = "gray";
-        if (this.req.method == "POST") methodColor = "yellow";
-        if (this.req.method == "PUT") methodColor = "magenta";
-        if (this.req.method == "DELETE") methodColor = "red";
-
-        log[type] ("%s %s %s '%s' %s %s %s",
-            this.req.ip,
-            colors[methodColor] (this.req.method),
-            colors.blue(this.statusCode),
-            this.phrase(),
-            colors.green(this.$route) ,
-            this.req.url,
-            this.req.user ? colors.gray(this.req.user.id) : ""
-        );
-    });
-};
 
 /**
  * Return a smart response, based on the given value.

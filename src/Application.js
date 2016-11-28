@@ -195,6 +195,19 @@ class Application extends EventEmitter
     }
 
     /**
+     * Check if the given provider name is loaded.
+     * @param providerName string
+     * @returns {boolean}
+     */
+    loaded(providerName)
+    {
+        if (! this._providers.hasOwnProperty(providerName)) {
+            return false;
+        }
+        return this._providers[providerName].loaded();
+    }
+
+    /**
      * Call the boot() method on the given provider and inject any services.
      * @param provider Provider
      * @returns {boolean}
@@ -261,6 +274,11 @@ class Application extends EventEmitter
      */
     register(serviceName, instance, description, call=false)
     {
+        if (typeof serviceName == 'object') {
+            instance = serviceName;
+            serviceName = serviceName.name;
+            description = instance.description || `${serviceName} instance`;
+        }
         if (this.has(serviceName)) {
             throw new Error (`"${serviceName}" service has already been defined`);
         }

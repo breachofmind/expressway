@@ -8,6 +8,12 @@ var [localeService,config] = app.get('localeService','config');
 
 class Localization extends Expressway.Middleware
 {
+    get type() {
+        return "Core"
+    }
+    get description() {
+        return "Finds the requester's locale and adds some localization functionality";
+    }
     dispatch()
     {
         http.IncomingMessage.prototype.lang = function(key,args)

@@ -7,6 +7,8 @@ var columnify = require('columnify');
 var colors = require('colors');
 var _ = require('lodash');
 
+const LINE = Array(30).join("-")+"\n";
+
 /**
  * Provides a Command Line interface module.
  * @author Mike Adamczyk <mike@bom.us>
@@ -20,32 +22,53 @@ class CLIProvider extends Expressway.Provider
         this.requires('ControllerProvider');
 
         this.contexts(CXT_CLI);
+
+        /**
+         * List of command names in the
+         * CLI provider class to use.
+         * @type {Array<string>}
+         */
+        this.commands = [
+            'createNewCommand',
+            'listServicesCommand',
+            'listRoutesCommand',
+            'listProvidersCommand',
+            'listPathsCommand',
+            'listEventsCommand',
+            'listControllersCommand',
+            'listMiddlewaresCommand',
+            'seedCommand'
+        ]
+
     }
 
     /**
-     * Register the provider
-     * with the application.
+     * Register the provider with the application.
      * @param app Application
      */
     register(app)
     {
-        app.singleton('cli', __dirname+'/../classes/CLI', "The CLI Class instance");
+        app.singleton('cli', require('../classes/CLI'), "The CLI Class instance");
     }
 
     /**
      * Give the CLI class some default actions.
      * @param app Application
-     * @param cli CLI
-     * @param log Winston
-     * @param path PathService
      */
-    boot(app,cli,log,path)
+    boot(app)
     {
-        var LINE = Array(20).join("-")+"\n";
-        /**
-         * Create a new model, controller or provider.
-         * @usage ./bin/cli new model ModelName
-         */
+        this.commands.forEach(commandName => {
+            app.call(this, commandName);
+        });
+    }
+
+    /**
+     * Create a new model, controller or provider.
+     * @usage ./bin/cli new model ModelName
+     */
+    createNewCommand(cli,path)
+    {
+
         cli.command('new [class] <name>', "Create a new provider, controller or model").action((env,opts) =>
         {
             var type = env.trim().toLowerCase();
@@ -56,11 +79,15 @@ class CLIProvider extends Expressway.Provider
 
             process.exit();
         });
+    }
 
-        /**
-         * List all the routes in the application.
-         * @usage ./bin/cli routes
-         */
+    /**
+     * List all the routes in the application.
+     * @usage ./bin/cli routes
+     */
+    listRoutesCommand(app,cli)
+    {
+
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
             app.stacks().forEach(application => {
@@ -84,7 +111,8 @@ class CLIProvider extends Expressway.Provider
                     return {
                         index: i,
                         methods: methods.join(","),
-                        base: colors.gray(`[${route.rx.flags}]`)+` ${route.rx.path}`,
+                        flags: colors.gray(route.rx.flags),
+                        base: route.rx.path,
                         path: route.path,
                         middleware: routes.join(" -> ")
                     }
@@ -97,11 +125,16 @@ class CLIProvider extends Expressway.Provider
 
             process.exit();
         });
+    }
 
-        /**
-         * List all the services in the application.
-         * @usage ./bin/cli services
-         */
+
+    /**
+     * List all the services in the application.
+     * @usage ./bin/cli services
+     */
+    listServicesCommand(app,cli)
+    {
+
         cli.command('services', "List all services in the application").action((env,opts) =>
         {
             var conf = {
@@ -115,7 +148,7 @@ class CLIProvider extends Expressway.Provider
                 return {
                     type: colors.gray(type),
                     service: colors.green(key),
-                    value: typeof svc.value !== 'function' ? colors.blue(svc.value.toString()) : "",
+                    value: typeof svc.value == 'string' ? colors.blue(svc.value) : "",
                     description: svc.doc,
                     call: svc.call ? colors.red("true") : ""
                 }
@@ -124,11 +157,15 @@ class CLIProvider extends Expressway.Provider
             console.log(`\nRetrieve a service using ${colors.cyan('app.get("serviceName")')}`);
             process.exit();
         });
+    }
 
-        /**
-         * List all the providers in the application.
-         * @usage ./bin/cli providers [environment] [context]
-         */
+    /**
+     * List all the providers in the application.
+     * @usage ./bin/cli providers [environment] [context]
+     */
+    listProvidersCommand(app,cli)
+    {
+
         cli.command('providers [options]', "List all providers in the application loaded with the given environment and context")
             .option('-e, --environment [name]', "Providers loaded for given environment: local|dev|prod")
             .option('-c, --context [name]', "Providers loaded for given context: cli|web|test")
@@ -142,9 +179,9 @@ class CLIProvider extends Expressway.Provider
                     return {
                         name: colors.magenta(provider.name),
                         loaded: provider.isLoadable(opts.environment, opts.context) ? colors.green("yes") : colors.red("no"),
-                        envs: provider.environments,
+                        envs: provider.environments(),
                         contexts: provider.contexts.map(cxt => { return colors.gray(cxt); }),
-                        dependencies: provider.requires
+                        dependencies: provider.requires()
                     }
                 });
                 console.log(LINE);
@@ -154,11 +191,15 @@ class CLIProvider extends Expressway.Provider
                 console.log(columnify(columns));
                 process.exit();
             });
+    }
 
-        /**
-         * Run the seeder.
-         * @usage ./bin/cli seed
-         */
+    /**
+     * Run the seeder.
+     * @usage ./bin/cli seed
+     */
+    seedCommand(app,cli,path)
+    {
+
         cli.command('seed [options]', "Seed the database with data")
             .option('-s, --seeder [name]', "Run only the given seeder name")
             .option('-d, --dump', "Dump all models before seeding")
@@ -173,14 +214,20 @@ class CLIProvider extends Expressway.Provider
                 // Because this is only running once,
                 // we can get away with attaching the CLI options as a service.
                 app.register('cliOptions', opts);
-                require(app.path('db_path', 'db') + "seeder");
-            });
 
-        /**
-         * Show all path options.
-         * @usage ./bin/cli paths
-         */
-        cli.command('paths', "Inspect all set paths").action((env,opts) =>
+                // require the seeder.js file.
+                require(path.db('seeder'));
+            });
+    }
+
+    /**
+     * Show all path options.
+     * @usage ./bin/cli paths
+     */
+    listPathsCommand(app,cli,path)
+    {
+
+        cli.command('paths', "List all set paths in the Path service").action((env,opts) =>
         {
             var columns = Object.keys(path.paths).sort(utils.sortString(1)).map(key => {
                 return {
@@ -192,7 +239,14 @@ class CLIProvider extends Expressway.Provider
             console.log(columnify(columns));
             process.exit();
         });
+    }
 
+    /**
+     * List event listeners.
+     * @usage ./bin/cli events
+     */
+    listEventsCommand(app,cli)
+    {
         cli.command('events', "List all events and listener count").action((env,opts) => {
             var columns = app.eventNames().map(eventName => {
                 return {
@@ -203,6 +257,45 @@ class CLIProvider extends Expressway.Provider
             console.log(columnify(columns));
             process.exit();
         })
+    }
+
+    /**
+     * List available controllers.
+     * @usage ./bin/cli events
+     */
+    listControllersCommand(app,cli,controller)
+    {
+        cli.command('controllers', "List all controllers").action((env,opts) => {
+            var columns = _.map(controller, (object,controllerName) => {
+                return {
+                    name: colors.green(controllerName),
+                    description: object.description || "",
+                }
+            });
+
+            console.log(columnify(columns));
+            process.exit();
+        });
+    }
+
+    /**
+     * List available middlewares.
+     * @usage ./bin/cli events
+     */
+    listMiddlewaresCommand(app,cli,middleware)
+    {
+        cli.command('middlewares', "List all middlewares").action((env,opts) => {
+            var columns = _.map(middleware, (object,middlewareName) => {
+                return {
+                    name: colors.green(middlewareName),
+                    origin: colors.blue(object.type || "User-defined"),
+                    description: object.description || "",
+                }
+            });
+
+            console.log(columnify(columns));
+            process.exit();
+        });
     }
 }
 

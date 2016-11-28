@@ -32,14 +32,20 @@ class Module extends Provider {
      */
     parent(parent,uri)
     {
-        if (typeof parent == 'string') {
-            parent = this.app.get(parent);
-        }
+        if (typeof parent == 'string') parent = this.app.get(parent);
 
         if (! (parent instanceof Module)) {
             throw new TypeError("First argument not instance of Module");
         }
         parent.express.use(uri, this.express);
+
+        // Inherit the view engine and settings of the parent module.
+        // You can always change this at the module provider level.
+        var engine = parent.express.get('view engine');
+
+        this.set('view engine', engine)
+            .set('views', parent.express.get('views'))
+            .engine(engine, parent.engine(engine));
     }
 
     /**
@@ -51,6 +57,20 @@ class Module extends Provider {
     set(key,value)
     {
         this.express.set(key,value);
+
+        return this;
+    }
+
+    /**
+     * Get or set the given engine.
+     * @param ext string
+     * @param fn Function
+     * @returns {Module|Function}
+     */
+    engine(ext,fn)
+    {
+        if (! fn) return this.express.engines["."+ext];
+        this.express.engine(ext,fn);
 
         return this;
     }

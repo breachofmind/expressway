@@ -8,6 +8,13 @@ var config = app.get('config');
 
 class BodyParser extends Expressway.Middleware
 {
+    get type() {
+        return "Core"
+    }
+    get description() {
+        return "Parses the request body and cookie headers with bodyParser and cookieParser";
+    }
+
     dispatch()
     {
         var bodyParseJson  = bodyParser.json();
