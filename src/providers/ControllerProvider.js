@@ -38,8 +38,8 @@ class ControllerProvider extends Expressway.Provider
         app.register('middleware', app.get('controllerService').middlewares, 'Index of middlewares');
 
         // Expose the controller class for our wonderful developers.
-        Expressway.Middleware = require('../classes/Middleware');
-        Expressway.Controller = require('../classes/Controller');
+        Expressway.Middleware = require('../Middleware');
+        Expressway.Controller = require('../Controller');
 
         app.on('view.created', function(view,request){
             view.data.route = function(key,uri="") {

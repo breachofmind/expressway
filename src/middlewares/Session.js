@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var app = Expressway.instance.app;
 var session = require('express-session');
-var driverProvider = app.get('driverProvider');
+var store = app.get('sessionStore');
 var config = app.get('config');
 
 class Session extends Expressway.Middleware
@@ -21,8 +21,9 @@ class Session extends Expressway.Middleware
             secret: config('appKey', 'keyboard cat'),
             saveUninitialized: false,
             resave: false,
-            store: app.call(driverProvider,'getSessionStore')
+            store: store
         });
+
         return function Session(...args) {
             return middleware(...args);
         }

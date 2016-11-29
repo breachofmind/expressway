@@ -22,22 +22,23 @@ class Module extends Provider {
         this.options = null;
         this.routes = [];
 
+        this.baseUri = "/";
+
         app.register(this.name, this, "Express application provider instance");
     }
 
     /**
      * Set the parent express module.
      * @param parent Module|string
-     * @param uri string
      */
-    parent(parent,uri)
+    parent(parent)
     {
         if (typeof parent == 'string') parent = this.app.get(parent);
 
         if (! (parent instanceof Module)) {
             throw new TypeError("First argument not instance of Module");
         }
-        parent.express.use(uri, this.express);
+        parent.express.use(this.baseUri, this.express);
 
         // Inherit the view engine and settings of the parent module.
         // You can always change this at the module provider level.
@@ -90,7 +91,7 @@ class Module extends Provider {
 
     /**
      * Default boot method.
-     * @param app
+     * @param app Application
      */
     boot(app)
     {

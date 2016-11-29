@@ -136,6 +136,7 @@ exports.spreadAttributes = function(object)
 };
 
 
+
 /**
  * Return just the file basenames (without the .js).
  * @param dir string
@@ -293,4 +294,13 @@ exports.sortString = function(direction=1)
     return function(a,b) {
         return direction == 1 ? a.localeCompare(b) : b.localeCompare(a);
     }
+};
+
+exports.alphabetizeKeys = function(object)
+{
+    var out = {};
+    Object.keys(object).sort(exports.sortString(1)).forEach(key => {
+        out[key] = object[key];
+    });
+    return out;
 };

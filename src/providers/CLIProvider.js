@@ -37,6 +37,7 @@ class CLIProvider extends Expressway.Provider
             'listEventsCommand',
             'listControllersCommand',
             'listMiddlewaresCommand',
+            'listModelsCommand',
             'seedCommand'
         ]
 
@@ -48,7 +49,7 @@ class CLIProvider extends Expressway.Provider
      */
     register(app)
     {
-        app.singleton('cli', require('../classes/CLI'), "The CLI Class instance");
+        app.singleton('cli', require('../CLI'), "The CLI Class instance");
     }
 
     /**
@@ -261,7 +262,7 @@ class CLIProvider extends Expressway.Provider
 
     /**
      * List available controllers.
-     * @usage ./bin/cli events
+     * @usage ./bin/cli controllers
      */
     listControllersCommand(app,cli,controller)
     {
@@ -280,7 +281,7 @@ class CLIProvider extends Expressway.Provider
 
     /**
      * List available middlewares.
-     * @usage ./bin/cli events
+     * @usage ./bin/cli middlewares
      */
     listMiddlewaresCommand(app,cli,middleware)
     {
@@ -288,7 +289,7 @@ class CLIProvider extends Expressway.Provider
             var columns = _.map(middleware, (object,middlewareName) => {
                 return {
                     name: colors.green(middlewareName),
-                    origin: colors.blue(object.type || "User-defined"),
+                    origin: colors.blue(object.type || "AppModule"),
                     description: object.description || "",
                 }
             });
@@ -296,6 +297,28 @@ class CLIProvider extends Expressway.Provider
             console.log(columnify(columns));
             process.exit();
         });
+    }
+
+    /**
+     * List available models.
+     * @usage ./bin/cli models
+     */
+    listModelsCommand(app,cli,modelService)
+    {
+        cli.command('models', "List all models").action((env,opts) => {
+            var columns = _.map(modelService.models, (object,modelName) => {
+                return {
+                    name: colors.green(modelName),
+                    slug: object.slug,
+                    title: colors.gray(object.title),
+                    expose: object.expose ? colors.green("yes") : colors.red("no"),
+                    guards: object.guarded.join(",")
+                }
+            });
+
+            console.log(columnify(columns));
+            process.exit();
+        })
     }
 }
 

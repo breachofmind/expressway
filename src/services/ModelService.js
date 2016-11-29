@@ -1,6 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
+var utils = Expressway.utils;
 var app = Expressway.instance.app;
 var debug = app.get('debug');
 
@@ -61,6 +62,17 @@ class ModelService
         this[instance.name] = instance;
 
         return this.models[instance.name] = instance;
+    }
+
+    /**
+     * Add all files in a directory.
+     * @param dir string|PathObject
+     */
+    addDirectory(dir)
+    {
+        utils.getModules(dir.toString(), moduleName => {
+            this.add(moduleName);
+        });
     }
 
     /**

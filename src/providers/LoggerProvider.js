@@ -19,8 +19,8 @@ class LoggerProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires('CoreProvider');
         this.order(0);
+        this.requires('CoreProvider');
 
         this.fileMaxSize = 1000 * 1000 * 10; // 10MB
         this.logFileName = "server.log";
@@ -80,7 +80,7 @@ class LoggerProvider extends Expressway.Provider
         // Show debugging messages when providers load.
         app.on('provider.loaded', provider =>
         {
-            this.debug('Provider', 'Loaded: %s', colors.gray(provider.name));
+            this.debug(provider, 'Loaded');
         });
 
         // Show debugging messages when all providers are registered.
@@ -88,6 +88,11 @@ class LoggerProvider extends Expressway.Provider
         {
             this.debug(app, 'Providers Created: %s, Registered: %s', Object.keys(app.providers).length, app._order.length);
             this.debug(app, 'Booting...');
+        });
+
+        app.once('application.booted', () =>
+        {
+            this.debug(app, 'Booted!');
         });
     }
 

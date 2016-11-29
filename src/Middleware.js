@@ -1,7 +1,7 @@
 "use strict";
 
 var Expressway = require('expressway');
-var app = Expressway.instance.app;
+var app = Expressway.app;
 
 class Middleware
 {

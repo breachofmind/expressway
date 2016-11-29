@@ -1,8 +1,11 @@
 "use strict";
 
-var Expressway  = require('expressway');
-var Collection  = require('./classes/Collection');
-var _ = require('lodash');
+var Expressway   = require('expressway');
+var _            = require('lodash');
+var app          = Expressway.app;
+var db           = app.get('db');
+var modelService = app.get('modelService');
+var utils        = Expressway.utils;
 
 /**
  * The base model class.
@@ -10,23 +13,20 @@ var _ = require('lodash');
  */
 class Model
 {
-    get name() {
-        return this.constructor.name;
-    }
-
-    /**
-     * Constructor.
-     * @param app Application
-     */
-    constructor(app)
+    constructor()
     {
+        var self = this;
+
         this._booted = false;
 
         /**
-         * Instance of the application.
-         * @type Application
+         * The model instance, which does the interacting with the database.
+         * This depends on the driver being used, ie mysql|mongodb
+         * @type {object}
          */
-        this.app = app;
+        this._model = null;
+
+        this._methods = {};
 
         /**
          * The default primary key field name.
@@ -53,17 +53,10 @@ class Model
         this.schema = {};
 
         /**
-         * The model instance, which does the interacting with the database.
-         * This depends on the driver being used, ie mysql|mongodb
-         * @type {object}
-         */
-        this.model = null;
-
-        /**
          * The field representing the "title" of the model.
          * @type {string}
          */
-        this.title = "id";
+        this.title = "_id";
 
         /**
          * Expose this model to the public API?
@@ -120,19 +113,90 @@ class Model
          * Note: "this" corresponds to the model in the function body.
          * @type {{}}
          */
-        this.methods = {};
+        this.methods = {
 
-        app.register(this.name, this, `The ${this.name} model`);
+            /**
+             * The default toJSON method.
+             * @returns {{}}
+             */
+            toJSON() {
+
+                var json = {
+                    id:     this.id,
+                    $title: this[self.title],
+                };
+
+                self.fillable.forEach(field =>
+                {
+                    // Skip fields that are in the guarded column.
+                    if (self.guarded.indexOf(field) > -1) {
+                        return;
+                    }
+
+                    return json[field] = typeof this[field] == 'undefined' ? null : this[field];
+                });
+
+                // The developer can append other columns to the output.
+                self.appends.forEach(field =>
+                {
+                    // This is a computed property.
+                    if (typeof field == 'function') {
+                        var arr = field(this,self);
+                        if (Array.isArray(arr)) {
+                            return json[arr[0]] = arr[1];
+                        }
+                    }
+                    // This is a method call from the object.
+                    if (typeof this[field] == "function") {
+                        return json[field] = this[field] ();
+                    }
+                });
+
+                return utils.alphabetizeKeys(json);
+            }
+        };
     }
 
+
     /**
-     * The default collection for this model.
-     * @param modelArray
-     * @returns {Collection}
+     * Return the name of the object.
+     * @returns String
      */
-    collection(modelArray)
+    get name() { return this.constructor.name; }
+
+    /**
+     * Check if this model is booted.
+     * @returns {boolean}
+     */
+    get booted() { return this._booted; }
+
+    /**
+     * Return the mongoose model.
+     * @returns {Object}
+     */
+    get model() { return this._model; }
+
+    /**
+     * Set the mongoose model.
+     * @param model {Object}
+     */
+    set model(model) { this._model = model; }
+
+    /**
+     * Get the methods object.
+     * @returns {Object}
+     */
+    get methods() { return this._methods; }
+
+    /**
+     * Set new methods.
+     * @param object {Object}
+     */
+    set methods(object)
     {
-        return new Collection(modelArray, this);
+        _.each(object, (value,key) => {
+            this._methods[key] = value;
+        })
     }
 
     /**
@@ -141,10 +205,8 @@ class Model
      */
     get range()
     {
-        var out = {}; out[this.key] = this.sort;
-        return out;
+        return {[this.key]: this.sort};
     }
-
 
     /**
      * Return an object for a filter query.
@@ -153,24 +215,11 @@ class Model
      */
     paging(value)
     {
-        var q = {};
-        q[this.key] = this.sort == 1
-            ? {$gt:value}
-            : {$lt:value};
-        return q;
+        let query = this.sort ==1 ? {$gt:value} : {$lt:value};
+
+        return {[this.key]: query};
     };
 
-    /**
-     * Helper method to set all columns in the schema as fillable.
-     * @param object
-     * @return Model
-     */
-    setSchema(object)
-    {
-        this.fillable = Object.keys(object);
-        this.schema = object;
-        return this;
-    }
 
     /**
      * Boot the model.
@@ -178,7 +227,26 @@ class Model
      */
     boot()
     {
-        return this._booted = true;
+        if (this.booted) return this.booted;
+
+        app.register(this.name, this, `The ${this.name} model`);
+        var schema = new db.Schema(this.schema, {collection: this.table});
+        this.booting(schema);
+        schema.virtual('$base').get(() => {return this});
+        if (this.fillable.length == 0) this.fillable = Object.keys(this.schema);
+        schema.methods = this.methods;
+        this.model = db.model(this.name, schema);
+
+        this._booted = true;
+    }
+
+    /**
+     * Modify the Schema object before attaching to the model.
+     * @param schema
+     */
+    booting(schema)
+    {
+        // Unimplemented
     }
 
     /**
@@ -188,8 +256,23 @@ class Model
      */
     static get(modelName)
     {
-        return Expressway.instance.app.get('modelService').models[modelName];
+        return modelService.get(modelName);
     }
 }
+
+
+const POPULATE_METHODS = ['find','findOne','findById'];
+
+// Attach the mongoose methods to the blueprint.
+['find','findOne','findById','findByIdAndUpdate','count','remove','create','update'].forEach(method =>
+{
+    Model.prototype[method] = function() {
+        var out = this.model[method] (...arguments);
+        if (POPULATE_METHODS.indexOf(method) > -1) {
+            out.populate(this.populate).sort(this.range);
+        }
+        return out;
+    }
+});
 
 module.exports = Model;

@@ -187,11 +187,19 @@ class Provider
         return this._active && inEnvironment && inContext;
     }
 
+    /**
+     * Return a native value of the object.
+     * @returns {String}
+     */
     toValue()
     {
         return this.name;
     }
 
+    /**
+     * Return this object as a string.
+     * @returns {String}
+     */
     toString()
     {
         return this.name;

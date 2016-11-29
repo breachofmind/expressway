@@ -16,11 +16,7 @@ class SeederProvider extends Expressway.Provider
     {
         super(app);
 
-        this.requires(
-            'LoggerProvider',
-            'CoreProvider',
-            'ModelProvider'
-        );
+        this.requires('ModelProvider');
         this.environments(ENV_LOCAL, ENV_DEV);
         this.contexts(CXT_TEST, CXT_CLI);
     }
@@ -28,22 +24,10 @@ class SeederProvider extends Expressway.Provider
     /**
      * Register the Seeder class with the application.
      * @param app Application
-     * @param driverProvider DriverProvider
-     * @param db object
      */
-    register(app,driverProvider,db)
+    register(app)
     {
-        var Seeder = require('../classes/Seeder');
-
-        if (driverProvider.alias == 'mongodb') {
-            Seeder.getId = function() {
-                return new db.Types.ObjectId;
-            }
-        }
-
-        Expressway.Seeder = Seeder;
-
-        app.register('Seeder', Seeder, "A class for seeding database records");
+        Expressway.Seeder = require('../Seeder');
     }
 }
 

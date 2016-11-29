@@ -229,6 +229,11 @@ class Application extends EventEmitter
     }
 
 
+    require(module)
+    {
+        return require(module)(this);
+    }
+
     /**
      * Start the application server.
      * @param listening function, optional

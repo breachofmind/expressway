@@ -1,7 +1,12 @@
 "use strict";
 
 var Expressway = require('expressway');
-var utils      = require('../support/utils');
+var mongoose   = require('mongoose');
+var session    = require('express-session');
+var Store      = require('connect-mongo')(session);
+var Promise    = require('bluebird');
+
+mongoose.Promise = Promise;
 
 /**
  * ORM and Database provider.
@@ -18,47 +23,66 @@ class ModelProvider extends Expressway.Provider
         super(app);
 
         this.order(1);
-        this.requires(
-            'LoggerProvider',
-            'CoreProvider',
-            'Driver'
-        );
+        this.requires('LoggerProvider', 'CoreProvider');
+        this.events({
+            'application.booted' : 'applicationBooted'
+        });
     }
 
 
     /**
      * Register the provider with the application.
      * @param app Application
-     * @param debug function
-     * @param driverProvider DriverProvider
      */
-    register(app,debug,driverProvider)
+    register(app)
     {
         app.singleton('modelService', require('../services/ModelService'), "Service for storing and retrieving models");
 
-        debug(this,'Using driver: %s', driverProvider.alias);
+        app.register('db', mongoose, 'Mongoose ORM instance');
+        app.register('ObjectId', mongoose.Types.ObjectId, 'MongoDB ObjectId constructor');
+        app.register('ObjectIdType', mongoose.Schema.Types.ObjectId, 'MongoDB ObjectId Schema type');
+        app.register('dataTypes', mongoose.Schema.Types, "Mongoose data types");
 
-        // Expose the Driver model class.
-        Expressway.Model = driverProvider.Model;
+        app.call(this,'connect');
+
+        app.register('sessionStore', new Store({mongooseConnection: mongoose.connection}), "MongoDB session store instance");
+
+        // Expose the Model class.
+        Expressway.Model = require('../Model');
     }
 
     /**
-     * Load all models.
+     * Connect to the database.
      * @param app Application
-     * @param path PathService
-     * @param modelService ModelService
-     * @returns {object}
+     * @param db mongoose
+     * @param config function
+     * @param debug function
+     * @param log Winston
      */
-    boot(app,path,modelService)
+    connect(app,db,config,debug,log)
     {
-        utils.getModules(path.models("/"), modulePath =>
-        {
-            modelService.add(modulePath);
+        let credentials = config('db');
+
+        db.connection.on('error', function(err){
+            log.error('Connection error: %s on %s', err.message, credentials);
+            process.exit(1);
         });
 
-        modelService.boot();
+        db.connection.on('open', function(){
+            debug('MongoDriverProvider','Connected to MongoDB: %s', credentials);
+            app.emit('database.connected', app);
+        });
 
-        app.emit('models.loaded', app);
+        db.connect(credentials);
+    }
+
+    /**
+     * When the application is done booting, boot the mongoose models.
+     * @param modelService
+     */
+    applicationBooted(modelService)
+    {
+        modelService.boot();
     }
 }
 

@@ -8,7 +8,7 @@ var fs              = require('fs');
 var colors          = require('colors/safe');
 var columnify       = require('columnify');
 
-var [modelService,path,log] = app.get('modelService','path','log');
+var [modelService,path,log,ObjectId] = app.get('modelService','path','log','ObjectId');
 
 var msg = {
     running: `Running Seeder: ${colors.green("%s")}`,
@@ -68,8 +68,9 @@ class Seeder
      */
     static getId()
     {
-        Seeder.counter ++;
-        return Seeder.counter;
+        return new ObjectID();
+        // Seeder.counter ++;
+        // return Seeder.counter;
     }
 
     /**

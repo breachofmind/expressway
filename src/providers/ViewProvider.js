@@ -25,10 +25,8 @@ class ViewProvider extends Expressway.Provider
      */
     register(app)
     {
-        // Expose as a public class.
-        Expressway.View = require('../classes/View');
-
-        Expressway.Template = require('../classes/Template');
+        Expressway.View = require('../View');
+        Expressway.Template = require('../Template');
 
         function createView (name,data) {
             return new Expressway.View(name,data);
