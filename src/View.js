@@ -87,8 +87,8 @@ class View
 
 
     /**
-     * Combine data with this view.
-     * @param key object|string
+     * Combine data with this view or wrap in a callback.
+     * @param key object|string|function
      * @param value null|*
      * @returns {View}
      */
@@ -98,6 +98,8 @@ class View
             _.each(key,(v,k) => this.data[k] = v);
         } else if (typeof key == 'string') {
             this.data[key] = value;
+        } else if (typeof key == 'function') {
+            key(this);
         }
         return this;
     }
