@@ -29,7 +29,7 @@ class LocaleProvider extends Expressway.Provider
 
         // When each view is created, add the template function.
         app.on('view.created', function(view,request) {
-            view.data.lang = request.lang.bind(request);
+            view.use('lang', request.lang.bind(request));
         });
     }
 }

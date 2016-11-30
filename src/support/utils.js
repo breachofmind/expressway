@@ -11,6 +11,15 @@ const FN_ARG = /^\s*(_?)(.+?)\1\s*$/;
 const FN_CONSTRUCTOR = /^\s*constructor\(([^\)]*)\)/m;
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 
+const HTML_ATTR_RX = /^[a-zA-Z_:][-a-zA-Z0-9_:.]/;
+const HTML_EMPTY_ELEMENTS = [
+    'area','base','br','col',
+    'colgroup','command','embed',
+    'hr','img','input','keygen',
+    'link','meta','param','source',
+    'track','wbr'
+];
+
 /**
  * Adapted Function that angular uses to read function args names
  * @param fn Function (can also be method name)
@@ -122,19 +131,20 @@ exports.toRouteMap = function(routes)
 
 /**
  * When building an element, spreads the object into attribute values.
+ * Ignores keys that being with invalid characters.
  * @param object
  * @returns {string}
  */
 exports.spreadAttributes = function(object)
 {
-    return Object.keys(object).map(function(key){
-        var value = object[key];
-        if (value) {
-            return `${key}="${object[key]}"`;
+    var out = Object.keys(object).map(function(attrName){
+        var value = object[attrName];
+        if (value && HTML_ATTR_RX.test(attrName) ) {
+            return `${attrName}="${value}"`;
         }
-    }).join(" ");
+    });
+    return _.compact(out).join(" ");
 };
-
 
 
 /**
@@ -199,7 +209,12 @@ exports.objectAccessor = function(object)
     }
 };
 
-
+/**
+ * Given a route from express router,
+ * parse the given regex.
+ * @param rx
+ * @returns {{path: string, flags: (number|*|string|String|string)}}
+ */
 exports.parseRouteRegexp = function(rx)
 {
     var flags = rx.flags;
@@ -289,6 +304,11 @@ exports.sortByDirection = function(direction=1,property)
     }
 };
 
+/**
+ * Sort an array of strings in asc or desc order.
+ * @param direction Number 1|-1
+ * @returns {Function}
+ */
 exports.sortString = function(direction=1)
 {
     return function(a,b) {
@@ -296,6 +316,12 @@ exports.sortString = function(direction=1)
     }
 };
 
+/**
+ * Alphabetize a object based on the keys in the object.
+ * Returns a new object with sorted keys.
+ * @param object Object
+ * @returns {{}}
+ */
 exports.alphabetizeKeys = function(object)
 {
     var out = {};
@@ -303,4 +329,21 @@ exports.alphabetizeKeys = function(object)
         out[key] = object[key];
     });
     return out;
+};
+
+/**
+ * Create an XML/HTML element.
+ * @param elementName string
+ * @param opts object
+ * @returns {string}
+ */
+exports.element = function(elementName,opts={})
+{
+    if (!opts.$text) opts.$text = "";
+    var el = elementName.toLowerCase();
+    var attrs = exports.spreadAttributes(opts);
+    var str = `<${el}`;
+    if (attrs.length) str+= " "+attrs;
+    str += (HTML_EMPTY_ELEMENTS.indexOf(el) > -1 ? `/>` : `>${opts.$text}</${el}>`);
+    return str;
 };

@@ -24,7 +24,10 @@ class Module extends Provider {
 
         this.baseUri = "/";
 
-        app.register(this.name, this, "Express application provider instance");
+        app.register(this.name, this, "Express application Module instance");
+        if (this.alias) {
+            app.register(this.alias, this, "Alias to "+this.name);
+        }
     }
 
     /**
