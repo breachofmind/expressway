@@ -264,7 +264,7 @@ exports.getMiddlewareStack = function(express)
                     rx: rx,
                     path: "*",
                     methods: ["*"],
-                    stack: [middleware.handle.$route]
+                    stack: [middleware.handle.$route],
                 };
             default:
                 return {
@@ -279,6 +279,21 @@ exports.getMiddlewareStack = function(express)
     return _.compact(_.flatten(routes));
 };
 
+/**
+ * Return an array from an object.
+ * @param object
+ * @returns {Array}
+ */
+exports.arrayFromObject = function(object)
+{
+    return Object.keys(object).map((key,index) => {
+        return {
+            index: index,
+            key: key,
+            value: object[key]
+        }
+    })
+};
 
 /**
  * Convert each item in an array to a string.

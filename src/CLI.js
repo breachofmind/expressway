@@ -2,12 +2,15 @@
 
 var Expressway  = require('expressway');
 var program     = require('commander');
+var columnify   = require('columnify');
+var colors      = require('colors/safe');
 var app         = Expressway.instance.app;
 var log         = app.get('log');
 var cp          = require('child_process');
 var path        = require('path');
 var ejs         = require('ejs');
 var fs          = require('fs');
+var _           = require('lodash');
 
 class CLI
 {
@@ -62,6 +65,56 @@ class CLI
 
         log.info('Created File: %s', destFile);
     };
+
+    /**
+     * Create formatted columns of an array.
+     * @param array array|object
+     * @param opts object
+     * @returns {string}
+     */
+    columns(array,opts)
+    {
+        var mapper = opts.map;
+        var colorizer = opts.colors || {};
+        var colorKeys = Object.keys(colorizer);
+        var title = opts.title ? colors.blue(opts.title)+"\n" : "";
+        if (opts.sort) array = _.sortBy(array, opts.sort);
+
+        let columns = _.map(array, (value,key) =>
+        {
+            let object = mapper(value,key);
+            colorKeys.forEach(property =>
+            {
+                if (! object.hasOwnProperty(property)) return;
+                let colorType = colorizer[property];
+
+                if (typeof colorType == 'string') {
+                    // Just color the value by the string color name.
+                    return object[property] = colors[colorType](object[property]);
+                } else if (typeof colorType == 'function') {
+                    // Wrap the value in a callback.
+                    return object[property] = colorType(object[property],object);
+                }
+            });
+            return object;
+        });
+        if (! columns.length) {
+            return title + "No Objects.";
+        }
+
+        return title + columnify(columns, {config:opts.config});
+    }
+
+    /**
+     * Log an array of strings.
+     * @param logToConsole array<string>
+     * @param exit boolean
+     */
+    output(logToConsole=[], exit=false)
+    {
+        logToConsole.forEach(string=> { console.log(string) });
+        if (exit) process.exit();
+    }
 
     /**
      * Execute a cli command and print the response to the console.

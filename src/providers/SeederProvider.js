@@ -17,8 +17,8 @@ class SeederProvider extends Expressway.Provider
         super(app);
 
         this.requires('ModelProvider');
-        this.environments(ENV_LOCAL, ENV_DEV);
-        this.contexts(CXT_TEST, CXT_CLI);
+        this.environments([ENV_LOCAL, ENV_DEV]);
+        this.contexts([CXT_TEST, CXT_CLI]);
     }
 
     /**

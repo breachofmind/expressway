@@ -292,6 +292,7 @@ class Application extends EventEmitter
         }
 
         this._services[serviceName] = {
+            name: serviceName,
             call:  call && typeof instance === 'function',
             value: instance,
             doc:   description,

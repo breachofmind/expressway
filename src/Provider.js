@@ -1,6 +1,7 @@
 "use strict";
 
 var assert = require('assert');
+var _ = require('lodash');
 
 /**
  * Provider class.
@@ -50,7 +51,7 @@ class Provider
     requires()
     {
         if (! arguments.length) return this._requires;
-        this._requires = Array.isArray(arguments[0]) ? arguments[0] : this._requires.concat(...arguments);
+        this._requires = Array.isArray(arguments[0]) ? arguments[0] : _.union(this._requires, arguments);
         return this;
     }
     /**
@@ -60,7 +61,7 @@ class Provider
     environments()
     {
         if (! arguments.length) return this._environments;
-        this._environments = Array.isArray(arguments[0]) ? arguments[0] : this._environments.concat(...arguments);
+        this._environments = Array.isArray(arguments[0]) ? arguments[0] : _.union(this._environments, arguments);
         return this;
     }
 
@@ -71,7 +72,7 @@ class Provider
     contexts()
     {
         if (! arguments.length) return this._contexts;
-        this._contexts = Array.isArray(arguments[0]) ? arguments[0] : this._contexts.concat(...arguments);
+        this._contexts = Array.isArray(arguments[0]) ? arguments[0] : _.union(this._contexts, arguments);
         return this;
     }
 
