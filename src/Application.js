@@ -5,7 +5,7 @@ var EventEmitter = require('events');
 var Provider     = require('./Provider');
 var Module       = require('./Module');
 var utils        = require('./support/utils');
-
+var _            = require('lodash');
 
 /**
  * The application class sets up the entire stack.
@@ -26,7 +26,7 @@ class Application extends EventEmitter
 
         var conf = utils.objectAccessor(config);
 
-        this.setMaxListeners(conf('max_listeners',50));
+        this.setMaxListeners(conf('max_listeners',20));
 
         this._expressway    = expressway;
         this._booted        = false;
@@ -40,14 +40,9 @@ class Application extends EventEmitter
         this._env           = config.environment;
         this._context       = context;
 
-        this.register('package', this._package,
-            "The NPM package.json");
-
-        this.register('app', this,
-            "The Application instance");
-
-        this.register('config', conf,
-            "Helper function for accessing the config file");
+        this.register('package', this._package, "The NPM package.json");
+        this.register('app', this, "The Application instance");
+        this.register('config', conf, "Helper function for accessing the config file");
 
         this._createProviderInstances(config.providers);
     }
@@ -140,7 +135,7 @@ class Application extends EventEmitter
 
         // Sort the providers by their load order and
         // call the register method on each.
-        var providers = Object.values(this._providers).sort(utils.sortByDirection(1,'_order'));
+        var providers = _.values(this._providers).sort(utils.sortByDirection(1,'_order'));
 
         providers.forEach(provider => { this.load(provider) });
 

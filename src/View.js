@@ -94,13 +94,20 @@ class View
      */
     use(key,value=null)
     {
-        if (typeof key == 'object') {
-            _.each(key,(v,k) => this.data[k] = v);
-        } else if (typeof key == 'string') {
-            this.data[key] = value;
-        } else if (typeof key == 'function') {
-            key(this);
+        if (! key) return this;
+
+        if (Array.isArray(key)) {
+            key.forEach(item => this.use(item) );
+        } else {
+            if (typeof key == 'object') {
+                _.each(key,(v,k) => this.data[k] = v);
+            } else if (typeof key == 'string') {
+                this.data[key] = value;
+            } else if (typeof key == 'function') {
+                key(this);
+            }
         }
+
         return this;
     }
 
@@ -125,12 +132,15 @@ class View
      */
     toJSON(request)
     {
-        var json = {};
+        var json = {
+            $view: this,
+            $request: request || null,
+        };
+
         json.title = this.title;
         _.each(this.data, (value,key) => { json[key] = value });
         _.each(this.tags, (arr,el) => { json[el] = arr.join("\n") });
-        json.$view = this;
-        if (request) json.request = request;
+
         return json;
     }
 
@@ -141,8 +151,13 @@ class View
      */
     render(response)
     {
-        app.emit('view.created', this, response.req);
+        app.emit('view.created', this, response.req, response);
 
+        this.use(response.viewData);
+
+        // This is modeled after express' response.render()
+        // We can use our own sub-app's render function.
+        // Sub-apps can have their own view engines and view paths.
         return this.module.express.render(this.file, this.toJSON(response.req), (err,str) => {
             if (err) return response.req.next(err);
 

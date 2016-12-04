@@ -29,23 +29,6 @@ http.ServerResponse.prototype.phrase = function()
     return http.STATUS_CODES[this.statusCode];
 };
 
-/**
- * Alias to create a view.
- * @param file string
- * @param data object|null optional
- * @param status {Number} optional
- * @returns {View}
- */
-http.ServerResponse.prototype.view = function(file,data,status = 200)
-{
-    if (typeof data === 'number') {
-        status = data;
-        data = {};
-    }
-    this.status(status);
-    return new Expressway.View(file,data).render(this);
-};
-
 
 /**
  * Return a smart response, based on the given value.

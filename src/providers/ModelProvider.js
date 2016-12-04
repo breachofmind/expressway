@@ -63,13 +63,13 @@ class ModelProvider extends Expressway.Provider
     {
         let credentials = config('db');
 
-        db.connection.on('error', function(err){
+        db.connection.on('error', (err) => {
             log.error('Connection error: %s on %s', err.message, credentials);
             process.exit(1);
         });
 
-        db.connection.on('open', function(){
-            debug('MongoDriverProvider','Connected to MongoDB: %s', credentials);
+        db.connection.on('open', () => {
+            debug(this,'Connected to MongoDB: %s', credentials);
             app.emit('database.connected', app);
         });
 

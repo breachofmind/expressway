@@ -19,7 +19,7 @@ class CLI
      */
     constructor()
     {
-        this.program = program.version(app._version);
+        this.program = program.version(app.version);
     }
 
     /**
@@ -37,10 +37,11 @@ class CLI
      * Run and process the cli arguments.
      * @returns void
      */
-    run()
+    run(args)
     {
-        if (! process.argv[2]) process.argv[2] = "--help";
-        this.program.parse(process.argv);
+        if (! arguments.length) args = process.argv;
+        if (! args[2]) args[2] = "--help";
+        this.program.parse(args);
     };
 
     /**

@@ -49,6 +49,4 @@ global.CXT_WEB   = 'web';
 global.CXT_TEST  = 'test';
 global.CXT_ALL   = [CXT_CLI,CXT_WEB,CXT_TEST];
 
-var Expressway = require('./src/Expressway');
-
-module.exports = Expressway;
+module.exports = require('./src/Expressway');
