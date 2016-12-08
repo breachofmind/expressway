@@ -280,6 +280,15 @@ exports.getMiddlewareStack = function(express)
 };
 
 /**
+ * Check if the current platform is windows.
+ * @returns {boolean}
+ */
+exports.isWindows = function()
+{
+    return /^win/.test(process.platform);
+};
+
+/**
  * Return an array from an object.
  * @param object
  * @returns {Array}
@@ -361,4 +370,15 @@ exports.element = function(elementName,opts={})
     if (attrs.length) str+= " "+attrs;
     str += (HTML_EMPTY_ELEMENTS.indexOf(el) > -1 ? `/>` : `>${opts.$text}</${el}>`);
     return str;
+};
+
+/**
+ * Default middleware that goes to the next middleware.
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+exports.goToNext = function(req,res,next) {
+    return next();
 };

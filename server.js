@@ -1,9 +1,10 @@
-var Expressway = require('expressway');
-var cp = require('child_process');
+"use strict";
 
-var app = Expressway.init(__dirname + "/demo/app/").app;
+var Expressway  = require('expressway');
+var path        = require('path');
+var cp          = require('child_process');
 
-app.bootstrap().server(function(url) {
+Expressway.start(path.join(__dirname, "demo/app"), function(url,app) {
 
     // Boot google chrome if developing locally.
     if (app.env == ENV_LOCAL) {

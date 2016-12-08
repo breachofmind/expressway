@@ -3,6 +3,7 @@
 var winston = require('winston');
 var Expressway = require('expressway');
 var fs = require('fs');
+var _ = require('lodash');
 var colors = require('colors/safe');
 
 /**
@@ -105,6 +106,7 @@ class LoggerProvider extends Expressway.Provider
      */
     debug(className,message,...args)
     {
+        let maxLen = 20;
         if (this.app.config.debug !== true) {
             return;
         }
@@ -115,7 +117,7 @@ class LoggerProvider extends Expressway.Provider
             return colors.green(arg)
         });
 
-        this.logger.debug(`[${colors['magenta'](className)}] ${message}`, ...args);
+        this.logger.debug(`${colors['magenta'](_.padStart(className,maxLen))} ${message}`, ...args);
     }
 }
 

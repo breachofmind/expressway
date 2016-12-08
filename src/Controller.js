@@ -103,14 +103,15 @@ class Controller
      * Finds middleware required for the given route.
      * @param method {String}
      * @param action {Function}
+     * @param $module Module
      * @returns {Array}
      */
-    getMiddleware(method, action)
+    getMiddleware(method, action, $module)
     {
         var out = this._middleware.map(value =>
         {
             if (value.method == "*" || value.method == method)
-                return controllerService.getRouteFunctions(value.middleware);
+                return controllerService.getRouteFunctions(value.middleware, $module);
         });
 
         // The last middleware in the stack is the actual request.
@@ -124,9 +125,10 @@ class Controller
      * Returns an array suitable for use with express.
      * ie, router.get(urlpattern, array)
      * @param method {String}
+     * @param $module Module
      * @returns {Array}
      */
-    dispatch(method)
+    dispatch(method,$module)
     {
         var self = this;
 
@@ -149,7 +151,7 @@ class Controller
 
         route.$route = this.name+"."+method;
 
-        return this.getMiddleware(method, route);
+        return this.getMiddleware(method, route, $module);
     }
 }
 

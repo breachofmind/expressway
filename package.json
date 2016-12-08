@@ -1,7 +1,7 @@
 {
   "name": "expressway",
   "version": "0.7.1",
-  "description": "An MVC microframework for Node.js Express and impatient developers",
+  "description": "A modular MVC microframework for Node.js Express and your impatience",
   "main": "index.js",
   "scripts": {
     "test": "mocha test",
@@ -57,6 +57,7 @@
     "gulp-livereload": "^3.8.1",
     "gulp-sass": "^2.3.2",
     "gulp-sourcemaps": "^2.2.0",
+    "livereload": "^0.6.0",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0"
   }

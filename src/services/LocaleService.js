@@ -23,6 +23,8 @@ class LocaleService
      */
     addDirectory(dir)
     {
+        dir = dir.toString();
+        if (! dir.endsWith("/")) dir+="/";
         let dirs = glob.sync(dir + "*");
 
         dirs.forEach(dirName => {

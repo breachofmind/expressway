@@ -89,6 +89,8 @@ class ControllerService
      */
     addDirectory(dir)
     {
+        dir = dir.toString();
+        if (! dir.endsWith("/")) dir+="/";
         utils.getModules(dir.toString(), moduleName => {
             this.add(moduleName);
         });
@@ -124,39 +126,49 @@ class ControllerService
     /**
      * Return the function associated with the given middleware.
      * @param middlewareName string
+     * @param $module Module
      * @throws Error
-     * @returns {Function}
+     * @returns {Function|Array|null}
      */
-    dispatchMiddleware(middlewareName)
+    dispatchMiddleware(middlewareName,$module)
     {
-        var middleware = this.getMiddleware(middlewareName);
-        var func = middleware.dispatch();
+        var middlewareInstance = this.getMiddleware(middlewareName);
+        var middlewares = middlewareInstance.dispatch($module);
 
-        // Just in case we're using a custom dispatch() method.
-        // We want to be able to see the middleware name in the route listing.
-        if (! func.$route) func.$route = middleware.name;
-        return func;
+        if (! middlewares) return null;
+
+        if (! Array.isArray(middlewares)) middlewares = [middlewares];
+
+        return middlewares.map(middleware =>
+        {
+            // Just in case we're using a custom dispatch() method.
+            // We want to be able to see the middleware name in the route listing.
+            if (! middleware.$route) middleware.$route = middlewareInstance.name || "anonymous";
+
+            return middleware;
+        });
     }
 
     /**
      * Return all middleware and functions associated with the given controller and method.
      * @param controllerName string
      * @param method string
+     * @param $module Module
      * @returns {Array}
      */
-    dispatchController(controllerName,method)
+    dispatchController(controllerName,method,$module)
     {
-        return this.get(controllerName).dispatch(method);
+        return this.get(controllerName).dispatch(method,$module);
     }
 
     /**
      * Given a string or functions, return an array of
      * functions for the express router.
      * @param values {Array|Function|String}
-     * @param args mixed
+     * @param $module Module
      * @returns {Array}
      */
-    getRouteFunctions(values,args)
+    getRouteFunctions(values,$module)
     {
         if (! Array.isArray(values)) values = [values];
 
@@ -168,11 +180,11 @@ class ControllerService
                 // Objects look like: {"GET /": [Routes], ...}
                 case "object" :
 
-                    let router = Express.Router(args);
+                    let router = Express.Router($module.options || {});
 
                     utils.toRouteMap(value).forEach((middleware,opts) =>
                     {
-                        var stack = this.getRouteFunctions(middleware);
+                        let stack = this.getRouteFunctions(middleware, $module);
                         if (! stack.length) throw new Error("Route declaration missing routes: "+opts.url);
 
                         // Add the routes to the express router.
@@ -186,26 +198,29 @@ class ControllerService
                 case "string" :
                     if (value.indexOf(".") > -1) {
                         // Controller
-                        var [controllerName,method] = value.split(".",2);
-                        return this.dispatchController(controllerName,method);
+                        let [controllerName,method] = value.split(".",2);
+                        return this.dispatchController(controllerName,method,$module);
                     } else {
                         // Middleware
-                        return this.dispatchMiddleware(value);
+                        return this.dispatchMiddleware(value,$module);
                     }
                     break;
 
                 // This is a regular express route function.
                 // function(request,response,next) {...}
                 case "function" :
-                    if (!value.$route) value.$route = value.name || "anonymous";
                     return value;
 
                     break;
             }
         });
 
+        var middlewares = _.compact( _.flattenDeep(out) );
+
         // Return the stack of functions to pass to express.route.
-        return _.flattenDeep(out);
+        // Remove any null or falsey values, express doesn't like it.
+        // In the event nothing gets returned, send a default middleware.
+        return middlewares.length ? middlewares : [utils.goToNext];
     }
 }
 

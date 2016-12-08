@@ -30,9 +30,10 @@ class Middleware
      * Register the middleware with express.
      * Should return a function that express can use:
      * function(request,response,next) {...}
+     * @param $module Module
      * @returns {Function}
      */
-    dispatch()
+    dispatch($module)
     {
         var self = this;
 

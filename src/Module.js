@@ -3,7 +3,7 @@
 var Provider   = require('./Provider');
 var Express    = require('express');
 var utils      = require('./support/utils');
-
+var _          = require('lodash');
 
 /**
  * A convenient way of creating sub-applications in express.
@@ -28,6 +28,8 @@ class Module extends Provider {
         if (this.alias) {
             app.register(this.alias, this, "Alias to "+this.name);
         }
+
+        this.express.$module = this;
     }
 
     /**
@@ -102,6 +104,35 @@ class Module extends Provider {
     }
 
     /**
+     * Add objects to the app by the
+     * directories in which they are located.
+     * @param object
+     * @returns Module
+     */
+    directories(object)
+    {
+        let [controllerService, modelService,localeService] = this.app.get('controllerService','modelService','localeService');
+
+        let services = {
+            "models"      : modelService,
+            "middlewares" : controllerService,
+            "controllers" : controllerService,
+            "localization": localeService,
+        };
+
+        _.each(services, (service,key) =>
+        {
+            if (! object.hasOwnProperty(key)) return;
+
+            let paths = Array.isArray(object[key]) ? object[key] : [object[key]];
+            paths.forEach(path => {
+                service.addDirectory(path);
+            })
+        });
+        return this;
+    }
+
+    /**
      * Add some routes or middleware.
      * @param base string|object
      * @param routes string|object
@@ -109,16 +140,17 @@ class Module extends Provider {
      */
     add(base,routes)
     {
-        var controllerService = this.app.get('controllerService');
-
-        // We're passing either a string or array (global middleware) or an object (routes).
+        // We're passing either a string or array
+        // (global middleware) or an object (routes).
         if (arguments.length == 1) {
             routes = base;
             base = "/";
         }
 
+        var controllerService = this.app.get('controllerService');
+
         // Add the router to the express application.
-        this.express.use(base,controllerService.getRouteFunctions(routes, this.options));
+        this.express.use(base,controllerService.getRouteFunctions(routes, this));
 
         return this;
     }

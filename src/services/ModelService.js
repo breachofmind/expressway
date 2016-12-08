@@ -70,6 +70,8 @@ class ModelService
      */
     addDirectory(dir)
     {
+        dir = dir.toString();
+        if (! dir.endsWith("/")) dir+="/";
         utils.getModules(dir.toString(), moduleName => {
             this.add(moduleName);
         });

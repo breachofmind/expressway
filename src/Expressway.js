@@ -126,14 +126,37 @@ class Expressway
      */
     static init(rootPath, context, configPath=null)
     {
+        let root = _.trimEnd(rootPath,"/") + "/";
+
         // Return the instance if it exists already.
         if (Expressway.instance) return Expressway.instance;
 
-        var instance = new Expressway(rootPath,configPath);
+        var instance = new Expressway(root,configPath);
 
         instance.createApplication(context);
 
         return Expressway.instance = instance;
+    }
+
+    /**
+     * Start the express server with default settings or run the cli.
+     * @param rootPath string
+     * @param listen function, optional
+     * @returns {*}
+     */
+    static start(rootPath, listen)
+    {
+        // We can call the command line interface from here.
+        // node index cli <command> [options]
+        if (process.argv[2] == 'cli')
+        {
+            process.argv.splice(2,1);
+            var cli = Expressway.cli(rootPath).get('cli');
+            return cli.run(process.argv);
+        }
+
+        // Calling node index will run the server.
+        return Expressway.init(rootPath).bootstrap().server(listen);
     }
 }
 
