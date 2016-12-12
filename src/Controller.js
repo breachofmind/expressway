@@ -18,7 +18,18 @@ class Controller
     {
         this.name = this.constructor.name;
 
+        /**
+         * Route-specific middleware.
+         * @type {Array}
+         * @private
+         */
         this._middleware = [];
+
+        /**
+         * Defaults styles, scripts or meta tags.
+         * @type {Array}
+         */
+        this.defaults = [];
     }
 
     /**

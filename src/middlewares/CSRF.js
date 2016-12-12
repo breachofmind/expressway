@@ -14,7 +14,7 @@ class CSRF extends Expressway.Middleware
 
     dispatch()
     {
-        return csrf();
+        return csrf({});
     }
 }
 

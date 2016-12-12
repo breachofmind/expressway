@@ -50,13 +50,14 @@ class LoggerProvider extends Expressway.Provider
     /**
      * Register the provider with the application.
      * @param app Application
-     * @param path PathService
+     * @param paths PathService
      */
-    register(app,path)
+    register(app,paths)
     {
-        var logFile = path.logs(this.logFileName);
+        var logFile = paths.obj.logs(this.logFileName);
 
-        if (! logFile.exists) fs.writeFileSync(logFile.get(), "");
+        // Create the file if it doesn't exist.
+        if (! logFile.exists) logFile.write("");
 
         this.logger = new winston.Logger({
             transports: [
@@ -68,7 +69,7 @@ class LoggerProvider extends Expressway.Provider
                 // Will log events up to the access level into a file.
                 new winston.transports.File({
                     level: this.fileLogLevels[app.context],
-                    filename: logFile.get(),
+                    filename: logFile.toString(),
                     maxsize: this.fileMaxSize
                 })
             ]

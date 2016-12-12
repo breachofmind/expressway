@@ -1,12 +1,11 @@
 "use strict";
 
-var Expressway = require('expressway');
-var Express = require('express');
-var utils = Expressway.utils;
-var Path = require('path');
-var app = Expressway.instance.app;
-var _ = require('lodash');
-var [debug,path] = app.get('debug','path');
+var Expressway  = require('expressway');
+var Express     = require('express');
+var _           = require('lodash');
+var utils       = Expressway.utils;
+var app         = Expressway.instance.app;
+var debug       = app.get('debug');
 
 /**
  * Handles the storage and retrieval of controller classes.
@@ -58,14 +57,14 @@ class ControllerService
      */
     add(Controller)
     {
-        var path = typeof Controller == "string" ? Controller : null,
-            type;
+        let dir = typeof Controller == "string" ? Controller : null;
+        let type = null;
 
         try {
-            if (path) Controller = require(path);
+            if (dir) Controller = require(dir);
             var instance = app.call(Controller);
         } catch (err) {
-            throw new Error(`Error loading Controller or Middleware: ${err.message} + ${path}`);
+            throw new Error(`Error loading Controller or Middleware: ${err.message} + ${dir}`);
         }
 
         if (instance instanceof Expressway.Controller) {
@@ -73,7 +72,7 @@ class ControllerService
         } else if (instance instanceof Expressway.Middleware) {
             type = "Middleware";
         } else {
-            throw new Error("Unable to add controller, not a Controller or Middleware instance: "+path);
+            throw new Error("Unable to add controller, not a Controller or Middleware instance: "+dir);
         }
 
         this[type.toLowerCase()+"s"][instance.name] = instance;

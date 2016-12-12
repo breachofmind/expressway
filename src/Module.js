@@ -176,17 +176,17 @@ class Module extends Provider {
 
     /**
      * Default server start method.
-     * @param app
-     * @param config
-     * @param url
-     * @param path
-     * @param log
+     * @param app Application
+     * @param config function
+     * @param url URLService
+     * @param paths PathService
+     * @param log Winston
      */
-    serverStart(app,config,url,path,log)
+    serverStart(app,config,url,paths,log)
     {
         this.express.listen(config('port'), function()
         {
-            log.info('Using root path: %s', path.root().get());
+            log.info('Using root path: %s', paths.root());
             log.info(`Starting %s server v.%s on %s (%s)...`,
                 app.env,
                 app.version,

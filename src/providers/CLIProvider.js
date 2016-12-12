@@ -79,16 +79,16 @@ class CLIProvider extends Expressway.Provider
      * Create a new model, controller or provider.
      * @usage ./bin/cli new model ModelName
      */
-    createNewCommand(cli,path)
+    createNewCommand(cli,paths)
     {
 
-        cli.command('new [class] <name>', "Create a new provider, controller or model").action((env,opts) =>
+        cli.command('new [class] <name>', "Create a new provider, middleware, controller or model").action((env,opts) =>
         {
             var type = env.trim().toLowerCase();
             var templateFile = __dirname + `/../templates/${type}.template`;
-            var destFile = path[type+"s"] (opts + ".js");
+            var destFile = paths.to(type+"s", opts + ".js");
 
-            cli.template(templateFile, destFile.toString() , {name:opts, _:_string});
+            cli.template(templateFile, destFile , {name:opts, _:_string});
 
             process.exit();
         });
@@ -258,7 +258,7 @@ class CLIProvider extends Expressway.Provider
      * Run the seeder.
      * @usage ./bin/cli seed
      */
-    seedCommand(app,cli,path)
+    seedCommand(app,cli,paths,log)
     {
 
         cli.command('seed [options]', "Seed the database with data")
@@ -269,7 +269,7 @@ class CLIProvider extends Expressway.Provider
             .action((env,opts) =>
             {
                 if (app.env == ENV_PROD) {
-                    log.warn("Seeding not allowed in production mode! Exiting.");
+                    log.error("Seeding not allowed in production mode! Exiting");
                     return process.exit(1);
                 }
                 // Because this is only running once,
@@ -277,7 +277,7 @@ class CLIProvider extends Expressway.Provider
                 app.register('cliOptions', opts);
 
                 // require the seeder.js file.
-                require(path.db('seeder'));
+                require(paths.db('seeder'));
             });
     }
 
@@ -285,17 +285,17 @@ class CLIProvider extends Expressway.Provider
      * Show all path options.
      * @usage ./bin/cli paths
      */
-    listPathsCommand(app,cli,path)
+    listPathsCommand(app,cli,paths)
     {
         cli.command('paths', "List all set paths in the Path service").action((env,opts) =>
         {
-            var columns = cli.columns(utils.arrayFromObject(path.paths), {
+            var columns = cli.columns(utils.arrayFromObject(paths.all), {
                 title: "Path List",
                 map(object,index) {
-                    let fullPath = path.paths[object.key];
+                    let fullPath = paths.to(object.key);
                     return {
                         key: object.key,
-                        exists: fs.existsSync(fullPath),
+                        exists: paths.exists(object.key),
                         path: fullPath,
                     }
                 },

@@ -1,12 +1,11 @@
 "use strict";
 
-var Expressway = require('expressway');
-var app = Expressway.instance.app;
-var utils = Expressway.utils;
-var glob = require('glob');
-var Path = require('path');
-
-var [path,debug] = app.get('path','debug');
+var Expressway  = require('expressway');
+var app         = Expressway.instance.app;
+var utils       = Expressway.utils;
+var glob        = require('glob');
+var path        = require('path');
+var debug       = app.get('debug');
 
 class LocaleService
 {
@@ -29,7 +28,7 @@ class LocaleService
 
         dirs.forEach(dirName => {
 
-            let localeName = Path.basename(dirName);
+            let localeName = path.basename(dirName);
             let files = utils.getFileBaseNames(dirName+"/");
 
             this.setLocale(localeName);

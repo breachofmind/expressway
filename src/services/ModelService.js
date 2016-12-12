@@ -41,18 +41,18 @@ class ModelService
 
     /**
      * Add a new model class.
-     * @param Model string|Model
+     * @param model string|Model
      * @throws Error
      * @returns {Model}
      */
-    add(Model)
+    add(model)
     {
-        var path;
-        if (typeof Model == "string") {
-            path = Model;
-            Model = require(path);
+        let path = null;
+        if (typeof model == "string") {
+            path = model;
+            model = require(path);
         }
-        var instance = app.call(Model);
+        let instance = app.call(model);
         if (! (instance instanceof Expressway.Model)) {
             throw new Error("Unable to add model, not a Model instance: "+path);
         }
@@ -84,7 +84,7 @@ class ModelService
      */
     bySlug(slug)
     {
-        var models = this.all();
+        let models = this.all();
 
         for(let i=0; i<models.length; i++)
         {

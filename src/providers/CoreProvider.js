@@ -36,7 +36,7 @@ class CoreProvider extends Expressway.Provider
      */
     register(app)
     {
-        app.singleton('path', require('../services/PathService'), "A helper service for returning paths to files in the application");
+        app.singleton('paths', require('../services/PathService'), "A helper service for returning paths to files in the application");
 
         app.call(this,'setupURLService');
         app.call(this,'setupPathService');
@@ -57,17 +57,17 @@ class CoreProvider extends Expressway.Provider
     /**
      * Set up the path service.
      * @param app Application
-     * @param path PathService
+     * @param paths PathService
      */
-    setupPathService(app,path)
+    setupPathService(app,paths)
     {
-        path.set('root', app.rootPath());
+        paths.set('root', app.rootPath());
 
         // Set up a path function for each path listed in the config.
         _.each(this.pathNames, (value,pathName) =>
         {
             let str = app.config[value];
-            if (str) path.set(pathName, app.rootPath(str), true);
+            if (str) paths.set(pathName, app.rootPath(str), true);
         });
     }
 }
