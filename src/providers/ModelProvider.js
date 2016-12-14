@@ -23,7 +23,9 @@ class ModelProvider extends Expressway.Provider
         super(app);
 
         this.order(1);
-        this.requires('LoggerProvider', 'CoreProvider');
+
+        this.requires('LoggerProvider');
+
         this.events({
             'application.booted' : 'applicationBooted'
         });
@@ -44,8 +46,6 @@ class ModelProvider extends Expressway.Provider
         app.register('dataTypes', mongoose.Schema.Types, "Mongoose data types");
 
         app.call(this,'connect');
-
-        app.register('sessionStore', new Store({mongooseConnection: mongoose.connection}), "MongoDB session store instance");
 
         // Expose the Model class.
         Expressway.Model = require('../Model');
@@ -74,6 +74,21 @@ class ModelProvider extends Expressway.Provider
         });
 
         db.connect(credentials);
+    }
+
+    /**
+     * Fire when all providers are registered.
+     * @param controllerService ControllerService
+     * @param db Mongoose
+     */
+    boot(controllerService, db)
+    {
+        // Switch out the file store and use mongo storage instead.
+        if (controllerService.hasMiddleware('Session')) {
+            controllerService.getMiddleware('Session').setStore(Store, {
+                mongooseConnection: db.connection
+            });
+        }
     }
 
     /**

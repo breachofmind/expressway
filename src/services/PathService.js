@@ -162,6 +162,15 @@ class PathObject
     }
 
     /**
+     * Write a string to this file.
+     * @param str String
+     */
+    write(str)
+    {
+        return fs.writeFileSync(this._string, str);
+    }
+
+    /**
      * Get the basename.
      * @returns {String}
      */

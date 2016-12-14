@@ -25,6 +25,7 @@ class CoreProvider extends Expressway.Provider
             locales:     "locales_path",
             public:      "static_path",
             db:          "db_path",
+            tmp:         "tmp_path",
             logs:        "logs_path",
             uploads:     "uploads_path",
         }

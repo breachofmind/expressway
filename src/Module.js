@@ -111,19 +111,18 @@ class Module extends Provider {
      */
     directories(object)
     {
-        let [controllerService, modelService,localeService] = this.app.get('controllerService','modelService','localeService');
-
         let services = {
-            "models"      : modelService,
-            "middlewares" : controllerService,
-            "controllers" : controllerService,
-            "localization": localeService,
+            "models"      : 'modelService',
+            "middlewares" : 'controllerService',
+            "controllers" : 'controllerService',
+            "localization": 'localeService',
         };
 
-        _.each(services, (service,key) =>
+        _.each(services, (serviceName,key) =>
         {
             if (! object.hasOwnProperty(key)) return;
 
+            let service = this.app.get(serviceName);
             let paths = Array.isArray(object[key]) ? object[key] : [object[key]];
             paths.forEach(path => {
                 service.addDirectory(path);
