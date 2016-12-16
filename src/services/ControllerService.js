@@ -142,7 +142,7 @@ class ControllerService
         {
             // Just in case we're using a custom dispatch() method.
             // We want to be able to see the middleware name in the route listing.
-            if (! middleware.$route) middleware.$route = middlewareInstance.name || "anonymous";
+            if (! middleware.$route) middleware.$route = middleware.name || middlewareInstance.name || "<anonymous>";
 
             return middleware;
         });

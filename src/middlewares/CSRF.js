@@ -22,11 +22,16 @@ class CSRF extends Expressway.Middleware
     dispatch()
     {
         let middleware = csrf(this.options);
-
-        return function CSRF()
-        {
-            return middleware(...arguments);
+        let errorHandler = function CSRFError (err,req,res,next) {
+            if (err.code !== 'EBADCSRFTOKEN') return next(err);
+            return res.sendStatus(403);
         };
+        return [
+            function CSRF() {
+                return middleware(...arguments);
+            },
+            errorHandler
+        ];
     }
 }
 
