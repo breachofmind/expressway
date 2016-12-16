@@ -8,7 +8,7 @@ var fs              = require('fs');
 var colors          = require('colors/safe');
 var columnify       = require('columnify');
 
-var [modelService,path,log,ObjectId] = app.get('modelService','path','log','ObjectId');
+var [modelService,paths,log,ObjectId] = app.get('modelService','paths','log','ObjectId');
 
 var msg = {
     running: `Running Seeder: ${colors.green("%s")}`,
@@ -34,7 +34,7 @@ class Seeder
     {
         this.cliOptions = app.get('cliOptions');
         this.name = name;
-        this.path = seedDir || path.db('seeds/');
+        this.path = seedDir || paths.db('seeds/');
 
         /**
          * Dump the database table before seeding?

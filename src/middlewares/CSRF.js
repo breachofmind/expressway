@@ -12,9 +12,21 @@ class CSRF extends Expressway.Middleware
         return "Provides Cross-site Request Forgery (CSRF) protection via csurf";
     }
 
+    constructor()
+    {
+        super();
+
+        this.options = {};
+    }
+
     dispatch()
     {
-        return csrf({});
+        let middleware = csrf(this.options);
+
+        return function CSRF()
+        {
+            return middleware(...arguments);
+        };
     }
 }
 

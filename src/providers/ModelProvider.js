@@ -24,7 +24,7 @@ class ModelProvider extends Expressway.Provider
 
         this.order(1);
 
-        this.requires('LoggerProvider');
+        this.requires('LoggerProvider','ControllerProvider');
 
         this.events({
             'application.booted' : 'applicationBooted'
@@ -79,14 +79,13 @@ class ModelProvider extends Expressway.Provider
     /**
      * Fire when all providers are registered.
      * @param controllerService ControllerService
-     * @param db Mongoose
      */
-    boot(controllerService, db)
+    boot(controllerService)
     {
         // Switch out the file store and use mongo storage instead.
         if (controllerService.hasMiddleware('Session')) {
             controllerService.getMiddleware('Session').setStore(Store, {
-                mongooseConnection: db.connection
+                mongooseConnection: mongoose.connection
             });
         }
     }

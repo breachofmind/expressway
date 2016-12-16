@@ -14,31 +14,48 @@ class ConsoleLogging extends Expressway.Middleware
         return "Logs the incoming request to the console";
     }
 
+    constructor()
+    {
+        super();
+
+        /**
+         * Print colors in the console?
+         * @type {boolean}
+         */
+        this.pretty = false;
+    }
+
     method(request,response,next)
     {
         response.on('finish', () =>
         {
+            var info = response.info();
+
             var type = 'info';
-            if (response.statusCode >= 400) type = 'warn';
-            if (response.statusCode >= 500) type = 'error';
+            if (info.status >= 400) type = 'warn';
+            if (info.status >= 500) type = 'error';
 
             // Not Modified, who cares
-            if (response.statusCode == 304) return;
+            if (info.status == 304) return;
 
-            var methodColor = "gray";
-            if (response.req.method == "POST") methodColor = "yellow";
-            if (response.req.method == "PUT") methodColor = "magenta";
-            if (response.req.method == "DELETE") methodColor = "red";
+            if (this.pretty) {
+                var methodColor = "gray";
+                if (info.method == "POST") methodColor = "yellow";
+                if (info.method == "PUT") methodColor = "magenta";
+                if (info.method == "DELETE") methodColor = "red";
+                log[type] ("%s %s %s '%s' %s %s %s",
+                    info.ip,
+                    colors[methodColor] (info.method),
+                    colors.blue(info.status),
+                    info.phrase,
+                    colors.green(info.route) ,
+                    info.url,
+                    info.user
+                );
 
-            log[type] ("%s %s %s '%s' %s %s %s",
-                response.req.ip,
-                colors[methodColor] (response.req.method),
-                colors.blue(response.statusCode),
-                response.phrase(),
-                colors.green(response.$route) ,
-                response.req.url,
-                response.req.user ? colors.gray(response.req.user.id) : ""
-            );
+            } else {
+                log[type] (info.method, info);
+            }
         });
 
         return next();

@@ -129,11 +129,16 @@ class CLIProvider extends Expressway.Provider
                         flags: 'gray',
                         middleware: function(routes)
                         {
-                            return routes.map((name,i) => {
+                            return routes.map((object,i) =>
+                            {
+                                if (! object) return "<anonymous>";
+                                if (object instanceof Expressway.Module) {
+                                    return colors.blue(object.name);
+                                }
                                 // This is a controller.
-                                if (name.indexOf(".") > -1) return colors.cyan(name);
+                                if (object.indexOf(".") > -1) return colors.cyan(object);
                                 // This is middleware.
-                                return colors[i < routes.length-1 ? 'gray' : 'white'](name);
+                                return colors[i < routes.length-1 ? 'gray' : 'white'](object);
                             }).join(" -> ");
 
                         },

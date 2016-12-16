@@ -5,9 +5,8 @@ var utils       = Expressway.utils;
 var webpack     = require('webpack');
 var livereload  = require('livereload');
 var app         = Expressway.app;
-var $app        = app.get('$app');
-var log         = app.get('log');
-var debug       = app.get('debug');
+
+var [$app,log,debug,url] = app.get('$app','log','debug','url');
 
 class Development extends Expressway.Middleware
 {
@@ -38,11 +37,27 @@ class Development extends Expressway.Middleware
         this.livereload = {
             dirs: [],
             options: {
-                exts: ['htm','html','ejs','hbs','png','gif','jpg'],
+                originalPath: url(),
+                exts: ['htm','html','ejs','hbs','png','gif','jpg','css'],
             }
         };
 
-        app.register('livereload', this.livereload, "Livereload configuration options");
+        app.register('devMiddleware', this, "Development Middleware instance");
+    }
+
+    /**
+     * Have the livereload server watch a path.
+     * @param path
+     * @returns {Development}
+     */
+    watch(path)
+    {
+        if (typeof path != 'string') {
+            throw new TypeError('path must be a string');
+        }
+        this.livereload.dirs.push(path);
+
+        return this;
     }
 
     /**
@@ -79,13 +94,11 @@ class Development extends Expressway.Middleware
             publicPath: $module.webpack.output.publicPath,
             noInfo: true,
         });
-        let hotMiddleware = webpackHotMiddleware(compiler, {
-            path: $module.staticPath + "/__webpack_hmr"
-        });
+        let hotMiddleware = webpackHotMiddleware(compiler, $module.hmrOptions||{});
 
         // Return the middleware functions.
         return [
-            function webpackDevMiddleware(req,res,next) {
+            function webpackDevMiddleware() {
                 return middleware(...arguments);
             },
             function webpackHotMiddleware() {

@@ -29,6 +29,22 @@ http.ServerResponse.prototype.phrase = function()
     return http.STATUS_CODES[this.statusCode];
 };
 
+/**
+ * Returns all the info about the request and current response state.
+ * @returns {{ip: *, method: string, status, phrase: *, route: (*|string), url: *, user: null}}
+ */
+http.ServerResponse.prototype.info = function()
+{
+    return {
+        ip: this.req.ip,
+        method: this.req.method,
+        status: this.statusCode,
+        phrase: this.phrase(),
+        route: this.$route,
+        url: this.req.originalUrl,
+        user: this.req.user ? this.req.user.id : null
+    };
+};
 
 /**
  * Return a smart response, based on the given value.

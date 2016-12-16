@@ -15,16 +15,53 @@ class Module extends Provider {
     {
         super(app);
 
+        this.mounted = {};
+
         this.order(50);
+
         this.requires('ControllerProvider');
 
+        /**
+         * This module's express instance.
+         * @type express
+         */
         this.express = Express();
+
+        /**
+         * Options to pass to express.router.
+         * @type {null|object}
+         */
         this.options = null;
+
+        /**
+         * Routes to add to express.
+         * If not using custom boot() method, fill this array.
+         * @type {Array}
+         */
         this.routes = [];
 
+        /**
+         * Middleware to add to express.
+         * If not using custom boot() method, fill this array.
+         * @type {Array}
+         */
+        this.middleware = [];
+
+        /**
+         * This module's base URI.
+         * @type {string}
+         */
         this.baseUri = "/";
 
+        /**
+         * If using the Static middleware,
+         * static content paths to map to url's: uri:path
+         * @type {{}}
+         */
+        this.staticPaths = {};
+
         app.register(this.name, this, "Express application Module instance");
+
         if (this.alias) {
             app.register(this.alias, this, "Alias to "+this.name);
         }
@@ -38,12 +75,15 @@ class Module extends Provider {
      */
     parent(parent)
     {
-        if (typeof parent == 'string') parent = this.app.get(parent);
+        if (typeof parent == 'string') {
+            parent = this.app.get(parent);
+        }
 
         if (! (parent instanceof Module)) {
-            throw new TypeError("First argument not instance of Module");
+            throw new TypeError("Argument not instance of Module");
         }
-        parent.express.use(this.baseUri, this.express);
+
+        parent.mount(this, this.baseUri);
 
         // Inherit the view engine and settings of the parent module.
         // You can always change this at the module provider level.
@@ -52,6 +92,18 @@ class Module extends Provider {
         this.set('view engine', engine)
             .set('views', parent.express.get('views'))
             .engine(engine, parent.engine(engine));
+    }
+
+    /**
+     * Mount another module on to this module.
+     * @param moduleInstance Module
+     * @param uri string
+     */
+    mount(moduleInstance, uri=null)
+    {
+        if (! uri) uri = moduleInstance.baseUri;
+        this.mounted[uri] = moduleInstance;
+        this.express.use(uri, moduleInstance.express);
     }
 
     /**
@@ -96,11 +148,13 @@ class Module extends Provider {
 
     /**
      * Default boot method.
-     * @param app Application
+     * @returns void
      */
-    boot(app)
+    boot()
     {
-        this.add("/",this.routes);
+        this.add(this.middleware);
+        this.add(this.routes);
+        this.add('NotFound');
     }
 
     /**
@@ -150,25 +204,6 @@ class Module extends Provider {
 
         // Add the router to the express application.
         this.express.use(base,controllerService.getRouteFunctions(routes, this));
-
-        return this;
-    }
-
-    /**
-     * Create a static serving uri.
-     * @param uri string
-     * @param dir string
-     */
-    static(uri,dir)
-    {
-        if (arguments.length == 1) {
-            dir = uri;
-            uri = "/";
-        }
-        var route = Express.static(dir.toString());
-        route.$dir = dir.toString();
-
-        this.express.use(uri,route);
 
         return this;
     }

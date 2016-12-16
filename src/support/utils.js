@@ -118,12 +118,20 @@ exports.toMap = function(object, manipulateKey)
 /**
  * Convert an object of VERB ROUTE -> MIDDLEWARE to a parsed Map object.
  * @param routes
- * @return Map
+ * @returns {Map}
  */
 exports.toRouteMap = function(routes)
 {
-    return this.toMap(routes, (key) => {
-        var [verb,url] = key.split(/\s+/);
+    return this.toMap(routes, (key) =>
+    {
+        let parts = key.split(/\s+/);
+        let [verb,url] = parts;
+        // We're just passing a uri instead of a verb and uri.
+        if (parts.length == 1) {
+            url = verb;
+            verb = "GET"
+        }
+        // This is the key of the map. The value is the middleware.
         return {verb:verb.toLowerCase().trim(), url:url.trim()};
     });
 };
@@ -247,16 +255,34 @@ exports.getMiddlewareStack = function(express)
 
         switch(middleware.name)
         {
+            case "mounted_app" :
+                var $module = express.$module.mounted[rx.path];
+                if (! $module) $module = "mounted_app";
+                return {
+                    rx: rx,
+                    path: "*",
+                    methods: ["*"],
+                    stack: [$module]
+                };
             case "router" :
                 return middleware.handle.stack.map(layer => {
+                    if (layer.route) {
+                        return {
+                            rx: rx,
+                            path: layer.route.path,
+                            methods: Object.keys(layer.route.methods),
+                            stack: layer.route.stack.map(middleware => {
+                                return middleware.handle.$route;
+                            })
+                        };
+                    }
                     return {
                         rx: rx,
-                        path: layer.route.path,
-                        methods: Object.keys(layer.route.methods),
-                        stack: layer.route.stack.map(middleware => {
-                            return middleware.handle.$route;
-                        })
-                    };
+                        path: exports.parseRouteRegexp(layer.regexp).path,
+                        methods: ["*"],
+                        stack: [layer.handle.$route]
+                    }
+
                 });
             case "middleware" :
 
