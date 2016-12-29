@@ -1,16 +1,13 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Middleware = require('expressway').Middleware;
 
 /**
  * The default not found 404 handler.
  * Overwrite with a custom function if needed.
  */
-class NotFound extends Expressway.Middleware
+class NotFound extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "The default 404 Not Found response";
     }
@@ -18,7 +15,7 @@ class NotFound extends Expressway.Middleware
     {
         response.status(404);
 
-        return view('error/404');
+        return view.template('error/404');
     }
 }
 

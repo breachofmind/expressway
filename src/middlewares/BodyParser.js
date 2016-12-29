@@ -1,21 +1,16 @@
 "use strict";
 
-var Expressway = require('expressway');
-var bodyParser = require('body-parser');
+var Middleware   = require('expressway').Middleware;
+var bodyParser   = require('body-parser');
 var cookieParser = require('cookie-parser');
-var app = Expressway.app;
-var config = app.get('config');
 
-class BodyParser extends Expressway.Middleware
+class BodyParser extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Parses the request body and cookie headers with bodyParser and cookieParser";
     }
 
-    dispatch()
+    dispatch(extension,config)
     {
         var bodyParseJson  = bodyParser.json();
         var bodyParseUrl   = bodyParser.urlencoded({extended:true});
@@ -36,4 +31,3 @@ class BodyParser extends Expressway.Middleware
 }
 
 module.exports = BodyParser;
-

@@ -27,8 +27,9 @@ const HTML_EMPTY_ELEMENTS = [
  */
 exports.annotate = function(fn)
 {
-    var $inject,
+    let $inject,
         fnText,
+        assign = true,
         fnMatch = FN_ARGS,
         argDecl;
 
@@ -40,7 +41,11 @@ exports.annotate = function(fn)
 
             if (fnText.startsWith("class")) {
                 fnMatch = FN_CONSTRUCTOR;
+
                 while(! FN_CONSTRUCTOR.test(fnText)) {
+                    // This will affect other parent constructors.
+                    // So, we will not assign the $inject array.
+                    assign = false;
                     fn = fn.prototype.__proto__.constructor;
                     fnText = fn.toString().replace(STRIP_COMMENTS, '').trim();
                 }
@@ -52,7 +57,8 @@ exports.annotate = function(fn)
                     $inject.push(name);
                 });
             });
-            fn.$inject = $inject;
+
+            fn.$inject = assign ? $inject : null;
         }
     }
     return $inject;
@@ -212,9 +218,13 @@ exports.getModulesAsHash = function(dir,callback)
  */
 exports.objectAccessor = function(object)
 {
-    return function (property,defaultValue=null) {
-        return _.get(object,property, defaultValue);
+    function accessor(property,defaultValue=null) {
+        return _.get(object, property, defaultValue);
     }
+    accessor.get = function(property) {
+        return _.get(object,property);
+    };
+    return accessor;
 };
 
 /**
@@ -235,7 +245,8 @@ exports.parseRouteRegexp = function(rx)
     str = _.trimEnd(str,"/"+flags);
 
     return {path: "/"+str, flags:flags}
-}
+};
+
 
 /**
  * Given an express app, return an array of routes.
@@ -256,13 +267,12 @@ exports.getMiddlewareStack = function(express)
         switch(middleware.name)
         {
             case "mounted_app" :
-                var $module = express.$module.mounted[rx.path];
-                if (! $module) $module = "mounted_app";
+                let $extension = express.$extension.mounted[rx.path];
                 return {
                     rx: rx,
                     path: "*",
                     methods: ["*"],
-                    stack: [$module]
+                    stack: [ ($extension ? $extension.name : "mounted_app") ]
                 };
             case "router" :
                 return middleware.handle.stack.map(layer => {
@@ -272,7 +282,7 @@ exports.getMiddlewareStack = function(express)
                             path: layer.route.path,
                             methods: Object.keys(layer.route.methods),
                             stack: layer.route.stack.map(middleware => {
-                                return middleware.handle.$route;
+                                return middleware.handle.$name;
                             })
                         };
                     }
@@ -280,17 +290,16 @@ exports.getMiddlewareStack = function(express)
                         rx: rx,
                         path: exports.parseRouteRegexp(layer.regexp).path,
                         methods: ["*"],
-                        stack: [layer.handle.$route]
+                        stack: [layer.handle.$name]
                     }
 
                 });
             case "middleware" :
-
                 return {
                     rx: rx,
                     path: "*",
                     methods: ["*"],
-                    stack: [middleware.handle.$route],
+                    stack: [middleware.handle.$name],
                 };
             default:
                 return {
@@ -405,6 +414,33 @@ exports.element = function(elementName,opts={})
  * @param next
  * @returns {*}
  */
-exports.goToNext = function(req,res,next) {
+exports.goToNext = function(req,res,next)
+{
     return next();
+};
+
+/**
+ * Flatten and remove any false values of an array.
+ * @param array Array
+ * @returns {Array}
+ */
+exports.compound = function(array)
+{
+    return _.compact( _.flattenDeep(array) );
+};
+
+/**
+ * Cast the given value to a array, if it isn't an array.
+ * @param value *
+ * @param flatten boolean
+ * @returns {Array}
+ */
+exports.castToArray = function(value, flatten=false)
+{
+    if (!value) return [];
+
+    if (! Array.isArray(value)) {
+        value = [value];
+    }
+    return flatten ? _.compact( _.flattenDeep(value) ) : value;
 };

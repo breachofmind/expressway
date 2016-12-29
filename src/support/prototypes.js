@@ -1,9 +1,22 @@
 "use strict";
 
-var Expressway = require('expressway');
 var http  = require('http');
 var Promise = require('bluebird');
-var colors = require('colors/safe');
+var View = require('../View');
+
+/**
+ * The splice() method changes the content of a string by removing a range of
+ * characters and/or adding new characters.
+ *
+ * @this {String}
+ * @param {number} start Index at which to start changing the string.
+ * @param {number} delCount An integer indicating the number of old chars to remove.
+ * @param {string} newSubStr The String that is spliced in.
+ * @return {string} A new string with the spliced substring.
+ */
+String.prototype.splice = function(start, delCount, newSubStr) {
+    return this.slice(0, start) + newSubStr + this.slice(start + Math.abs(delCount));
+};
 
 /**
  * Return a query string value or the default value.
@@ -69,9 +82,9 @@ http.ServerResponse.prototype.smart = function(value,status)
         // Execute the promise, and then recursively try again.
         return value.then(returnValue => { return this.smart(returnValue) });
 
-    } else if (value instanceof Expressway.View) {
+    } else if (value instanceof View) {
         // Render the View object.
-        return value.render(this);
+        return value.render();
 
     } else if (typeof value == "object") {
         // Convert objects to JSON and return JSON response.
@@ -125,34 +138,4 @@ http.ServerResponse.prototype.redirectWithFlash = function(to,key,body)
     this.req.flash(key, body);
 
     return this.redirect(to);
-};
-
-
-/**
- * Send an error response back. TODO
- * @param err
- * @param status number
- */
-http.ServerResponse.prototype.apiError = function(err,status)
-{
-    if (! err) err = {};
-    var out = err.toJSON ? err.toJSON() : err;
-
-    if (this.req.Model && err.code) {
-        out.message = this.req.lang('model.err_'+err.code, [this.req.Model.name]);
-    }
-    if (err.name == "ValidationError") {
-        out.message = this.req.lang('model.err_validation');
-        out.errors = Object.keys(err.errors).map( key =>
-        {
-            var error = err.errors[key];
-            var label = this.req.Model ? request.lang('model.'+this.req.Model.name+"_"+error.path) : error.path;
-            return {
-                kind: error.kind,
-                path: error.path,
-                message: this.req.lang('model.err_'+error.kind, [label])
-            };
-        })
-    }
-    return this.api(out, status || 400);
 };

@@ -1,11 +1,12 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Provider = require('expressway').Provider;
 
-class <%=name%> extends Expressway.Provider
+class <%=name%> extends Provider
 {
     /**
      * Constructor.
+     * @injectable
      * @param app Application
      */
     constructor(app)
@@ -14,20 +15,23 @@ class <%=name%> extends Expressway.Provider
 
         this.order = 0;
 
-        this.requires = [
-            'LoggerProvider',
-            'ModelProvider'
-        ];
-
         this.contexts = CXT_ALL;
         this.environments = ENV_ALL;
+
+        // Register any services if other providers need them.
+        // app.service(name,value);
+
+        // Use app.load() to load service functions.
+        // app.service("service", app.load(paths.services('MyService')));
     }
 
     /**
-     * Register any classes or instances
-     * with the application.
+     * Fired when the application boots.
+     * All other providers and services should be created.
+     * @injectable
+     * @returns void
      */
-    register(app)
+    boot(app)
     {
         //
     }

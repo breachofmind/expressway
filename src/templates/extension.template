@@ -1,0 +1,43 @@
+"use strict";
+
+var Extension = require('expressway').Extension;
+
+class <%=name%> extends Extension
+{
+    /**
+     * Constructor.
+     * @injectable
+     * @param app Application
+     */
+    constructor(app)
+    {
+        super(app);
+
+        this.middleware = [
+            'Init',
+            'ConsoleLogging'
+        ];
+
+        this.routes = [
+            {
+                "GET /" : "IndexController.index"
+            },
+            'NotFound'
+        ];
+    }
+
+    /**
+     * Fired when the application boots.
+     * This is where you should create your routes.
+     * @injectable
+     * @returns void
+     */
+    boot(app)
+    {
+        // This will add anything listed
+        // in this.middleware and this.routes.
+        super.boot(app);
+    }
+}
+
+module.exports = <%=name%>;

@@ -1,11 +1,12 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Controller = require('expressway').Controller;
 
-class <%=name%> extends Expressway.Controller
+class <%=name%> extends Controller
 {
     /**
      * Constructor.
+     * @injectable
      * @param app Application
      */
     constructor(app)
@@ -13,14 +14,20 @@ class <%=name%> extends Expressway.Controller
         super(app);
 
         // Controller Setup...
+        this.defaults = []
     }
 
     /**
      * "<%=name%>.index" route.
+     * @injectable
      */
-    index(request,response,next)
+    index(request,response,next,view)
     {
-        //
+        view.title('Title')
+            .template('index')
+            .use(this.defaults);
+
+        return view;
     }
 }
 

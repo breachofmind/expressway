@@ -1,12 +1,9 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Middleware = require('expressway').Middleware;
 
-class Ajax extends Expressway.Middleware
+class Ajax extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Checks if the X-Requested-With request header is XMLHttpRequest";
     }
@@ -19,4 +16,3 @@ class Ajax extends Expressway.Middleware
 }
 
 module.exports = Ajax;
-

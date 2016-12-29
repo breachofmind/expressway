@@ -1,11 +1,7 @@
 "use strict";
 
-var Expressway   = require('expressway');
-var _            = require('lodash');
-var app          = Expressway.app;
-var db           = app.get('db');
-var modelService = app.get('modelService');
-var utils        = Expressway.utils;
+var _ = require('lodash');
+var utils = require('./support/utils');
 
 /**
  * The base model class.
@@ -13,9 +9,14 @@ var utils        = Expressway.utils;
  */
 class Model
 {
-    constructor()
+    /**
+     * Constructor.
+     * @injectable
+     * @param app
+     */
+    constructor(app)
     {
-        var self = this;
+        this._app = app;
 
         this._booted = false;
 
@@ -25,8 +26,6 @@ class Model
          * @type {object}
          */
         this._model = null;
-
-        this._methods = {};
 
         /**
          * The default primary key field name.
@@ -45,12 +44,6 @@ class Model
          * @type {string}
          */
         this.table = this.name.toLowerCase();
-
-        /**
-         * The schema, or list of columns and field types.
-         * @type {{}}
-         */
-        this.schema = {};
 
         /**
          * The field representing the "title" of the model.
@@ -107,56 +100,9 @@ class Model
          * @type {number} 1|-1
          */
         this.sort = 1;
-
-        /**
-         * Methods attached to this model.
-         * Note: "this" corresponds to the model in the function body.
-         * @type {{}}
-         */
-        this.methods = {
-
-            /**
-             * The default toJSON method.
-             * @returns {{}}
-             */
-            toJSON() {
-
-                var json = {
-                    id:     this.id,
-                    $title: this[self.title],
-                };
-
-                self.fillable.forEach(field =>
-                {
-                    // Skip fields that are in the guarded column.
-                    if (self.guarded.indexOf(field) > -1) {
-                        return;
-                    }
-
-                    return json[field] = typeof this[field] == 'undefined' ? null : this[field];
-                });
-
-                // The developer can append other columns to the output.
-                self.appends.forEach(field =>
-                {
-                    // This is a computed property.
-                    if (typeof field == 'function') {
-                        var arr = field(this,self);
-                        if (Array.isArray(arr)) {
-                            return json[arr[0]] = arr[1];
-                        }
-                    }
-                    // This is a method call from the object.
-                    if (typeof this[field] == "function") {
-                        return json[field] = this[field] ();
-                    }
-                });
-
-                return utils.alphabetizeKeys(json);
-            }
-        };
     }
 
+    get app() { return this._app; }
 
     /**
      * Return the name of the object.
@@ -186,17 +132,51 @@ class Model
      * Get the methods object.
      * @returns {Object}
      */
-    get methods() { return this._methods; }
-
-    /**
-     * Set new methods.
-     * @param object {Object}
-     */
-    set methods(object)
+    get methods()
     {
-        _.each(object, (value,key) => {
-            this._methods[key] = value;
-        })
+        let self = this;
+
+        return {
+            /**
+             * The default toJSON method.
+             * @returns {{}}
+             */
+            toJSON() {
+
+                let json = {
+                    id:     this.id,
+                    $title: this[self.title],
+                };
+
+                self.fillable.forEach(field =>
+                {
+                    // Skip fields that are in the guarded column.
+                    if (self.guarded.indexOf(field) > -1) {
+                        return;
+                    }
+
+                    return json[field] = typeof this[field] == 'undefined' ? null : this[field];
+                });
+
+                // The developer can append other columns to the output.
+                self.appends.forEach(field =>
+                {
+                    // This is a computed property.
+                    if (typeof field == 'function') {
+                        let arr = field(this,self);
+                        if (Array.isArray(arr)) {
+                            return json[arr[0]] = arr[1];
+                        }
+                    }
+                    // This is a method call from the object.
+                    if (typeof this[field] == "function") {
+                        return json[field] = this[field] ();
+                    }
+                });
+
+                return utils.alphabetizeKeys(json);
+            }
+        }
     }
 
     /**
@@ -225,11 +205,10 @@ class Model
      * Boot the model.
      * @returns {boolean}
      */
-    boot()
+    boot(db)
     {
         if (this.booted) return this.booted;
 
-        app.register(this.name, this, `The ${this.name} model`);
         var schema = new db.Schema(this.schema, {collection: this.table});
         this.booting(schema);
         schema.virtual('$base').get(() => {return this});
@@ -247,16 +226,6 @@ class Model
     booting(schema)
     {
         // Unimplemented
-    }
-
-    /**
-     * Get a model object by name.
-     * @param modelName string
-     * @returns {null|Model}
-     */
-    static get(modelName)
-    {
-        return modelService.get(modelName);
     }
 }
 

@@ -1,18 +1,15 @@
 "use strict";
 
-var Expressway = require('expressway');
-var flash = require('connect-flash');
+var Middleware = require('expressway').Middleware;
+var flash      = require('connect-flash');
 
-class Flash extends Expressway.Middleware
+class Flash extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Provides session-based Flash messaging via connect-flash";
     }
 
-    dispatch()
+    dispatch(extension)
     {
         var middleware = flash();
         return function Flash(...args)

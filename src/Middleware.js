@@ -1,17 +1,23 @@
 "use strict";
 
-var Expressway = require('expressway');
-var app = Expressway.app;
-
 class Middleware
 {
-    constructor()
+    constructor(app)
     {
         /**
-         * The name of the middleware.
-         * @type {String}
+         * Application instance.
+         * @type Application
          */
-        this.name = this.constructor.name;
+        this.app = app;
+    }
+
+    /**
+     * Return the name of the middleware.
+     * @returns {String}
+     */
+    get name()
+    {
+        return this.constructor.name;
     }
 
     /**
@@ -23,36 +29,70 @@ class Middleware
      */
     method(request,response,next)
     {
-        throw new Error(`${this.name}.method() is unimplemented`);
+        throw new Error(`unimplemented: ${this.name}.method()`);
     }
 
     /**
      * Register the middleware with express.
      * Should return a function that express can use:
      * function(request,response,next) {...}
-     * @param $module Module
+     * @param extension Extension
      * @returns {Function}
      */
-    dispatch($module)
+    dispatch(extension)
     {
-        var self = this;
+        let self = this;
 
         function middleware(request,response,next)
         {
             if (response.headersSent) return null;
 
-            response.$route = middleware.$route;
+            response.$route = self.name;
 
-            let val = app.call(self,'method', [request,response,next]);
+            let val = self.app.call(self,'method', [request,response,next]);
 
             if (val) return response.smart(val);
         }
 
-        middleware.$route = this.name;
+        middleware.$name = this.name;
 
         return middleware;
     }
-}
 
+    /**
+     * Create a middleware instance out of anonymous function.
+     * @param fn Function
+     * @returns {AnonymousMiddleware}
+     */
+    static create(fn)
+    {
+        if (typeof fn !== 'function') {
+            throw new TypeError('argument must be a function');
+        }
+        fn.$constructor = false;
+
+        class AnonymousMiddleware extends Middleware
+        {
+            dispatch(extension)
+            {
+                let self = this;
+                let name = fn.name || 'anonymous';
+
+
+                function middleware (request,response,next)
+                {
+                    response.$route = name;
+                    return self.app.call(fn,[request,response,next]);
+                }
+
+                middleware.$name = name;
+
+                return middleware;
+            }
+        }
+
+        return AnonymousMiddleware;
+    }
+}
 
 module.exports = Middleware;

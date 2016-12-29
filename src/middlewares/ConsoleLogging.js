@@ -1,22 +1,17 @@
 "use strict";
 
-var Expressway = require('expressway');
-var app = Expressway.app;
-var log = app.get('log');
+var expressway = require('expressway');
 var colors = require('colors/safe');
 
-class ConsoleLogging extends Expressway.Middleware
+class ConsoleLogging extends expressway.Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Logs the incoming request to the console";
     }
 
-    constructor()
+    constructor(app)
     {
-        super();
+        super(app);
 
         /**
          * Print colors in the console?
@@ -25,40 +20,47 @@ class ConsoleLogging extends Expressway.Middleware
         this.pretty = false;
     }
 
-    method(request,response,next)
+    dispatch(extension,log)
     {
-        response.on('finish', () =>
+        let self = this;
+
+        return function ConsoleLogging(request,response,next)
         {
-            var info = response.info();
+            response.on('finish', () =>
+            {
+                let info = response.info();
 
-            var type = 'info';
-            if (info.status >= 400) type = 'warn';
-            if (info.status >= 500) type = 'error';
+                info.extension = extension.name;
 
-            // Not Modified, who cares
-            if (info.status == 304) return;
+                var type = 'info';
+                if (info.status >= 400) type = 'warn';
+                if (info.status >= 500) type = 'error';
 
-            if (this.pretty) {
-                var methodColor = "gray";
-                if (info.method == "POST") methodColor = "yellow";
-                if (info.method == "PUT") methodColor = "magenta";
-                if (info.method == "DELETE") methodColor = "red";
-                log[type] ("%s %s %s '%s' %s %s %s",
-                    info.ip,
-                    colors[methodColor] (info.method),
-                    colors.blue(info.status),
-                    info.phrase,
-                    colors.green(info.route) ,
-                    info.url,
-                    info.user
-                );
+                // Not Modified, who cares
+                if (info.status == 304) return;
 
-            } else {
-                log[type] (info.method, info);
-            }
-        });
+                if (self.pretty) {
+                    var methodColor = "gray";
+                    if (info.method == "POST") methodColor = "yellow";
+                    if (info.method == "PUT") methodColor = "magenta";
+                    if (info.method == "DELETE") methodColor = "red";
+                    log[type] ("%s %s %s '%s' %s %s %s",
+                        info.ip,
+                        colors[methodColor] (info.method),
+                        colors.blue(info.status),
+                        info.phrase,
+                        colors.green(info.route) ,
+                        info.url,
+                        info.user
+                    );
 
-        return next();
+                } else {
+                    log[type] (info.method, info);
+                }
+            });
+
+            return next();
+        }
     }
 }
 

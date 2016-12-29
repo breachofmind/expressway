@@ -1,28 +1,14 @@
 "use strict";
 
-var Expressway  = require('expressway');
-var utils       = Expressway.utils;
-var webpack     = require('webpack');
-var livereload  = require('livereload');
-var app         = Expressway.app;
+var Middleware = require('expressway').Middleware;
+var webpack    = require('webpack');
+var livereload = require('livereload');
 
-var [$app,log,debug,url] = app.get('$app','log','debug','url');
-
-class Development extends Expressway.Middleware
+class Development extends Middleware
 {
-    get type() {
-        return "Core"
-    }
-    get description() {
-        return "Adds webpack hot module replacement to a module (ENV_LOCAL only)";
-    }
-
-    /**
-     * Constuctor,
-     */
-    constructor()
+    constructor(app, url)
     {
-        super();
+        super(app);
 
         /**
          * Is livereload currently running?
@@ -37,14 +23,17 @@ class Development extends Expressway.Middleware
         this.livereload = {
             dirs: [],
             options: {
-                originalPath: url(),
+                originalPath: url.get(),
                 exts: ['htm','html','ejs','hbs','png','gif','jpg','css'],
             }
         };
 
-        app.register('devMiddleware', this, "Development Middleware instance");
+        app.service('devMiddleware', this);
     }
 
+    get description() {
+        return "Adds webpack hot module replacement to a module (ENV_LOCAL only)";
+    }
     /**
      * Have the livereload server watch a path.
      * @param path
@@ -62,39 +51,41 @@ class Development extends Expressway.Middleware
 
     /**
      * Dispatch middleware functions to express.
-     * @param $module
+     * @param extension Extension
      * @returns {(*|*)[]}
      */
-    dispatch($module)
+    dispatch(extension)
     {
-        if (app.env !== ENV_LOCAL) return;
+        if (this.app.env !== ENV_LOCAL) return;
 
-        this.startLivereload($module);
-
-        return this.startWebpackDev($module);
+        return [
+            this.app.call(this,'startLivereload',[extension]),
+            this.app.call(this,'startWebpackDev',[extension])
+        ];
     }
 
     /**
      * Start the webpack hot middleware dev server.
-     * @param $module Module
+     * @param extension Extension
+     * @param log Winston
      * @returns {[*,*]}
      */
-    startWebpackDev($module)
+    startWebpackDev(extension,log)
     {
-        if (! $module.webpack || typeof $module.webpack != 'object') {
-            log.warn(`${$module.name}.webpack missing webpack config. Skipping...`);
+        if (! extension.webpack || typeof extension.webpack != 'object') {
+            log.warn(`${extension.name}.webpack missing webpack config. Skipping...`);
             return;
         };
 
         var webpackMiddleware    = require('webpack-dev-middleware');
         var webpackHotMiddleware = require('webpack-hot-middleware');
 
-        let compiler = webpack($module.webpack);
+        let compiler = webpack(extension.webpack);
         let middleware = webpackMiddleware(compiler, {
-            publicPath: $module.webpack.output.publicPath,
+            publicPath: extension.webpack.output.publicPath,
             noInfo: true,
         });
-        let hotMiddleware = webpackHotMiddleware(compiler, $module.hmrOptions||{});
+        let hotMiddleware = webpackHotMiddleware(compiler, extension.hmrOptions||{});
 
         // Return the middleware functions.
         return [
@@ -109,19 +100,19 @@ class Development extends Expressway.Middleware
 
     /**
      * Start the livereload server.
-     * @param $module Module
+     * @param extension Extension
+     * @param app Application
+     * @param log Winston
+     * @param debug Function
      * @returns void
      */
-    startLivereload($module)
+    startLivereload(extension,app,log,debug)
     {
         if (this.livereloadRunning) return;
 
         try {
             let server = livereload.createServer(this.livereload.options);
             server.watch(this.livereload.dirs);
-            app.on('view.created', function(view,request) {
-                view.script('livereload', 'http://localhost:35729/livereload.js');
-            });
         } catch (err) {
             log.error(err.message);
         }
@@ -129,10 +120,15 @@ class Development extends Expressway.Middleware
         log.info('Livereload server running at http://localhost:35729');
 
         this.livereload.dirs.forEach(dir => {
-            debug(this, 'Livereload watching path %s', dir);
+            debug('Livereload watching path %s', dir);
         });
 
         this.livereloadRunning = true;
+
+        return function(request,response,next) {
+            response.view.script('livereload', 'http://localhost:35729/livereload.js');
+            next();
+        }
     }
 }
 

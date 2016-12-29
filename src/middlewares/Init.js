@@ -1,22 +1,23 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Middleware = require('expressway').Middleware;
+var View = require('../View');
 
-class Init extends Expressway.Middleware
+class Init extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Runs at the start of all requests";
     }
 
-    method(request,response,next)
+    dispatch(extension)
     {
-        response.viewData = [];
-        next();
+        function Init(request,response,next) {
+            response.view = new View(extension,request,response);
+            next();
+        }
+
+        return Init;
     }
 }
 
 module.exports = Init;
-

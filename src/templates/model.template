@@ -1,11 +1,13 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Model = require('expressway').Model;
+var _     = require('lodash');
 
-class <%=name%> extends Expressway.Model
+class <%=name%> extends Model
 {
     /**
      * Constructor.
+     * @injectable
      * @param app Application
      */
     constructor(app)
@@ -18,14 +20,43 @@ class <%=name%> extends Expressway.Model
         this.appends    = [];
         this.populate   = [];
         this.managed    = false;
-        this.labels     = {};
+    }
 
-        this.schema = {
+    /**
+     * Return the schema fields.
+     * @returns {Object}
+     */
+    get schema()
+    {
+        let [ObjectId,config] = this.app.get('ObjectId','config');
+
+        return {
             created_at:  { type: Date, default: Date.now },
             modified_at: { type: Date, default: Date.now }
         };
+    }
 
-        this.methods = {}
+    /**
+     * Return the schema methods.
+     * @returns {Object}
+     */
+    get methods()
+    {
+        let config = this.app.get('config');
+
+        let methods = {};
+
+        // This assures the base methods are not overwritten.
+        return _.assign({}, super.methods, methods);
+    }
+
+    /**
+     * Perform actions on the schema object before creating the model.
+     * @returns void
+     */
+    booting(schema)
+    {
+        // schema.pre(...)
     }
 }
 

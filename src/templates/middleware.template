@@ -1,12 +1,24 @@
 "use strict";
 
-var Expressway = require('expressway');
+var Middleware = require('expressway').Middleware;
 
-class <%=name%> extends Expressway.Middleware
+class <%=name%> extends Middleware
 {
     /**
+     * Constructor.
+     * @injectable
+     * @param app Application
+     */
+    constructor(app)
+    {
+        super(app);
+
+        this.options = {};
+    }
+
+    /**
      * Handler that is passed to express.use() or express route.
-     * @returns void
+     * @injectable
      */
     method(request,response,next)
     {
@@ -14,13 +26,11 @@ class <%=name%> extends Expressway.Middleware
     }
 
     /**
-     * If passed to the global middlewareService, this will be fired.
-     * @returns void
+     * Override the dispatch method to return multiple middleware.
+     * @injectable
+     * @returns {Array|Function}
      */
-    load()
-    {
-        //
-    }
+    // dispatch(extension) {}
 }
 
 module.exports = <%=name%>;

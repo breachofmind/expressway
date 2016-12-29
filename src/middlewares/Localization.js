@@ -1,46 +1,45 @@
 "use strict";
 
-var Expressway = require('expressway');
-var app = Expressway.app;
-var locale = require('locale');
-var http = require('http');
-var [localeService,config] = app.get('localeService','config');
+var Middleware  = require('expressway').Middleware;
+var Locale      = require('locale');
+var http        = require('http');
 
-class Localization extends Expressway.Middleware
+class Localization extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Finds the requester's locale and adds some localization functionality";
     }
-    dispatch()
-    {
-        http.IncomingMessage.prototype.lang = function(key,args)
-        {
-            var loc = this.locale.toLowerCase();
-            if (! key || key=="") return "";
-            if (! loc) loc = "en_us";
-            return localeService.getKey(loc,key,args);
-        };
 
-        var middleware = locale( config('lang_support', ['en_us']));
+    dispatch(extension,locale,config)
+    {
+        var middleware = Locale( config('lang_support', ['en_us']));
 
         return [
-            function LocaleParser(...args) {
-                return middleware(...args);
+
+            // Sets the request.locale property.
+            function LocaleParser()
+            {
+                return middleware(...arguments);
             },
-            function LocaleQuery(request,response,next) {
+
+            // Checks the query string for a locale property.
+            // Binds some helper functions to the request and view.
+            function LocaleQuery(request,response,next)
+            {
                 if (request.query.cc) {
                     request.locale = request.query.cc.toLowerCase();
                 }
+                // Bind a helper function to the request.
+                request.lang = locale.helper(request);
+
+                // Bind a helper function to the view object.
+                response.view.use('lang', request.lang);
+
                 next();
             }
         ]
     }
 }
-
-
 
 module.exports = Localization;
 

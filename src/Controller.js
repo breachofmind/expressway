@@ -1,11 +1,7 @@
 "use strict";
 
-var Expressway          = require('expressway');
-var app                 = Expressway.instance.app;
-var utils               = Expressway.utils;
-var _                   = require('lodash');
-var controllerService   = app.get('controllerService');
-var stack               = require('callsite');
+var _     = require('lodash');
+var utils = require('./support/utils');
 
 /**
  * Controller class.
@@ -14,9 +10,13 @@ var stack               = require('callsite');
  */
 class Controller
 {
-    constructor()
+    constructor(app)
     {
-        this.name = this.constructor.name;
+        /**
+         * Application instance.
+         * @type Application
+         */
+        this.app = app;
 
         /**
          * Route-specific middleware.
@@ -33,6 +33,15 @@ class Controller
     }
 
     /**
+     * Return the name of the controller.
+     * @returns String
+     */
+    get name()
+    {
+        return this.constructor.name;
+    }
+
+    /**
      * Attach middleware to a method or to all methods.
      * Normally called in the boot function when declaring a controller.
      * This needs to occur only after all controllers have been loaded, in the
@@ -44,29 +53,30 @@ class Controller
      */
     middleware(method, stack)
     {
-        if (! method || !arguments.length) {
+        if (! arguments.length || ! method) {
             return this;
         }
 
-        if (typeof stack == 'undefined')
+        if (arguments.length == 1)
         {
-            // method is a hash of object -> middlewares.
-            if (typeof method == 'object')
-            {
-                Object.keys(method).forEach(route =>
-                {
-                    let stack = method[route];
-                    this._middleware.push({method: route, middleware: stack})
-                })
+            if (Array.isArray(method)) {
+                // We're passing an array of middleware.
+                // Could be mix of strings and objects.
+                _.each(method, middleware => { this.middleware(middleware) });
+
+            } else if (typeof method == 'object') {
+                // {methodName: [middleware]}
+                _.each(method, (stack,route) => { this.middleware(route,stack) });
 
             } else {
-                // "method" could be a string or function.
-                // Assign middleware to all methods.
-                this._middleware.push({method: "*", middleware: method});
+                // Assign to all methods.
+                // Could be string, fn or array.
+                this.middleware("*", method);
             }
 
-            // Assign middleware to a single method.
         } else if (typeof method == 'string') {
+            // Assign middleware to a single method.
+            // Or, use "*" to assign to all.
             this._middleware.push({method: method, middleware: stack})
         }
 
@@ -74,95 +84,54 @@ class Controller
     };
 
     /**
-     * Bind a parameter to a middleware.
-     * @param parameter string
-     * @param handler function
-     * @returns Controller
-     */
-    bind(parameter,handler)
-    {
-        function binding(request,response,next) {
-            if (request.params.hasOwnProperty(parameter)) {
-                return handler(request.params[parameter], request,response,next);
-            }
-            return next();
-        }
-        binding.$route = `binding[:${parameter}]`;
-        return this.middleware(binding);
-    };
-
-    /**
-     * Bind a GET query to a middleware.
-     * @param parameter string
-     * @param handler function
-     * @returns Controller
-     */
-    query(parameter,handler)
-    {
-        function binding(request,response,next) {
-            if (request.query.hasOwnProperty(parameter)) {
-                return handler(request.query[parameter], request,response,next);
-            }
-            return next();
-        }
-        binding.$route = `binding[?${parameter}]`;
-        return this.middleware(binding);
-    };
-
-
-    /**
-     * Finds middleware required for the given route.
-     * @param method {String}
-     * @param action {Function}
-     * @param $module Module
-     * @returns {Array}
-     */
-    getMiddleware(method, action, $module)
-    {
-        var out = this._middleware.map(value =>
-        {
-            if (value.method == "*" || value.method == method)
-                return controllerService.getRouteFunctions(value.middleware, $module);
-        });
-
-        // The last middleware in the stack is the actual request.
-        if (action) out.push(action);
-
-        return _.compact(out);
-    };
-
-    /**
      * Dispatches the middleware and route stack.
      * Returns an array suitable for use with express.
-     * ie, router.get(urlpattern, array)
+     *
      * @param method {String}
-     * @param $module Module
+     * @param extension {Extension}
      * @returns {Array}
      */
-    dispatch(method,$module)
+    dispatch(method,extension)
     {
-        var self = this;
+        let controller = this;
+        let routeName = `${this.name}.${method}`;
 
-        if (! typeof this[method] === 'function') {
-            throw new Error(`"${this.name}" missing method "${method}"`);
+        if (typeof this[method] !== 'function') {
+            throw new Error(`controller method does not exist: ${routeName}`);
         }
 
+        let middleware = this._middleware.map(value =>
+        {
+            if (value.method == "*" || value.method == method)
+                return this.app.dispatcher.resolve(value.middleware, extension);
+        });
+
+        /**
+         * The requested route function.
+         * @param request
+         * @param response
+         * @param next
+         * @returns {*}
+         */
         function route(request,response,next)
         {
-            response.$route = route.$route;
+            response.$route = routeName;
 
             if (response.headersSent) return null;
 
             // Allows the injection of services into a controller method.
             // The first 3 arguments are always the request/response/next params.
-            var output = app.call(self, method, [request,response,next]);
+            let output = controller.app.call(controller, method, [request,response,next]);
 
             return response.smart(output);
         }
 
-        route.$route = this.name+"."+method;
+        route.$name = routeName;
 
-        return this.getMiddleware(method, route, $module);
+        // Add the requested route to the end of the stack.
+        middleware.push(route);
+
+        return utils.compound(middleware);
     }
 }
 

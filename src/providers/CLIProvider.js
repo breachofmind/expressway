@@ -1,16 +1,18 @@
 "use strict";
 
-var Expressway = require('expressway');
-var utils = Expressway.utils;
-var _string  = require('lodash/string');
-var columnify = require('columnify');
-var colors = require('colors');
-var fs = require('fs');
-var _ = require('lodash');
+var expressway  = require('expressway');
+var Provider    = expressway.Provider;
+var path        = require('path');
+var _string     = require('lodash/string');
+var columnify   = require('columnify');
+var colors      = require('colors/safe');
+var fs          = require('fs');
+var _           = require('lodash');
 
 const LINE = Array(30).join("-");
 const BREAK = "";
 const ITEM_TITLE_COLOR = 'magenta';
+const ITEM_ORDER_COLOR = 'blue';
 
 /**
  * Function for coloring a boolean value.
@@ -25,15 +27,13 @@ const CONSOLE_BOOLEAN = function(boolean) {
  * Provides a Command Line interface module.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class CLIProvider extends Expressway.Provider
+class CLIProvider extends Provider
 {
     constructor(app)
     {
         super(app);
 
-        this.requires('ControllerProvider');
-
-        this.contexts([CXT_CLI]);
+        this.contexts = CXT_CLI;
 
         /**
          * List of command names in the
@@ -51,17 +51,11 @@ class CLIProvider extends Expressway.Provider
             'listMiddlewaresCommand',
             'listModelsCommand',
             'seedCommand'
-        ]
+        ];
 
-    }
+        app.service('cli', app.load('expressway/src/CLI'));
 
-    /**
-     * Register the provider with the application.
-     * @param app Application
-     */
-    register(app)
-    {
-        app.singleton('cli', require('../CLI'), "The CLI Class instance");
+        app['cli'] = app.get('cli');
     }
 
     /**
@@ -77,18 +71,29 @@ class CLIProvider extends Expressway.Provider
 
     /**
      * Create a new model, controller or provider.
-     * @usage ./bin/cli new model ModelName
+     * @usage ./bin/cli new [controller|middleware|provider|extension|model] name
      */
     createNewCommand(cli,paths)
     {
-
         cli.command('new [class] <name>', "Create a new provider, middleware, controller or model").action((env,opts) =>
         {
-            var type = env.trim().toLowerCase();
-            var templateFile = __dirname + `/../templates/${type}.template`;
-            var destFile = paths.to(type+"s", opts + ".js");
+            let fileName = `${opts}.js`;
+            let types = {
+                "controller" : paths.controllers(fileName),
+                "middleware" : paths.middleware(fileName),
+                "provider"   : paths.providers(fileName),
+                "service"   : paths.services(fileName),
+                "extension"  : paths.root(fileName),
+                "model"      : paths.models(fileName),
+            };
+            let type = env.trim().toLowerCase();
+            let tmplFile = path.resolve(__dirname,'../templates', `${type}.template`);
+            let destFile = types[type];
+            if (! destFile) {
+                throw (`template not available: ${type}`);
+            }
 
-            cli.template(templateFile, destFile , {name:opts, _:_string});
+            cli.template(tmplFile, destFile , {name:opts, _:_string});
 
             process.exit();
         });
@@ -110,7 +115,7 @@ class CLIProvider extends Expressway.Provider
 
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
-            app.stacks().forEach(application =>
+            app.extensions.stacks().forEach(application =>
             {
                 var columns = cli.columns(application.stack, {
                     title: `#${application.index}: ${application.name}`,
@@ -125,14 +130,14 @@ class CLIProvider extends Expressway.Provider
                         }
                     },
                     colors: {
-                        index: ITEM_TITLE_COLOR,
+                        index: ITEM_ORDER_COLOR,
                         flags: 'gray',
                         middleware: function(routes)
                         {
                             return routes.map((object,i) =>
                             {
                                 if (! object) return "<anonymous>";
-                                if (object instanceof Expressway.Module) {
+                                if (object instanceof expressway.Extension) {
                                     return colors.blue(object.name);
                                 }
                                 // This is a controller.
@@ -175,25 +180,27 @@ class CLIProvider extends Expressway.Provider
     {
         cli.command('services', "List all services in the application").action((env,opts) =>
         {
-            var columns = cli.columns(utils.arrayFromObject(app.services), {
+            var columns = cli.columns(app.services.list(), {
                 title: "Services list",
                 config: {description: {maxWidth:80}},
-                map(object,index) {
-                    var service = object.value;
-                    let type = typeof service.value;
-                    if (type == 'function') type = service.value.name || type;
+                map(item,index) {
+                    var service = item.object;
+                    let type = typeof service;
+                    if (type == 'function') type = item.object.name || type;
+                    if (type == 'object' && service.name) type = service.name;
                     return {
+                        order: item.index,
                         type: type,
-                        service: service.name,
-                        value: typeof service.value == 'string' ? service.value : "",
-                        description: service.doc,
-                        call: service.call ? 'true' : ''
+                        service: item.name,
+                        value: typeof service == 'string' ? service : "",
+                        call: typeof service === 'function' && service.$call ? 'true' : ''
                     }
                 },
                 sort(object) {
-                    return object.value.name;
+                    return object.name;
                 },
                 colors: {
+                    order: ITEM_ORDER_COLOR,
                     type: 'gray',
                     service: ITEM_TITLE_COLOR,
                     value: 'blue',
@@ -220,26 +227,21 @@ class CLIProvider extends Expressway.Provider
                 if (! opts.environment) opts.environment = app.env;
                 if (! opts.context) opts.context = CXT_WEB;
 
-                var columns = cli.columns(utils.arrayFromObject(app.providers), {
+                var columns = cli.columns(app.providers.list(), {
                     title:"Providers list",
-                    map(object,index) {
-                        let provider = object.value;
+                    map(item,index) {
+                        let provider = item.object;
                         return {
+                            order: provider.order,
                             name: provider.name,
-                            module: provider instanceof Expressway.Module,
-                            alias: provider.alias || null,
                             loaded: provider.isLoadable(opts.environment, opts.context),
-                            envs: provider.environments(),
-                            contexts: provider.contexts(),
-                            dependencies: provider.requires()
+                            envs: provider.environments,
+                            contexts: provider.contexts,
                         }
                     },
-                    sort(object) {
-                        return object.value.name;
-                    },
                     colors: {
+                        order: ITEM_ORDER_COLOR,
                         name: ITEM_TITLE_COLOR,
-                        module: CONSOLE_BOOLEAN,
                         loaded: CONSOLE_BOOLEAN,
                         contexts(contexts) {
                             return contexts.map(context => { return colors.gray(context) });
@@ -249,11 +251,11 @@ class CLIProvider extends Expressway.Provider
                 });
 
                 cli.output([
+                    BREAK,
                     LINE,
                     "Environment: " + colors.green(opts.environment.toString()),
                     "Context: " + colors.green(opts.context.toString()),
                     LINE,
-                    BREAK,
                     columns
                 ],true);
             });
@@ -263,9 +265,8 @@ class CLIProvider extends Expressway.Provider
      * Run the seeder.
      * @usage ./bin/cli seed
      */
-    seedCommand(app,cli,paths,log)
+    seedCommand(app,cli,paths,log,config)
     {
-
         cli.command('seed [options]', "Seed the database with data")
             .option('-s, --seeder [name]', "Run only the given seeder name")
             .option('-d, --dump', "Dump all models before seeding")
@@ -277,12 +278,8 @@ class CLIProvider extends Expressway.Provider
                     log.error("Seeding not allowed in production mode! Exiting");
                     return process.exit(1);
                 }
-                // Because this is only running once,
-                // we can get away with attaching the CLI options as a service.
-                app.register('cliOptions', opts);
 
-                // require the seeder.js file.
-                require(paths.db('seeder'));
+                app.load(config('seeder',paths.db('seeder.js')),[app,opts]);
             });
     }
 
@@ -294,20 +291,22 @@ class CLIProvider extends Expressway.Provider
     {
         cli.command('paths', "List all set paths in the Path service").action((env,opts) =>
         {
-            var columns = cli.columns(utils.arrayFromObject(paths.all), {
+            var columns = cli.columns(paths.list(), {
                 title: "Path List",
-                map(object,index) {
-                    let fullPath = paths.to(object.key);
+                map(item,index) {
+                    let fullPath = paths.to(item.name);
                     return {
-                        key: object.key,
-                        exists: paths.exists(object.key),
+                        order: item.index,
+                        key: item.name,
+                        exists: paths.exists(item.name),
                         path: fullPath,
                     }
                 },
-                sort(object) {
-                    return object.key;
+                sort(item) {
+                    return item.name;
                 },
                 colors: {
+                    order: ITEM_ORDER_COLOR,
                     key: ITEM_TITLE_COLOR,
                     exists: CONSOLE_BOOLEAN
                 }
@@ -348,22 +347,21 @@ class CLIProvider extends Expressway.Provider
      * List available controllers.
      * @usage ./bin/cli controllers
      */
-    listControllersCommand(app,cli,controller)
+    listControllersCommand(app,cli)
     {
         cli.command('controllers', "List all controllers").action((env,opts) =>
         {
-            var columns = cli.columns(utils.arrayFromObject(controller), {
+            var columns = cli.columns(app.controllers.list(), {
                 title: "Controller list",
-                map(object, index) {
+                map(item, index) {
                     return {
-                        name: object.key,
-                        description: object.value.description
+                        order: item.index,
+                        name: item.name,
+                        description: item.object.description
                     }
                 },
-                sort(object) {
-                    return object.value.name;
-                },
                 colors: {
+                    order: ITEM_ORDER_COLOR,
                     name: ITEM_TITLE_COLOR,
                 }
             });
@@ -376,23 +374,24 @@ class CLIProvider extends Expressway.Provider
      * List available middlewares.
      * @usage ./bin/cli middlewares
      */
-    listMiddlewaresCommand(app,cli,middleware)
+    listMiddlewaresCommand(app,cli)
     {
         cli.command('middlewares', "List all middlewares").action((env,opts) =>
         {
-            var columns = cli.columns(utils.arrayFromObject(middleware), {
+            var columns = cli.columns(app.middleware.list(), {
                 title: "Middleware list",
-                map(object, index) {
+                map(item, index) {
                     return {
-                        name: object.key,
-                        type: object.value.type || "AppModule",
-                        description: object.value.description || "",
+                        order: item.index,
+                        name: item.name,
+                        description: item.object.description || "",
                     }
                 },
-                sort(object) {
-                    return object.value.name;
+                sort(item) {
+                    return item.name;
                 },
                 colors: {
+                    order: ITEM_ORDER_COLOR,
                     name: ITEM_TITLE_COLOR,
                     type: 'blue',
                 }
@@ -406,15 +405,16 @@ class CLIProvider extends Expressway.Provider
      * List available models.
      * @usage ./bin/cli models
      */
-    listModelsCommand(app,cli,modelService)
+    listModelsCommand(app,cli)
     {
         cli.command('models', "List all models").action((env,opts) =>
         {
-            var columns = cli.columns(utils.arrayFromObject(modelService.models), {
+            var columns = cli.columns(app.models.list(), {
                 title: "Models list",
-                map(object, index) {
-                    var model = object.value;
+                map(item, index) {
+                    var model = item.object;
                     return {
+                        order: item.index,
                         name: model.name,
                         slug: model.slug,
                         title: model.title,
@@ -422,10 +422,8 @@ class CLIProvider extends Expressway.Provider
                         guards: model.guarded
                     }
                 },
-                sort(object) {
-                    return object.value.name;
-                },
                 colors: {
+                    order: ITEM_ORDER_COLOR,
                     name: ITEM_TITLE_COLOR,
                     title: 'gray',
                     expose: CONSOLE_BOOLEAN

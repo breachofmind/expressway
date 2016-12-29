@@ -1,15 +1,17 @@
 "use strict";
 
 var colors = require('colors/safe');
-var stack = require('callsite');
 
 class ApplicationCallError extends Error
 {
-    constructor(message)
+    constructor(message,context,method)
     {
         super(message,1);
-        var ln = stack()[3];
-        this.message += "\n"+colors.red(ln.toString());
+
+        this.message += "\nat: "+colors.red(context.name);
+        if (method) {
+            this.message += "."+colors.red(method)+"()";
+        }
     }
 }
 

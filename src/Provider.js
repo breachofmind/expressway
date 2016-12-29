@@ -1,7 +1,8 @@
 "use strict";
 
 var assert = require('assert');
-var _ = require('lodash');
+var utils  = require('./support/utils');
+var _      = require('lodash');
 
 /**
  * Provider class.
@@ -16,160 +17,91 @@ class Provider
      */
     constructor(app)
     {
-        this.app            = app;
-        this.name           = this.constructor.name;
-
-        this._active         = true;
-        this._loaded         = false;
-        this._booted         = false;
-        this._order          = 1;
-        this._requires       = [];
-        this._environments   = ENV_ALL;
-        this._contexts       = CXT_ALL;
-        this._events         = {};
+        this._app = app;
+        this._order = 10;
+        this._environments = ENV_ALL;
+        this._contexts = CXT_ALL;
+        this._booted = false;
     }
 
     /**
-     * Get/set the order.
-     * @param n Number
-     * @returns {Provider|Number}
+     * Get the name of the provider.
+     * @returns {String}
      */
-    order(n)
-    {
-        if (! arguments.length) return this._order;
+    get name() {
+        return this.constructor.name;
+    }
+
+    /**
+     * Get the Application instance.
+     * @returns {Application}
+     */
+    get app() {
+        return this._app;
+    }
+
+    /**
+     * Get the boot order.
+     * @returns {Number}
+     */
+    get order() {
+        return this._order;
+    }
+
+    /**
+     * Set the boot order.
+     * @param n {Number}
+     */
+    set order(n) {
         assert.equal(typeof n, 'number');
         this._order = n;
-        return this;
     }
 
     /**
-     * Set the dependencies for this provider.
-     * If passing array, override the current set dependencies.
-     * Pass separate arguments to append to the current dependency set.
-     * @returns {Provider|Array}
+     * Get the environments.
+     * @returns {Array}
      */
-    requires()
-    {
-        if (! arguments.length) return this._requires;
-        this._requires = Array.isArray(arguments[0]) ? arguments[0] : _.union(this._requires, arguments);
-        return this;
-    }
-    /**
-     * Get/set the environments.
-     * @returns {Provider|Array}
-     */
-    environments()
-    {
-        if (! arguments.length) return this._environments;
-        this._environments = Array.isArray(arguments[0]) ? arguments[0] : _.union(this._environments, arguments);
-        return this;
+    get environments() {
+        return this._environments;
     }
 
     /**
-     * Get/set the contexts.
-     * @returns {Provider|Array}
+     * Set the environments.
+     * @param arr {Array}
      */
-    contexts()
-    {
-        if (! arguments.length) return this._contexts;
-        this._contexts = Array.isArray(arguments[0]) ? arguments[0] : _.union(this._contexts, arguments);
-        return this;
+    set environments(arr) {
+        this._environments = utils.castToArray(arr);
     }
 
     /**
-     * Get/set the events property.
-     * @param obj Object
-     * @returns {Provider|object}
+     * Get the environments.
+     * @returns {Array}
      */
-    events(obj)
-    {
-        if (! arguments.length) return this._events;
-
-        assert.equal(typeof obj, 'object');
-
-        Object.keys(obj).forEach(eventName => {
-            this._events[eventName] = obj[eventName];
-        });
-
-        return this;
+    get contexts() {
+        return this._contexts;
     }
 
     /**
-     * Does the provider have events listed?
-     * @returns {boolean}
+     * Set the environments.
+     * @param arr {Array}
      */
-    get hasEvents() {
-        return Object.keys(this._events).length > 0;
+    set contexts(arr) {
+        this._contexts = utils.castToArray(arr);
     }
 
     /**
-     * Get/set the active property.
-     * @param boolean
-     * @returns {Provider|boolean}
+     * Check if this provider has been booted.
+     * @returns {*|boolean}
      */
-    active(boolean)
-    {
-        if (! arguments.length) return this._active;
-        assert.equal(typeof boolean, 'boolean');
-        this._active = boolean;
-        return this;
-    }
-
-    /**
-     * Get/set the loaded property.
-     * @param boolean
-     * @returns {Provider|boolean}
-     */
-    loaded(boolean)
-    {
-        if (! arguments.length) return this._loaded;
-        assert.equal(typeof boolean, 'boolean');
-        this._loaded = boolean;
-        return this;
-    }
-
-    booted(boolean)
-    {
-        if (! arguments.length) return this._booted;
-        assert.equal(typeof boolean, 'boolean');
-        this._booted = boolean;
-        return this;
-    }
-
-    /**
-     * If a provider has events listed, attach them to the app.
-     * @param app Application
-     * @returns {boolean}
-     */
-    attachEvents(app)
-    {
-        if (! this.hasEvents) {
-            return false;
-        }
-        var provider = this;
-        Object.keys(this._events).forEach(eventName => {
-            var method = this._events[eventName];
-            app.once(eventName, function() {
-                app.call(provider, method)
-            });
-        });
-        return true;
-    }
-
-    /**
-     * Called when all providers have been instantiated.
-     * @returns {null}
-     */
-    register()
-    {
-        return null;
+    get booted() {
+        return this._booted;
     }
 
     /**
      * Called when all providers have been registered.
-     * @returns {null}
+     * @param app Application
      */
-    boot()
+    boot(app)
     {
         return null;
     }
@@ -185,7 +117,7 @@ class Provider
         var inEnvironment = this._environments.indexOf(env) > -1;
         var inContext =  this._contexts.indexOf(context) > -1;
 
-        return this._active && inEnvironment && inContext;
+        return inEnvironment && inContext;
     }
 
     /**

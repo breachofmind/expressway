@@ -1,9 +1,7 @@
 "use strict";
 
-var Expressway = require('expressway');
-var utils = Expressway.utils;
-var app = Expressway.instance.app;
 var _ = require('lodash');
+var utils = require('./support/utils');
 
 /**
  * The view class, which combines data with the template.
@@ -13,34 +11,49 @@ class View
 {
     /**
      * Constructor.
-     * @param file string
-     * @param data object
+     * @param extension {Extension}
+     * @param request {IncomingMessage}
+     * @param response {ServerResponse}
      */
-    constructor(file,data={})
+    constructor(extension,request,response)
     {
-        this.file     = file;
-        this.module   = app.get('$app');
-        this.data     = data;
-        this.title    = undefined;
-
-        this.tags = {
+        this._req = request;
+        this._res = response;
+        this._renderer = extension;
+        this._file = null;
+        this._data = {
+            title: undefined
+        };
+        this._tags = {
             scripts: [],
             styles: [],
             meta: []
         };
 
-        // We're asking for a different express module.
-        // An express module can have it's own views directory.
-        if (file.indexOf(":") > -1)
-        {
-            let [module,view] = file.split(":");
-            let $module = app.get(module);
-            if (! ($module instanceof Expressway.Module)) {
-                throw new Error(`${module} not instance of Module`);
-            }
-            this.file = view.trim();
-            this.module = $module;
+        this.app = extension.app;
+    }
+
+    /**
+     * Get the file name.
+     * @returns {String}
+     */
+    get file() {
+        return this._file;
+    }
+
+    /**
+     * Set the template to render.
+     * @param file string
+     */
+    template(file)
+    {
+        if (file.indexOf(":") > -1) {
+            let [extensionName,file] = file.split(":");
+            this._renderer = this.app.extension(extensionName);
         }
+        this._file = file.trim();
+
+        return this;
     }
 
     /**
@@ -53,7 +66,8 @@ class View
     script(name,src,attrs={})
     {
         var el = utils.element('script', _.merge(attrs,{id:"_"+name, type:"text/javascript", src:src}) );
-        this.tags.scripts.push(el);
+        this._tags.scripts.push(el);
+
         return this;
     }
 
@@ -67,7 +81,8 @@ class View
     style(name,src,attrs={})
     {
         var el = utils.element('link', _.merge(attrs,{id:"_"+name, type:"text/css", rel:"stylesheet", href:src}) );
-        this.tags.styles.push(el);
+        this._tags.styles.push(el);
+
         return this;
     }
 
@@ -81,10 +96,10 @@ class View
     meta(name,content,attrs={})
     {
         var el = utils.element('meta', _.merge(attrs,{name:name, content:content}) );
-        this.tags.meta.push(el);
+        this._tags.meta.push(el);
+
         return this;
     }
-
 
     /**
      * Combine data with this view or wrap in a callback.
@@ -94,15 +109,15 @@ class View
      */
     use(key,value=null)
     {
-        if (! key) return this;
+        if (! key || ! arguments.length) return this;
 
         if (Array.isArray(key)) {
             key.forEach(item => this.use(item) );
         } else {
             if (typeof key == 'object') {
-                _.each(key,(v,k) => this.data[k] = v);
+                _.each(key,(v,k) => this._data[k] = v);
             } else if (typeof key == 'string') {
-                this.data[key] = value;
+                this._data[key] = value;
             } else if (typeof key == 'function') {
                 key(this);
             }
@@ -112,56 +127,48 @@ class View
     }
 
     /**
-     * Set the view title.
-     * @param str string
-     * @returns {View}
+     * Get or set the title.
+     * @param title string
+     * @returns {String|View}
      */
-    setTitle(str)
+    title(title)
     {
-        if (typeof str != 'string') {
-            throw new TypeError('Title is not a string');
-        }
-        this.title = str;
+        if (! arguments.length) return this._data.title;
+        this._data.title = title;
         return this;
     }
 
     /**
      * Convert this view into a JSON format.
-     * @param request
      * @returns {{}}
      */
-    toJSON(request)
+    toJSON()
     {
         var json = {
             $view: this,
-            $request: request || null,
+            $request: this._req,
         };
-
-        json.title = this.title;
-        _.each(this.data, (value,key) => { json[key] = value });
-        _.each(this.tags, (arr,el) => { json[el] = arr.join("\n") });
+        _.each(this._data, (value,key) => { json[key] = value });
+        _.each(this._tags, (arr,el) => { json[el] = arr.join("\n") });
 
         return json;
     }
 
     /**
      * Render the view response.
-     * @param response
      * @returns {*}
      */
-    render(response)
+    render()
     {
-        app.emit('view.created', this, response.req, response);
-
-        this.use(response.viewData);
+        this.app.emit('view.render', this, this._req, this._res);
 
         // This is modeled after express' response.render()
         // We can use our own sub-app's render function.
         // Sub-apps can have their own view engines and view paths.
-        return this.module.express.render(this.file, this.toJSON(response.req), (err,str) => {
-            if (err) return response.req.next(err);
+        return this._renderer.express.render(this._file, this.toJSON(), (err,str) => {
+            if (err) return this._req.next(err);
 
-            response.send(str);
+            this._res.send(str);
         });
     }
 }

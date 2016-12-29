@@ -5,8 +5,11 @@ var mongoose   = require('mongoose');
 var session    = require('express-session');
 var Store      = require('connect-mongo')(session);
 var Promise    = require('bluebird');
+var _          = require('lodash');
 
 mongoose.Promise = Promise;
+
+const CRUD = ['create','read','update','delete'];
 
 /**
  * ORM and Database provider.
@@ -17,86 +20,70 @@ class ModelProvider extends Expressway.Provider
     /**
      * Constructor
      * @param app Application
+     * @param utils Object
      */
-    constructor(app)
+    constructor(app,utils)
     {
         super(app);
 
-        this.order(1);
+        this.order = 1;
 
-        this.requires('LoggerProvider','ControllerProvider');
+        app.service('db', mongoose);
+        app.service('ObjectId', mongoose.Types.ObjectId);
+        app.service('ObjectIdType', mongoose.Schema.Types.ObjectId);
+        app.service('SchemaTypes', mongoose.Schema.Types.ObjectId);
+        app.service('seeder', app.load('expressway/src/services/SeederService'));
 
-        this.events({
-            'application.booted' : 'applicationBooted'
-        });
+        /**
+         * A helper function for creating permissions.
+         * @param modelNames {String|Array}
+         * @param actions {Array} - defaults to [create,read,update,delete]
+         * @returns {Array}
+         */
+        function permissions(modelNames, actions=CRUD)
+        {
+            let models = utils.castToArray(modelNames);
+            return utils.compound (models.map(modelName => {
+                return actions.map(action => {
+                    return `${modelName}.${action}`;
+                })
+            }));
+        }
+
+        permissions.CRUD = CRUD;
+
+        app.service(permissions);
     }
 
-
     /**
-     * Register the provider with the application.
-     * @param app Application
+     * When the app boots, connect to the database.
+     * @param app
+     * @param db
+     * @param config
+     * @param log
+     * @param debug
      */
-    register(app)
-    {
-        app.singleton('modelService', require('../services/ModelService'), "Service for storing and retrieving models");
-
-        app.register('db', mongoose, 'Mongoose ORM instance');
-        app.register('ObjectId', mongoose.Types.ObjectId, 'MongoDB ObjectId constructor');
-        app.register('ObjectIdType', mongoose.Schema.Types.ObjectId, 'MongoDB ObjectId Schema type');
-        app.register('dataTypes', mongoose.Schema.Types, "Mongoose data types");
-
-        app.call(this,'connect');
-
-        // Expose the Model class.
-        Expressway.Model = require('../Model');
-    }
-
-    /**
-     * Connect to the database.
-     * @param app Application
-     * @param db mongoose
-     * @param config function
-     * @param debug function
-     * @param log Winston
-     */
-    connect(app,db,config,debug,log)
+    boot(app,db,config,log,debug)
     {
         let credentials = config('db');
 
         db.connection.on('error', (err) => {
-            log.error('Connection error: %s on %s', err.message, credentials);
+            log.error('ModelProvider connection error: %s on %s', err.message, credentials);
             process.exit(1);
         });
 
         db.connection.on('open', () => {
-            debug(this,'Connected to MongoDB: %s', credentials);
-            app.emit('database.connected', app);
+            debug('ModelProvider connected to MongoDB: %s', credentials);
+            app.emit('database.connected');
         });
 
         db.connect(credentials);
-    }
 
-    /**
-     * Fire when all providers are registered.
-     * @param controllerService ControllerService
-     */
-    boot(controllerService)
-    {
-        // Switch out the file store and use mongo storage instead.
-        if (controllerService.hasMiddleware('Session')) {
-            controllerService.getMiddleware('Session').setStore(Store, {
-                mongooseConnection: mongoose.connection
-            });
+        if (app.middleware.has('Session')) {
+            app.middleware.get('Session').setStore(Store, {
+                mongooseConnection: db.connection
+            })
         }
-    }
-
-    /**
-     * When the application is done booting, boot the mongoose models.
-     * @param modelService
-     */
-    applicationBooted(modelService)
-    {
-        modelService.boot();
     }
 }
 

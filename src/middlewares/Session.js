@@ -1,28 +1,25 @@
 "use strict";
 
-var Expressway = require('expressway');
-var app = Expressway.instance.app;
+var Middleware = require('expressway').Middleware;
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
-var paths = app.get('paths');
-var config = app.get('config');
 var _ = require('lodash');
 
-class Session extends Expressway.Middleware
+class Session extends Middleware
 {
-    get type() {
-        return "Core"
-    }
     get description() {
         return "Provides a session via express-session";
     }
 
     /**
      * Constructor
+     * @param app Application
+     * @param config Function
+     * @param paths PathService
      */
-    constructor()
+    constructor(app,config,paths)
     {
-        super();
+        super(app);
 
         // Default session options.
         this.options = {
@@ -61,9 +58,10 @@ class Session extends Expressway.Middleware
 
     /**
      * Dispatch the middleware function to express.
+     * @param extension Extension
      * @returns {Session}
      */
-    dispatch()
+    dispatch(extension)
     {
         let middleware = session(this.sessionOptions);
 

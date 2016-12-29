@@ -1,0 +1,17 @@
+"use strict";
+
+/**
+ * New service.
+ * @injectable
+ */
+module.exports = function(app)
+{
+    // Example.
+    return new class <%=name%>
+    {
+        constructor()
+        {
+            //
+        }
+    }
+}
