@@ -20,6 +20,8 @@ class MailProvider extends Provider
     {
         super(app);
 
+        this.order = 0;
+
         let transport = nodemailer.createTransport( config('nodemailer_transport', stubTransport()) );
 
         /**

@@ -6,6 +6,10 @@ var _       = require('lodash');
 
 class Extension
 {
+    /**
+     * Constructor.
+     * @param app Application
+     */
     constructor(app)
     {
         /**
@@ -26,9 +30,29 @@ class Extension
          */
         this.mounted = {};
 
+        /**
+         * If using Static middleware, defined static paths.
+         * @type {{}}
+         */
         this.staticPaths = {};
+
+        /**
+         * Array of global middleware.
+         * @type {Array}
+         */
         this.middleware = [];
+
+        /**
+         * Array of route middleware.
+         * @type {Array}
+         */
         this.routes = [];
+
+        /**
+         * Default settings.
+         * @type {{}}
+         */
+        this.defaults = {};
 
         /**
          * The express instance.
@@ -103,6 +127,30 @@ class Extension
 
         if (this.base !== "/") {
             app.root.mount(this)
+        }
+    }
+
+    /**
+     * Render using the express instance.
+     * @param file string
+     * @param data object
+     * @returns {Promise}
+     */
+    render(file,data={})
+    {
+        return new Promise((resolve,reject) =>
+        {
+            this.express.render(file,data,function(err,str) {
+                if (err) return reject(err);
+                return resolve(str);
+            });
+        });
+    }
+
+    requires(extensionName)
+    {
+        if (! this.app.extensions.has(extensionName)) {
+            throw new MissingDependencyException('extension missing dependency: '+this.name, extensionName,this.name);
         }
     }
 }

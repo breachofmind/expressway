@@ -13,4 +13,5 @@ global.CXT_TEST  = 'test';
 global.CXT_ALL   = [CXT_CLI,CXT_WEB,CXT_TEST];
 
 require('./src/exceptions/ApplicationCallError');
+require('./src/exceptions/MissingDependencyException');
 require('./src/support/prototypes');

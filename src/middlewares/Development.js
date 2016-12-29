@@ -112,22 +112,28 @@ class Development extends Middleware
     {
         if (this.livereloadRunning) return;
 
-        try {
-            let server = livereload.createServer(this.livereload.options);
-            server.watch(this.livereload.dirs);
-        } catch (err) {
-            log.error(err.message);
+        // We don't want this to fire if we're in a CLI session.
+        // But, we do want to see the middleware.
+        if (app.context == CXT_WEB)
+        {
+            try {
+                let server = livereload.createServer(this.livereload.options);
+                server.watch(this.livereload.dirs);
+            } catch (err) {
+                log.error(err.message);
+            }
+
+            log.info('Livereload server running at http://localhost:35729');
+
+            this.livereload.dirs.forEach(dir => {
+                debug('Livereload watching path %s', dir);
+            });
+
+            this.livereloadRunning = true;
         }
 
-        log.info('Livereload server running at http://localhost:35729');
 
-        this.livereload.dirs.forEach(dir => {
-            debug('Livereload watching path %s', dir);
-        });
-
-        this.livereloadRunning = true;
-
-        return function(request,response,next) {
+        return function Livereload(request,response,next) {
             response.view.script('livereload', 'http://localhost:35729/livereload.js');
             next();
         }

@@ -19,7 +19,7 @@ var fs      = require('fs');
 module.exports = function(app)
 {
     var fileMaxSize = 1000 * 1000 * 10; // 10MB
-    var logFileName = path.resolve(app.rootPath, "tmp") + "server.log";
+    var logFileName = path.resolve(app.rootPath, "tmp") + "/server.log";
     var colorize    = true;
 
     var consoleLogLevels = {
