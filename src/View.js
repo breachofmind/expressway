@@ -30,7 +30,15 @@ class View
             meta: []
         };
 
-        this.app = extension.app;
+        this._app = extension.app;
+    }
+
+    /**
+     * Return the Application instance.
+     * @returns {Application}
+     */
+    get app() {
+        return this._app;
     }
 
     /**
@@ -47,9 +55,10 @@ class View
      */
     template(file)
     {
+        let extensionName;
         if (file.indexOf(":") > -1) {
-            let [extensionName,file] = file.split(":");
-            this._renderer = this.app.extension(extensionName);
+            [extensionName,file] = file.split(":");
+            this._renderer = this.app.extensions.get(extensionName);
         }
         this._file = file.trim();
 

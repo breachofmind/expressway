@@ -1,6 +1,6 @@
 "use strict";
 
-var _ = require('lodash/string');
+var _ = require('lodash');
 var URL = require('url');
 var path = require('path');
 var fs = require('fs');
@@ -13,6 +13,8 @@ var fs = require('fs');
  */
 module.exports = function(app,config)
 {
+    var base = _.trimEnd(config('proxy', `${config('url')}:${config('port')}`), "/");
+
     return new class URLService
     {
         get name()
@@ -26,8 +28,7 @@ module.exports = function(app,config)
          */
         get base()
         {
-            let base = config('proxy', `${config('url')}:${config('port')}`);
-            return _.trimEnd(base, "/");
+            return base;
         }
 
         /**
@@ -54,7 +55,9 @@ module.exports = function(app,config)
          * @returns {string}
          */
         get(uri="") {
-            if (Array.isArray(uri)) uri = _.compact(uri.join("/"));
+            if (Array.isArray(uri)) {
+                uri = _.compact(uri).join("/");
+            }
             uri = _.trim(uri, "/");
             return `${this.base}/${uri}`;
         }

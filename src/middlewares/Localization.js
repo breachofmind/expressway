@@ -33,7 +33,7 @@ class Localization extends Middleware
                 request.lang = locale.helper(request);
 
                 // Bind a helper function to the view object.
-                response.view.use('lang', request.lang);
+                if (response.view) response.view.use('lang', request.lang);
 
                 next();
             }

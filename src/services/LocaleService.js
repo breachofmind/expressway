@@ -42,7 +42,7 @@ module.exports = function(app,debug,utils)
                     let hash  = require(abs);
                     let count = this.setKeys(localeName, file, hash);
 
-                    debug("%s added: %s (%s keys)", this.constructor.name, abs,count);
+                    debug("LocaleService added: %s (%s keys)", abs,count);
                 });
             });
         }

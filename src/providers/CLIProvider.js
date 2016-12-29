@@ -115,10 +115,10 @@ class CLIProvider extends Provider
 
         cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
         {
-            app.extensions.stacks().forEach(application =>
+            app.extensions.stacks().forEach(extension =>
             {
-                var columns = cli.columns(application.stack, {
-                    title: `#${application.index}: ${application.name}`,
+                var columns = cli.columns(extension.stack, {
+                    title: `#${extension.index}: ${extension.name}`,
                     map(route,i) {
                         return {
                             index: i,
@@ -137,8 +137,9 @@ class CLIProvider extends Provider
                             return routes.map((object,i) =>
                             {
                                 if (! object) return "<anonymous>";
-                                if (object instanceof expressway.Extension) {
-                                    return colors.blue(object.name);
+
+                                if (app.services.has(object) && app.service(object) instanceof expressway.Extension) {
+                                    return colors.blue(object);
                                 }
                                 // This is a controller.
                                 if (object.indexOf(".") > -1) return colors.cyan(object);

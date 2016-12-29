@@ -26,6 +26,7 @@ class Extension
          */
         this.mounted = {};
 
+        this.staticPaths = {};
         this.middleware = [];
         this.routes = [];
 
@@ -57,12 +58,18 @@ class Extension
      */
     mount(extension,base=null)
     {
-        if (! base) base = extension.base;
         if (! (extension instanceof Extension)) {
             throw new TypeError('must be instance of Extension');
         }
+        if (! base) base = extension.base;
         this.express.use(base, extension.express);
         this.mounted[base] = extension;
+
+        // Migrate some settings
+        if (! extension.express.get('view engine')) {
+            extension.express.set('views', this.express.get('views'));
+            extension.express.set('view engine', this.express.get('view engine'));
+        }
 
         return this;
     }
@@ -93,6 +100,10 @@ class Extension
     {
         this.add(this.middleware);
         this.add(this.routes);
+
+        if (this.base !== "/") {
+            app.root.mount(this)
+        }
     }
 }
 

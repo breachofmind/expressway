@@ -29,10 +29,13 @@ class CSRF extends Middleware
             },
             function CSRFError (err,request,response,next) {
                 if (err.code !== 'EBADCSRFTOKEN') {
-                    response.view.meta('_csrf', request.csrfToken(), {id:"CSRFTOKEN"});
                     return next(err);
                 }
                 return response.sendStatus(403);
+            },
+            function CSRFToken (request,response,next) {
+                response.view.meta('_csrf', request.csrfToken(), {id:"CSRFTOKEN"});
+                next();
             }
         ];
     }

@@ -9,6 +9,13 @@ class Init extends Middleware
         return "Runs at the start of all requests";
     }
 
+    constructor(app)
+    {
+        super(app);
+
+        app.service(view);
+    }
+
     dispatch(extension)
     {
         function Init(request,response,next) {
@@ -19,5 +26,11 @@ class Init extends Middleware
         return Init;
     }
 }
+
+function view(request,response,next) {
+    return response.view;
+}
+
+view.$call = true;
 
 module.exports = Init;

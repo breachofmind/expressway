@@ -1,7 +1,7 @@
 "use strict";
 
 var Middleware = require('expressway').Middleware;
-var flash      = require('connect-flash');
+var connectFlash = require('connect-flash');
 
 class Flash extends Middleware
 {
@@ -9,15 +9,29 @@ class Flash extends Middleware
         return "Provides session-based Flash messaging via connect-flash";
     }
 
+    constructor(app)
+    {
+        super(app);
+
+        app.service('flash',flash);
+    }
+
     dispatch(extension)
     {
-        var middleware = flash();
+        var middleware = connectFlash();
         return function Flash(...args)
         {
             return middleware(...args);
         }
     }
 }
+
+function flash(request,response,next) {
+    let message = request.flash('message');
+    return message.length ? message[0] : null;
+}
+flash.$call = true;
+flash.$constructor = false;
 
 module.exports = Flash;
 

@@ -87,6 +87,7 @@ function expressway(opts={})
     return app;
 }
 
+expressway.Promise    = require('bluebird');
 expressway.Controller = require('./src/Controller');
 expressway.Middleware = require('./src/Middleware');
 expressway.Extension  = require('./src/Extension');

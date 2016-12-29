@@ -119,6 +119,8 @@ class Controller
 
             if (response.headersSent) return null;
 
+            if (response.view) response.view.use(controller.defaults);
+
             // Allows the injection of services into a controller method.
             // The first 3 arguments are always the request/response/next params.
             let output = controller.app.call(controller, method, [request,response,next]);

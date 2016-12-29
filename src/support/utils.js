@@ -444,3 +444,18 @@ exports.castToArray = function(value, flatten=false)
     }
     return flatten ? _.compact( _.flattenDeep(value) ) : value;
 };
+
+/**
+ * Attach the $call=true property to a function.
+ * @param fn Function
+ * @throws TypeError
+ * @returns {Function}
+ */
+exports.callable = function(fn)
+{
+    if (! typeof fn !== 'function') {
+        return new TypeError('argument is not a function');
+    }
+    fn.$call = true;
+    return fn;
+};

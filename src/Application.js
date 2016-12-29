@@ -89,12 +89,6 @@ class Application extends EventEmitter
             paths.add(key,value);
         });
 
-        function view(request,response,next) {
-            return response.view;
-        }
-        view.$call = true;
-        this.service(view);
-
         // Create a base extension to add routes.
         this.extensions.add('root', config('root',Root));
     }

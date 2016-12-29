@@ -6,7 +6,11 @@ var livereload = require('livereload');
 
 class Development extends Middleware
 {
-    constructor(app, url)
+    get description() {
+        return "Adds webpack hot module replacement to a module (ENV_LOCAL only)";
+    }
+
+    constructor(app,url)
     {
         super(app);
 
@@ -31,9 +35,7 @@ class Development extends Middleware
         app.service('devMiddleware', this);
     }
 
-    get description() {
-        return "Adds webpack hot module replacement to a module (ENV_LOCAL only)";
-    }
+
     /**
      * Have the livereload server watch a path.
      * @param path

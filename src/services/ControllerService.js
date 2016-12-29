@@ -19,6 +19,12 @@ module.exports = function(app,debug)
             this.on('add', (app,name,value) => {
                 debug("ControllerService added: %s", name);
             });
+
+            function controller(name) {
+                return this.get(name);
+            }
+
+            app.service('controller', controller.bind(this));
         }
 
         /**
