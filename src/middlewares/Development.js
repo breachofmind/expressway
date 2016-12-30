@@ -10,6 +10,12 @@ class Development extends Middleware
         return "Adds webpack hot module replacement to a module (ENV_LOCAL only)";
     }
 
+    /**
+     * Constructor.
+     * @injectable
+     * @param app Application
+     * @param url URLService
+     */
     constructor(app,url)
     {
         super(app);
@@ -53,6 +59,7 @@ class Development extends Middleware
 
     /**
      * Dispatch middleware functions to express.
+     * @injectable
      * @param extension Extension
      * @returns {(*|*)[]}
      */
@@ -68,6 +75,7 @@ class Development extends Middleware
 
     /**
      * Start the webpack hot middleware dev server.
+     * @injectable
      * @param extension Extension
      * @param log Winston
      * @returns {[*,*]}
@@ -102,6 +110,7 @@ class Development extends Middleware
 
     /**
      * Start the livereload server.
+     * @injectable
      * @param extension Extension
      * @param app Application
      * @param log Winston
@@ -129,13 +138,11 @@ class Development extends Middleware
                 debug('Livereload watching path %s', dir);
             });
 
+            app.on('view.render', function(view) {
+                view.script('livereload', 'http://localhost:35729/livereload.js');
+            });
+
             this.livereloadRunning = true;
-        }
-
-
-        return function Livereload(request,response,next) {
-            response.view.script('livereload', 'http://localhost:35729/livereload.js');
-            next();
         }
     }
 }

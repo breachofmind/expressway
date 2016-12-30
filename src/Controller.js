@@ -113,7 +113,7 @@ class Controller
          * @param next
          * @returns {*}
          */
-        function route(request,response,next)
+        function controllerRoute(request,response,next)
         {
             response.$route = routeName;
 
@@ -132,10 +132,10 @@ class Controller
             return response.smart(output);
         }
 
-        route.$name = routeName;
+        controllerRoute.$name = routeName;
 
         // Add the requested route to the end of the stack.
-        middleware.push(route);
+        middleware.push(controllerRoute);
 
         return utils.compound(middleware);
     }

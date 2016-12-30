@@ -63,6 +63,18 @@ module.exports = function(app,config)
         }
 
         /**
+         * Add properties or methods to this object.
+         * @param object
+         * @returns {URLService}
+         */
+        extend(object)
+        {
+            _.assign(this,object);
+
+            return this;
+        }
+
+        /**
          * Get the value of this object.
          * @returns {String}
          */

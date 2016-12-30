@@ -295,6 +295,7 @@ exports.getMiddlewareStack = function(express)
 
                 });
             case "middleware" :
+            case "controllerRoute" :
                 return {
                     rx: rx,
                     path: "*",
