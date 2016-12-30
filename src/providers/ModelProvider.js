@@ -32,7 +32,7 @@ class ModelProvider extends Expressway.Provider
         app.service('ObjectId', mongoose.Types.ObjectId);
         app.service('ObjectIdType', mongoose.Schema.Types.ObjectId);
         app.service('SchemaTypes', mongoose.Schema.Types.ObjectId);
-        app.service('seeder', app.load('expressway/src/services/SeederService'));
+        app.service('seeder', app.load(require('../services/SeederService')));
 
         /**
          * A helper function for creating permissions.
@@ -42,7 +42,7 @@ class ModelProvider extends Expressway.Provider
          */
         function permissions(modelNames, actions=CRUD)
         {
-            let models = utils.castToArray(modelNames);
+            let models = [].concat(modelNames);
             return utils.compound (models.map(modelName => {
                 return actions.map(action => {
                     return `${modelName}.${action}`;

@@ -87,7 +87,9 @@ describe('Controller', function()
         expect(controller.simple()).to.equal('hello');
     });
     it('should throw if attempting to overwrite a controller', () => {
-        expect(function() { app.controllers.add(TestController) }).to.throw("controller already exists: TestController");
+        expect(function() { app.controllers.add(TestController) }).to.throw(ObjectExistsException);
+        expect(function() { app.controllers.add(TestController) }).to.throw(/controller already exists/);
+
     });
 
 

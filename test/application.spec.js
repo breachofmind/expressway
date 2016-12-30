@@ -111,7 +111,8 @@ describe('Application', function()
         })
 
         it('should throw when attempting to overwrite a defined service', () => {
-            expect(function() { app.service('testStr', "OVERWRITE!") }).to.throw('service already exists: testStr');
+            expect(function() { app.service('testStr', "OVERWRITE!") }).to.throw(ObjectExistsException);
+            expect(function() { app.service('testStr', "OVERWRITE!") }).to.throw(`service already exists`);
         });
 
         it('should return one service using app.get(name)', () => {

@@ -20,10 +20,6 @@ module.exports = function(app,debug)
                 debug("ControllerService added: %s", name);
             });
 
-            function controller(name) {
-                return this.get(name);
-            }
-
             app.service('controller', controller.bind(this));
         }
 
@@ -44,3 +40,12 @@ module.exports = function(app,debug)
         }
     }
 };
+
+/**
+ * Helper function to get controllers.
+ * @param name string
+ */
+function controller(name)
+{
+    return this.get(name);
+}

@@ -257,13 +257,22 @@ class Application extends EventEmitter
             return this;
         }
 
-        let value = this.load(fn);
+        try {
+            let value = this.load(fn);
 
-        _.each(CLASS_COLLECTIONS, (Class,property) => {
-            if (value && value instanceof Class) {
-                this[property].add(value.name, value);
-            }
-        });
+            _.each(CLASS_COLLECTIONS, (Class,property) => {
+                if (value && value instanceof Class) {
+                    this[property].add(value.name, value);
+                }
+            });
+        } catch (err) {
+
+            // When adding classes via app.use(), we're going to let it slide if the objects exist.
+            let isObjectExistError = err instanceof ObjectExistsException
+                || (err instanceof ApplicationCallError && err.thrown instanceof ObjectExistsException);
+
+            if (! isObjectExistError) throw err;
+        }
 
         return this;
     }
@@ -318,21 +327,23 @@ class Application extends EventEmitter
         // This is a method on an object.
         if (method) {
             if (typeof context !== 'object')
-                throw new ApplicationCallError(`context must be an object if method name given`,context,method);
+                throw new ApplicationCallTypeError(`context must be an object if method name given`,context,method);
             if (typeof context[method] !== 'function')
-                throw new ApplicationCallError(`context method must be a function`,context,method);
+                throw new ApplicationCallTypeError(`context method must be a function`,context,method);
 
             try {
                 // Return the context method function injected with services.
                 return context[method].apply(context, this.inject(context[method], args));
             } catch (err) {
-                throw new ApplicationCallError(err.message, context,method);
+                throw new ApplicationCallError(err,context,method);
             }
         }
 
         // After this point, the context must be a function.
-        if (typeof context !== 'function')
-            throw new ApplicationCallError(`context must be a function`,context,method);
+        if (typeof context !== 'function') {
+            throw new ApplicationCallTypeError(`context must be a function`,context,method);
+        }
+
 
         try {
             // This is a class or constructor function.
@@ -346,7 +357,7 @@ class Application extends EventEmitter
             return context.apply(context, this.inject(context, args));
 
         } catch(err) {
-            throw new ApplicationCallError(err.message, context,method);
+            throw new ApplicationCallError(err, context,method);
         }
     }
 
@@ -383,7 +394,8 @@ class Application extends EventEmitter
      */
     boot()
     {
-        if (! this.booted) {
+        if (! this.booted)
+        {
             this.providers.boot();
             this.models.boot();
             this.extensions.boot();

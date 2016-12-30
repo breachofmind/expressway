@@ -19,6 +19,18 @@ String.prototype.splice = function(start, delCount, newSubStr) {
 };
 
 /**
+ * Specifies that the given function is not a constructor and is callable.
+ * @returns {Function}
+ */
+Function.prototype.callable = function()
+{
+    this.$call = true;
+    this.$constructor = false;
+
+    return this;
+}
+
+/**
  * Return a query string value or the default value.
  * @param property string
  * @param defaultValue optional
@@ -118,7 +130,7 @@ http.ServerResponse.prototype.api = function(data,status,metadata)
             }
         }
     }
-    response.data = data;
+    response[status == 200 ? 'data' : 'error'] = data;
 
     return this.smart(response,status);
 };

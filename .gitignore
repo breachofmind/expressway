@@ -5,3 +5,4 @@ app/logs/*
 
 *.DS_Store
 demo
+*npm-debug.log

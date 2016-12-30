@@ -69,7 +69,8 @@ describe('Middleware', function()
         expect(middleware.method()).to.equal('hello');
     });
     it('should throw if attempting to overwrite a middleware', () => {
-        expect(function() { app.middleware.add(TestMiddleware) }).to.throw("middleware already exists: TestMiddleware");
+        expect(function() { app.middleware.add(TestMiddleware) }).to.throw(ObjectExistsException);
+        expect(function() { app.middleware.add(TestMiddleware) }).to.throw(/middleware already exists/);
     });
 
     it('should create anonymous middleware using Middleware.create()', () => {

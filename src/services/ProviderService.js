@@ -15,10 +15,6 @@ module.exports = function(app,debug,utils)
             super(app,'provider');
 
             this.class = Provider;
-
-            this.on('add', (app,name,value) => {
-                debug('ProviderService added: %s',name);
-            });
         }
 
         /**
@@ -43,11 +39,13 @@ module.exports = function(app,debug,utils)
         {
             this.list().forEach(item =>
             {
-                if (item.object.isLoadable(app.env, app.context) && ! item.object.booted) {
-                    this.app.call(item.object,'boot');
-                    item.object._booted = true;
+                let provider = item.object;
 
-                    debug('ProviderService booted: %s', item.object.name);
+                if (provider.isLoadable(app.env, app.context) && ! provider.booted) {
+                    this.app.call(provider,'boot');
+                    provider._booted = true;
+
+                    debug('ProviderService booted: %s', provider.name);
                 }
             });
         }

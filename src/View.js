@@ -50,6 +50,14 @@ class View
     }
 
     /**
+     * Get the current extension.
+     * @returns {Extension}
+     */
+    get extension() {
+        return this._renderer;
+    }
+
+    /**
      * Set the template to render.
      * @param file string
      */

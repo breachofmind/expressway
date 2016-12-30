@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test",
+    "demo" : "node ./demo/index.js start",
     "mongod": "mongod"
   },
   "keywords": [

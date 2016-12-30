@@ -4,14 +4,38 @@ var colors = require('colors/safe');
 
 class ApplicationCallError extends Error
 {
-    constructor(message,context,method)
+    constructor(error,context,method)
     {
-        super(message,1);
+        super(error.message,1);
 
-        this.message += "\nat: "+colors.red(context.name);
-        if (method) {
-            this.message += "."+colors.red(method)+"()";
+        this.error = error;
+        this.context = context;
+        this.method = method;
+
+        this.message += "\n" + this.called;
+    }
+
+    each(callback)
+    {
+        let thrown = this.error;
+        while(thrown instanceof ApplicationCallError) {
+            callback(thrown);
+            thrown = thrown.error;
         }
+    }
+
+    get called()
+    {
+        return `at: ${colors.red(this.context.name)}` + (this.method ? `.${colors.red(this.method)}()` : "");
+    }
+
+    get thrown()
+    {
+        let thrown = this.error;
+        while(thrown instanceof ApplicationCallError) {
+            thrown = thrown.error;
+        }
+        return thrown;
     }
 }
 

@@ -147,11 +147,24 @@ class Extension
         });
     }
 
-    requires(extensionName)
+    /**
+     * Require a module with the app and extension as dependencies.
+     * @param fn Function|String
+     * @param args Array
+     * @returns {Extension}
+     */
+    use(fn,args=[])
     {
-        if (! this.app.extensions.has(extensionName)) {
-            throw new MissingDependencyException('extension missing dependency: '+this.name, extensionName,this.name);
+        if (Array.isArray(fn)) {
+            fn.forEach(item => { this.use(item,args) });
+
+            return this;
         }
+        args = [this.app,this].concat([args]);
+        let module = typeof fn == 'string' ? require(fn) : fn;
+        this.app.call(module,null,args);
+
+        return this;
     }
 }
 

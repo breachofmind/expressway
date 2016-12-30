@@ -13,7 +13,8 @@ class Init extends Middleware
     {
         super(app);
 
-        app.service(view);
+        app.service(view.callable());
+        app.service(extension.callable());
     }
 
     dispatch(extension)
@@ -29,8 +30,12 @@ class Init extends Middleware
 
 function view(request,response,next) {
     return response.view;
+};
+
+function extension(request,response,next) {
+    return response.view.extension;
 }
 
-view.$call = true;
+//view.$call = true;
 
 module.exports = Init;

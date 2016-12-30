@@ -30,9 +30,9 @@ module.exports = function(app,debug)
          */
         boot()
         {
-            this.each(item => {
-                this.app.call(item.object,'boot');
-                debug('Model booted: %s', item.name);
+            this.each(model => {
+                this.app.call(model,'boot');
+                debug('Model booted: %s', model.name);
             });
         }
 

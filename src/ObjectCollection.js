@@ -16,7 +16,7 @@ class ObjectCollection extends EventEmitter
          * The Application instance.
          * @type Application
          */
-        this.app = app;
+        this._app = app;
 
         /**
          * The type of object in the collection.
@@ -47,6 +47,19 @@ class ObjectCollection extends EventEmitter
          * @type {boolean}
          */
         this.createService = false;
+
+        this.on('exists', (name) => {
+            var debug = app.get('debug');
+            debug(`${this.name} object exists: %s`,name);
+        })
+    }
+
+    /**
+     * Get the Application instance.
+     * @returns {Application}
+     */
+    get app() {
+        return this._app;
     }
 
     get name() {
@@ -95,7 +108,8 @@ class ObjectCollection extends EventEmitter
         }
 
         if (this.has(name)) {
-            throw new Error(`${this.type} already exists: ${name}`);
+            this.emit('exists', name);
+            throw new ObjectExistsException(`${this.type} already exists`, this, name);
         }
         if (this.class) {
             value = this._getInstance(name,value);
@@ -130,11 +144,9 @@ class ObjectCollection extends EventEmitter
         if (typeof fn !== 'function') {
             throw new TypeError(`not a function or ${this.type} class: ${name}`);
         }
-        try {
-            instance = this.app.call(fn,[this.app]);
-        } catch (err) {
-            throw new Error(`error adding ${name} ${this.type}: ${err.message}`);
-        }
+
+        instance = this.app.call(fn,[this.app]);
+
         if (! (instance instanceof this.class)) {
             throw new TypeError(`not a ${this.class.name} instance: ${instance.name}`);
         }
@@ -186,7 +198,7 @@ class ObjectCollection extends EventEmitter
             throw new TypeError('callback function required');
         }
         return this.list().map((item,index) => {
-            return callback(item,index);
+            return callback(item.object,item.index,item.name);
         });
     }
 

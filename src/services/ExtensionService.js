@@ -25,7 +25,7 @@ module.exports = function(app,debug,utils)
                     app.service(value.alias, value);
                     this.aliases[value.alias] = value;
                 }
-                debug("ExtensionService added: %s", name);
+                debug("ExtensionService added: %s -> %s", name, value.alias || "<no alias>");
             })
         }
 
@@ -43,11 +43,11 @@ module.exports = function(app,debug,utils)
                 return utils.getMiddlewareStack(this.get(moduleName).express);
             }
 
-            return this.each(item => {
+            return this.each((extension,index,key) => {
                 return {
-                    index: item.index,
-                    name: item.object.name,
-                    stack: utils.getMiddlewareStack(item.object.express)
+                    index: index,
+                    name: extension.name,
+                    stack: utils.getMiddlewareStack(extension.express)
                 }
             });
         }
@@ -69,8 +69,8 @@ module.exports = function(app,debug,utils)
          */
         boot()
         {
-            this.each(item => {
-                this.app.call(item.object,'boot');
+            this.each(extension => {
+                this.app.call(extension,'boot');
             });
         }
     }
