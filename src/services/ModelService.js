@@ -2,6 +2,7 @@
 
 var Model = require('../Model');
 var ObjectCollection = require('../ObjectCollection');
+var Promise = require('bluebird');
 
 module.exports = function(app,debug)
 {
@@ -26,13 +27,15 @@ module.exports = function(app,debug)
 
         /**
          * Boot each model.
-         * @returns void
+         * @returns Array<Promise>
          */
         boot()
         {
-            this.each(model => {
-                this.app.call(model,'boot');
-                debug('Model booted: %s', model.name);
+            return this.each(model => {
+                return new Promise(resolve => {
+                    this.app.call(model,'boot',[resolve]);
+                    debug('Model booted: %s', model.name);
+                });
             });
         }
 

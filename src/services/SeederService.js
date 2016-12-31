@@ -132,7 +132,7 @@ module.exports = function(app,debug,log,ObjectId,paths)
             this.seeded = false;
             this.data   = [];
             this.models = [];
-            this.dump  = seeder.dump ? true : false;
+            this.dump  = seeder.dump;
         }
 
         setId(row)

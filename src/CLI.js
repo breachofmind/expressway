@@ -46,11 +46,13 @@ module.exports = function(app,log)
          */
         run(args)
         {
-            if (! app.booted) app.boot();
+            app.boot().then(() =>
+            {
+                if (! arguments.length) args = process.argv;
+                if (! args[2]) args[2] = "--help";
 
-            if (! arguments.length) args = process.argv;
-            if (! args[2]) args[2] = "--help";
-            this.program.parse(args);
+                this.program.parse(args);
+            });
         };
 
         /**

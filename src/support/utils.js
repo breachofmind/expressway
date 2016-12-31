@@ -445,3 +445,12 @@ exports.castToArray = function(value, flatten=false)
     }
     return flatten ? _.compact( _.flattenDeep(value) ) : value;
 };
+
+/**
+ * No op function.
+ * @returns {null}
+ */
+exports.noop = function()
+{
+    return null;
+}

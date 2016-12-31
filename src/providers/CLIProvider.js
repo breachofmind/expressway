@@ -7,12 +7,21 @@ var _string     = require('lodash/string');
 var columnify   = require('columnify');
 var colors      = require('colors/safe');
 var fs          = require('fs');
+var https        = require('https');
 var _           = require('lodash');
 
 const LINE = Array(30).join("-");
 const BREAK = "";
 const ITEM_TITLE_COLOR = 'magenta';
 const ITEM_ORDER_COLOR = 'blue';
+const OBJECT_INDEX = {
+    "controller" : 'controllers',
+    "middleware" : 'middleware',
+    "provider"   : 'providers',
+    "service"    : 'services',
+    "extension"  : 'root',
+    "model"      : 'models',
+};
 
 /**
  * Function for coloring a boolean value.
@@ -50,6 +59,7 @@ class CLIProvider extends Provider
             'listControllersCommand',
             'listMiddlewaresCommand',
             'listModelsCommand',
+            'borrowCommand',
             'seedCommand'
         ];
 
@@ -59,36 +69,49 @@ class CLIProvider extends Provider
     }
 
     /**
-     * Give the CLI class some default actions.
-     * @param app Application
+     * Add a command.
+     * @param commandName string
+     * @param fn
+     * @returns {CLIProvider}
      */
-    boot(app)
+    add(commandName, fn)
+    {
+        if (this.commands.indexOf(commandName) > -1) {
+            throw new Error('command exists: '+commandName);
+        }
+        this.commands.push(commandName);
+        this[fn] = fn;
+
+        return this;
+    }
+
+    /**
+     * Give the CLI class some default actions.
+     * @param done Function
+     * @param app Application
+     * @param cli CLI
+     */
+    boot(done,app,cli)
     {
         this.commands.forEach(commandName => {
-            app.call(this, commandName);
+            app.call(this, commandName,[app,cli]);
         });
+        done();
     }
 
     /**
      * Create a new model, controller or provider.
      * @usage ./bin/cli new [controller|middleware|provider|extension|model] name
      */
-    createNewCommand(cli,paths)
+    createNewCommand(app,cli,paths)
     {
         cli.command('new [class] <name>', "Create a new provider, middleware, controller or model").action((env,opts) =>
         {
             let fileName = `${opts}.js`;
-            let types = {
-                "controller" : paths.controllers(fileName),
-                "middleware" : paths.middleware(fileName),
-                "provider"   : paths.providers(fileName),
-                "service"   : paths.services(fileName),
-                "extension"  : paths.root(fileName),
-                "model"      : paths.models(fileName),
-            };
             let type = env.trim().toLowerCase();
             let tmplFile = path.resolve(__dirname,'../templates', `${type}.template`);
-            let destFile = types[type];
+
+            let destFile = paths.to(OBJECT_INDEX[type], fileName);
             if (! destFile) {
                 throw (`template not available: ${type}`);
             }
@@ -97,6 +120,37 @@ class CLIProvider extends Provider
 
             process.exit();
         });
+    }
+
+    /**
+     * Borrow command.
+     * @usage ./bin/cli borrow <object> [options]
+     */
+    borrowCommand(app,cli,paths,log)
+    {
+        cli.command('borrow [options]', "Borrow a file from a github location")
+            .option('-r, --repo [name]', "Github repo, ie breachofmind/expressway")
+            .option('-b, --branch [name]', "Repo branch. Default is master")
+            .option('-f, --file [name]', "File to borrow")
+            .action((env,opts) =>
+            {
+                let type = env;
+                let base = "https://raw.githubusercontent.com";
+                let repo = opts.repo;
+                let branch = opts.branch || "master";
+                let file = opts.file;
+                let destFile = paths.to(OBJECT_INDEX[type], path.basename(file));
+                let dest = fs.createWriteStream(destFile);
+
+                let req = https.get(`${base}/${repo}/${branch}/${file}`, function(response) {
+                    response.pipe(dest);
+                }).on('close', function() {
+                    log.info(`created %s: %s`,type,destFile);
+                    process.exit();
+                });
+
+
+            });
     }
 
     /**

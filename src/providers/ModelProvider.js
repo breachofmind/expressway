@@ -3,7 +3,7 @@
 var Expressway = require('expressway');
 var mongoose   = require('mongoose');
 var session    = require('express-session');
-var Store      = require('connect-mongo')(session);
+var MongoStore = require('connect-mongo')(session);
 var Promise    = require('bluebird');
 var _          = require('lodash');
 
@@ -31,7 +31,7 @@ class ModelProvider extends Expressway.Provider
         app.service('db', mongoose);
         app.service('ObjectId', mongoose.Types.ObjectId);
         app.service('ObjectIdType', mongoose.Schema.Types.ObjectId);
-        app.service('SchemaTypes', mongoose.Schema.Types.ObjectId);
+        app.service('SchemaTypes', mongoose.Schema.Types);
         app.service('seeder', app.load(require('../services/SeederService')));
 
         /**
@@ -53,17 +53,20 @@ class ModelProvider extends Expressway.Provider
         permissions.CRUD = CRUD;
 
         app.service(permissions);
+
+        app['db'] = mongoose;
     }
 
     /**
      * When the app boots, connect to the database.
+     * @param done Function
      * @param app
      * @param db
      * @param config
      * @param log
      * @param debug
      */
-    boot(app,db,config,log,debug)
+    boot(done,app,db,config,log,debug)
     {
         let credentials = config('db');
 
@@ -74,16 +77,14 @@ class ModelProvider extends Expressway.Provider
 
         db.connection.on('open', () => {
             debug('ModelProvider connected to MongoDB: %s', credentials);
-            app.emit('database.connected');
+            app.emit('database.connected', db);
+            done();
         });
 
         db.connect(credentials);
 
-        if (app.middleware.has('Session')) {
-            app.middleware.get('Session').setStore(Store, {
-                mongooseConnection: db.connection
-            })
-        }
+        // This should tell the Session middleware which store to use.
+        app.emit('database.boot',db,MongoStore);
     }
 }
 

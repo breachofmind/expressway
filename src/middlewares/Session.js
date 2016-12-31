@@ -32,7 +32,14 @@ class Session extends Middleware
         this.store = FileStore;
         this.storeOptions = {
             path: paths.tmp('sessions'),
-        }
+        };
+
+        app.on('database.boot', (db,MongoStore) => {
+            this.setStore(MongoStore, {
+                mongooseConnection: db.connection
+            })
+        });
+
     }
 
     /**
@@ -61,8 +68,10 @@ class Session extends Middleware
      * @param extension Extension
      * @returns {Session}
      */
-    dispatch(extension)
+    dispatch(extension,debug)
     {
+        debug('Session using store: %s -> %s', extension.name, this.store.name);
+
         let middleware = session(this.sessionOptions);
 
         return function Session(...args) {

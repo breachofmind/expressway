@@ -2,6 +2,7 @@
 
 var Extension       = require('../Extension');
 var ObjectCollection = require('../ObjectCollection');
+var Promise = require('bluebird');
 
 module.exports = function(app,debug,utils)
 {
@@ -65,12 +66,14 @@ module.exports = function(app,debug,utils)
 
         /**
          * Boot the extensions.
-         * @returns void
+         * @returns Array<Promise>
          */
         boot()
         {
-            this.each(extension => {
-                this.app.call(extension,'boot');
+            return this.each(extension => {
+                return new Promise(resolve => {
+                    this.app.call(extension,'boot',[resolve]);
+                })
             });
         }
     }

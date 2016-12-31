@@ -12,6 +12,7 @@ var Provider = require('./Provider');
 var Controller = require('./Controller');
 var Middleware = require('./Middleware');
 var Model = require('./Model');
+var Promise = require('bluebird');
 
 const CLASS_COLLECTIONS = {
     providers: Provider,
@@ -394,16 +395,25 @@ class Application extends EventEmitter
      */
     boot()
     {
-        if (! this.booted)
+        return new Promise((resolve,reject) =>
         {
-            this.providers.boot();
-            this.models.boot();
-            this.extensions.boot();
+            if (this.booted) return resolve();
 
-            this._booted = true;
-        }
+            var promises = [].concat(
+                this.models.boot(),
+                this.providers.boot(),
+                this.extensions.boot()
+            );
+            var iterator = function(item) { return item };
 
-        return this;
+            Promise.each(promises, iterator).then(() => {
+
+                this._booted = true;
+                this.emit('booted');
+
+                return resolve();
+            })
+        });
     }
 
     /**
@@ -413,22 +423,23 @@ class Application extends EventEmitter
      */
     start(listening=null)
     {
-        this.boot();
-
-        let [log,url] = this.get('log','url');
-
-        this.root.express.listen(this.config.port, () =>
+        this.boot().then(() =>
         {
-            log.info('using root path: %s', this.rootPath);
-            log.info(`starting %s server v.%s on %s`,
-                this.env,
-                this.version,
-                url.get()
-            );
+            let [log,url] = this.get('log','url');
 
-            this.emit('listening');
+            this.root.express.listen(this.config.port, () =>
+            {
+                log.info('using root path: %s', this.rootPath);
+                log.info(`starting %s server v.%s on %s`,
+                    this.env,
+                    this.version,
+                    url.get()
+                );
 
-            if (typeof listening == 'function') this.call(listening);
+                this.emit('listening');
+
+                if (typeof listening == 'function') this.call(listening);
+            });
         });
     }
 }

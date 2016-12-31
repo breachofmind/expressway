@@ -2,6 +2,7 @@
 
 var Provider       = require('../Provider');
 var ObjectCollection = require('../ObjectCollection');
+var Promise = require('bluebird');
 
 module.exports = function(app,debug,utils)
 {
@@ -33,20 +34,25 @@ module.exports = function(app,debug,utils)
 
         /**
          * Sort and boot each provider that is loadable.
-         * @returns void
+         * @returns Array<Promise>
          */
         boot()
         {
-            this.list().forEach(item =>
+            return this.list().map(item =>
             {
-                let provider = item.object;
+                return new Promise(resolve =>
+                {
+                    let provider = item.object;
 
-                if (provider.isLoadable(app.env, app.context) && ! provider.booted) {
-                    this.app.call(provider,'boot');
+                    if (! provider.isLoadable(app.env,app.context) || provider.booted) {
+                        return resolve();
+                    }
+
+                    this.app.call(provider,'boot',[resolve]);
                     provider._booted = true;
 
                     debug('ProviderService booted: %s', provider.name);
-                }
+                })
             });
         }
     }

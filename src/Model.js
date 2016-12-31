@@ -31,7 +31,7 @@ class Model
          * The default primary key field name.
          * @type {string}
          */
-        this.primaryKey = "id";
+        this.primaryKey = "_id";
 
         /**
          * The slugified version of the model name, for use in URL's.
@@ -100,9 +100,28 @@ class Model
          * @type {number} 1|-1
          */
         this.sort = 1;
+
+        /**
+         * The most recent compiled schema and methods.
+         * @type {{}}
+         * @private
+         */
+        this.__schema = {};
+        this.__methods = {};
+        this.__old = {schema:{}, methods:{}};
     }
 
+    /**
+     * Get the Application instance.
+     * @returns {Application}
+     */
     get app() { return this._app; }
+
+    /**
+     * Get the database instance.
+     * @returns {Mongoose}
+     */
+    get db() { return this.app.db; }
 
     /**
      * Return the name of the object.
@@ -122,21 +141,31 @@ class Model
      */
     get model() { return this._model; }
 
+
     /**
-     * Set the mongoose model.
-     * @param model {Object}
+     * Get the schema object.
+     * @injectable
+     * @returns {Object}
      */
-    set model(model) { this._model = model; }
+    schema()
+    {
+        return {
+            created_at   : { type: Date, default: Date.now },
+            modified_at  : { type: Date, default: Date.now },
+            [this.title] : { type: String, required: true }
+        }
+    }
 
     /**
      * Get the methods object.
+     * @injectable
      * @returns {Object}
      */
-    get methods()
+    methods(object)
     {
         let self = this;
 
-        return {
+        let methods = {
             /**
              * The default toJSON method.
              * @returns {{}}
@@ -168,15 +197,18 @@ class Model
                             return json[arr[0]] = arr[1];
                         }
                     }
-                    // This is a method call from the object.
-                    if (typeof this[field] == "function") {
-                        return json[field] = this[field] ();
+                    // This is a method call or property from the object.
+                    if (this[field]) {
+                        return json[field] = typeof this[field] == 'function' ? this[field]() : this[field];
                     }
+
                 });
 
                 return utils.alphabetizeKeys(json);
             }
         }
+
+        return _.assign({},methods,object);
     }
 
     /**
@@ -200,23 +232,49 @@ class Model
         return {[this.key]: query};
     };
 
-
     /**
      * Boot the model.
+     * @injectable
+     * @params done Function
      * @returns {boolean}
      */
-    boot(db)
+    boot(done)
     {
-        if (this.booted) return this.booted;
-
-        var schema = new db.Schema(this.schema, {collection: this.table});
-        this.booting(schema);
-        schema.virtual('$base').get(() => {return this});
-        if (this.fillable.length == 0) this.fillable = Object.keys(this.schema);
-        schema.methods = this.methods;
-        this.model = db.model(this.name, schema);
+        if (! this.booted) this.refresh();
 
         this._booted = true;
+        done();
+    }
+
+    /**
+     * Assign a new schema and model instance.
+     * @returns void
+     */
+    refresh()
+    {
+        // Unregister and re-register the models.
+        if (this.db.models[this.name]) {
+            delete this.db.models[this.name];
+            delete this.db.modelSchemas[this.name];
+        }
+
+        // Create a reference to the previous state.
+        this.__old.schema  = this.__schema;
+        this.__old.methods = this.__methods;
+
+        this.__schema  = this.app.call(this,'schema',[{}]);
+        this.__methods = this.app.call(this,'methods',[{}]);
+
+        let schema = new this.db.Schema(this.__schema, {collection: this.table});
+        this.booting(schema);
+        schema.virtual('$base').get(() => {return this});
+
+        if (this.fillable.length == 0) {
+            this.fillable = Object.keys(this.__schema);
+        }
+        schema.methods = this.__methods;
+
+        this._model = this.db.model(this.name, schema);
     }
 
     /**

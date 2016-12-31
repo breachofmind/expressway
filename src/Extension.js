@@ -118,16 +118,18 @@ class Extension
 
     /**
      * Default boot method.
-     * @param app
+     * @param done Function
      */
-    boot(app)
+    boot(done)
     {
         this.add(this.middleware);
         this.add(this.routes);
 
         if (this.base !== "/") {
-            app.root.mount(this)
+            this.app.root.mount(this)
         }
+
+        done();
     }
 
     /**

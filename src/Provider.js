@@ -99,11 +99,11 @@ class Provider
 
     /**
      * Called when all providers have been registered.
-     * @param app Application
+     * @param done Function
      */
-    boot(app)
+    boot(done)
     {
-        return null;
+        return done();
     }
 
     /**
