@@ -5,20 +5,19 @@ var colors = require('colors/safe');
 /**
  * A colorful debugger.
  * @param app
+ * @param log Winston
  */
-module.exports = function(app)
+module.exports = function(app,log)
 {
     return function(message,...args)
     {
-        if (app.config.debug === false || app.context !== CXT_WEB) return;
-        args.forEach(arg => {
-            if (isNaN(arg)) arg = colors.green(arg);
-            else arg = colors.blue(arg);
-            message = message.replace("%s", arg);
+        args.forEach((arg,i) => {
+            if (isNaN(arg)) args[i] = colors.green(arg);
+            else args[i] = colors.blue(arg);
         });
         let parts = message.split(" ");
         parts[0] = colors.gray(parts[0]);
 
-        console.log(colors.blue("debug")+": "+ parts.join(" "));
+        log.debug(parts.join(" "), ...args);
     }
 };

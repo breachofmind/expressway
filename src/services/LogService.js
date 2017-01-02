@@ -19,7 +19,7 @@ var fs      = require('fs');
 module.exports = function(app)
 {
     var fileMaxSize = 1000 * 1000 * 10; // 10MB
-    var logFileName = path.resolve(app.rootPath, "tmp") + "/server.log";
+    var logFileName = path.join(app.rootPath, "tmp") + "/server.log";
     var colorize    = true;
 
     var consoleLogLevels = {
@@ -35,21 +35,25 @@ module.exports = function(app)
     };
 
     // Create the file if it doesn't exist.
-    if (! fs.existsSync(logFileName)) fs.writeFileSync(logFileName,"");
+    // Disregard if working in a test environment.
+    if (! fs.existsSync(logFileName) && app.context !== CXT_TEST) {
+        fs.writeFileSync(logFileName,"");
+    }
+    var transports = [];
 
-    return new winston.Logger({
-        transports: [
-            new winston.transports.Console({
-                level: consoleLogLevels[app.context],
-                colorize: colorize
-            }),
+    transports.push(new winston.transports.Console({
+        level: consoleLogLevels[app.context],
+        colorize: colorize
+    }));
 
-            // Will log events up to the access level into a file.
-            new winston.transports.File({
-                level: fileLogLevels[app.context],
-                filename: logFileName,
-                maxsize: fileMaxSize
-            })
-        ]
-    });
+    // Will log events up to the access level into a file.
+    if (app.context !== CXT_TEST) {
+        transports.push(new winston.transports.File({
+            level: fileLogLevels[app.context],
+            filename: logFileName,
+            maxsize: fileMaxSize
+        }));
+    }
+
+    return new winston.Logger({transports: transports});
 };

@@ -54,7 +54,7 @@ function expressway(opts={})
         throw new TypeError('config is required');
     }
     if (! opts.rootPath) opts.rootPath = path.dirname(process.argv[1]);
-    if (! opts.context) opts.context = CXT_WEB;
+    if (! opts.context) opts.context = EXPRESSWAY_CONTEXT;
 
     if (opts.context == CXT_TEST) {
         global.chai     = require('chai');

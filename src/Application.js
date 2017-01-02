@@ -49,23 +49,7 @@ class Application extends EventEmitter
         this._services    = new ObjectCollection(this, 'service');
         this._aliases     = new ObjectCollection(this, 'alias');
 
-        // This is globally available to all objects.
-        this.service('app',    this);
-        this.service('utils',  utils);
-        this.service('config', utils.objectAccessor(config));
-
-        // Logger and debug function are configurable.
-        this.service('log', config.logger
-            ? this.load(config.logger)
-            : this.load('./services/LogService'));
-
-        this.service('debug', config.debugger
-            ? this.load(config.debugger)
-            : this.get('log').debug);
-
-        this.service('paths',  this.load('./services/PathService'));
-        this.service('url',    this.load('./services/URLService'));
-        this.service('locale', this.load('./services/LocaleService'));
+        this._createBaseServices();
 
         this._providers   = this.load('./services/ProviderService');
         this._models      = this.load('./services/ModelService');
@@ -75,6 +59,38 @@ class Application extends EventEmitter
         this._dispatcher  = this.load('./services/Dispatcher');
 
         this.call(this,'init');
+    }
+
+    /**
+     * Create some basic services.
+     * @private
+     */
+    _createBaseServices()
+    {
+        let config = utils.objectAccessor(this.config);
+
+        this.service('app',    this);
+        this.service('utils',  utils);
+        this.service('config', config);
+
+        // Logger and debug function are configurable.
+        this.service('log', this.config.logger
+            ? this.load(this.config.logger)
+            : this.load('./services/LogService'));
+
+        this.service('debug', this.config.debugger
+            ? this.load(this.config.debugger)
+            : this.get('log').debug);
+
+        let URLService = this.load('./services/URLService');
+        let urlBase = _.trimEnd(config('proxy', `${config('url')}:${config('port')}`), "/");
+
+        this.service('paths',  this.load('./services/PathService'));
+        this.service('url',    new URLService(urlBase));
+        this.service('URLService', URLService);
+        this.service('locale', this.load('./services/LocaleService'));
+
+        this.emit('setup');
     }
 
     /**
@@ -92,6 +108,20 @@ class Application extends EventEmitter
 
         // Create a base extension to add routes.
         this.extensions.add('root', config('root',Root));
+    }
+
+    /**
+     * Add an event listener that will inject services into the callback.
+     * @param name string
+     * @param fn Function - injectable
+     * @returns {Application}
+     */
+    event(name, fn)
+    {
+        this.on(name, (...args) => {
+            this.call(fn,null,args);
+        });
+        return this;
     }
 
     /**
@@ -376,7 +406,7 @@ class Application extends EventEmitter
 
         return serviceNames.map((serviceName,index) =>
         {
-            if (padding[index]) return padding[index];
+            if (padding.length > index) return padding[index];
             let service = this._services.get(serviceName);
 
             // When a service is injected, it can be called again with the padding arguments.

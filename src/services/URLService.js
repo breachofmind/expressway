@@ -13,10 +13,13 @@ var fs = require('fs');
  */
 module.exports = function(app,config)
 {
-    var base = _.trimEnd(config('proxy', `${config('url')}:${config('port')}`), "/");
-
-    return new class URLService
+    return class URLService
     {
+        constructor(url)
+        {
+            this._url = url;
+        }
+
         get name()
         {
             return this.constructor.name;
@@ -28,7 +31,7 @@ module.exports = function(app,config)
          */
         get base()
         {
-            return base;
+            return this._url;
         }
 
         /**

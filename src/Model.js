@@ -265,6 +265,8 @@ class Model
         this.__schema  = this.app.call(this,'schema',[{}]);
         this.__methods = this.app.call(this,'methods',[{}]);
 
+        this.app.emit('schema.create', this);
+
         let schema = new this.db.Schema(this.__schema, {collection: this.table});
         this.booting(schema);
         schema.virtual('$base').get(() => {return this});

@@ -87,16 +87,16 @@ class CLIProvider extends Provider
 
     /**
      * Give the CLI class some default actions.
-     * @param done Function
+     * @param next Function
      * @param app Application
      * @param cli CLI
      */
-    boot(done,app,cli)
+    boot(next,app,cli)
     {
         this.commands.forEach(commandName => {
             app.call(this, commandName,[app,cli]);
         });
-        done();
+        next();
     }
 
     /**

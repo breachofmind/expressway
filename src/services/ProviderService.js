@@ -16,6 +16,11 @@ module.exports = function(app,debug,utils)
             super(app,'provider');
 
             this.class = Provider;
+
+            this.on('boot', (provider) =>
+            {
+                debug('ProviderService booted: %s', provider.name);
+            })
         }
 
         /**
@@ -43,15 +48,11 @@ module.exports = function(app,debug,utils)
                 return new Promise(resolve =>
                 {
                     let provider = item.object;
-
-                    if (! provider.isLoadable(app.env,app.context) || provider.booted) {
-                        return resolve();
-                    }
+                    if (! provider.isLoadable(app.env,app.context) || provider.booted) return resolve();
 
                     this.app.call(provider,'boot',[resolve]);
                     provider._booted = true;
-
-                    debug('ProviderService booted: %s', provider.name);
+                    this.emit('boot',provider);
                 })
             });
         }

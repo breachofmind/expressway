@@ -27,6 +27,11 @@ module.exports = function(app,debug,utils)
                     this.aliases[value.alias] = value;
                 }
                 debug("ExtensionService added: %s -> %s", name, value.alias || "<no alias>");
+            });
+
+            this.on('boot', (extension) =>
+            {
+                debug('ExtensionService booted: %s',extension.name);
             })
         }
 
@@ -72,6 +77,7 @@ module.exports = function(app,debug,utils)
         {
             return this.each(extension => {
                 return new Promise(resolve => {
+                    this.emit('boot', extension);
                     this.app.call(extension,'boot',[resolve]);
                 })
             });

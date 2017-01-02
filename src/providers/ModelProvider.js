@@ -59,14 +59,14 @@ class ModelProvider extends Expressway.Provider
 
     /**
      * When the app boots, connect to the database.
-     * @param done Function
-     * @param app
-     * @param db
-     * @param config
-     * @param log
-     * @param debug
+     * @param next Function
+     * @param app Application
+     * @param db Mongoose
+     * @param config Function
+     * @param log Winston
+     * @param debug Function
      */
-    boot(done,app,db,config,log,debug)
+    boot(next,app,db,config,log,debug)
     {
         let credentials = config('db');
 
@@ -78,7 +78,7 @@ class ModelProvider extends Expressway.Provider
         db.connection.on('open', () => {
             debug('ModelProvider connected to MongoDB: %s', credentials);
             app.emit('database.connected', db);
-            done();
+            next();
         });
 
         db.connect(credentials);

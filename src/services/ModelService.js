@@ -19,9 +19,15 @@ module.exports = function(app,debug)
             this.slugs = {};
             this.createService = true;
 
-            this.on('add', (app,name,value) => {
-                debug('ModelService added: %s -> %s', name, value.slug);
+            this.on('add', (app,name,value) =>
+            {
                 this.slugs[value.slug] = value;
+                debug('ModelService added: %s -> %s', name, value.slug);
+            });
+
+            this.on('boot', (model) =>
+            {
+                debug('Model booted: %s', model.name);
             })
         }
 
@@ -33,8 +39,8 @@ module.exports = function(app,debug)
         {
             return this.each(model => {
                 return new Promise(resolve => {
+                    this.emit('boot',model);
                     this.app.call(model,'boot',[resolve]);
-                    debug('Model booted: %s', model.name);
                 });
             });
         }

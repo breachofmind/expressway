@@ -207,5 +207,43 @@ describe('Application', function()
             expect(function() { app.call(badFn) }).to.throw(ApplicationCallError);
             expect(function() { app.call(badFn) }).to.throw(/service does not exist/);
         });
+        it('should inject into the parent constructor if child constructor not defined', () => {
+            class Parent {
+                constructor(testStr,testObj,testFn) {this.args = arguments;}
+            }
+            class Child extends Parent{
+                test() {return this.args}
+            }
+            let output = app.call(Child);
+            let test = output.test();
+            expect(test).to.have.length(3);
+            expect(test[0]).to.equal(testStr);
+            expect(test[1]).to.equal(testObj);
+            expect(test[2]).to.equal(testFn);
+        });
     });
+
+    describe('app.event()', function()
+    {
+        it('should call a function with injected service', () => {
+            let test;
+            app.event('test', function(testStr,testObj,testFn) {
+                test = arguments;
+            });
+            app.emit('test');
+            expect(test[0]).to.equal(testStr);
+            expect(test[1]).to.equal(testObj);
+            expect(test[2]).to.equal(testFn);
+        });
+        it('should call a function using padding args', () => {
+            let test;
+            app.event('test2', function(testStr,testObj,testFn) {
+                test = arguments;
+            });
+            app.emit('test2','overwrite0','overwrite1');
+            expect(test[0]).to.equal('overwrite0');
+            expect(test[1]).to.equal('overwrite1');
+            expect(test[2]).to.equal(testFn);
+        })
+    })
 });
