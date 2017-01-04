@@ -157,6 +157,17 @@ class Model
     }
 
     /**
+     * Return the field labels.
+     * @param array
+     * @returns {Array}
+     */
+    fields(array=[])
+    {
+        return array;
+    }
+
+
+    /**
      * Get the methods object.
      * @injectable
      * @returns {Object}
@@ -192,7 +203,7 @@ class Model
                 {
                     // This is a computed property.
                     if (typeof field == 'function') {
-                        let arr = field(this,self);
+                        let arr = field.apply(this,[this,self]);
                         if (Array.isArray(arr)) {
                             return json[arr[0]] = arr[1];
                         }

@@ -36,7 +36,7 @@ module.exports = function(app)
 
     // Create the file if it doesn't exist.
     // Disregard if working in a test environment.
-    if (! fs.existsSync(logFileName) && app.context !== CXT_TEST) {
+    if (app.context !== CXT_TEST && fs.existsSync(logFileName)) {
         fs.writeFileSync(logFileName,"");
     }
     var transports = [];

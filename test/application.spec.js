@@ -223,8 +223,32 @@ describe('Application', function()
         });
     });
 
+    describe('app.alias()', function()
+    {
+        var testAlias = "/var/www/html";
+        it('should be a method', () => {
+            expect(app).to.respondTo('alias');
+        });
+        it('should have an ObjectCollection', () => {
+            expect(app.aliases).to.be.instanceof(ObjectCollection);
+        })
+        it('should create an alias', () => {
+            expect(app.alias('test',testAlias)).to.equal(app);
+            expect(app.aliases.has('test')).to.equal(true);
+        });
+        it('should get an alias', () => {
+            expect(app.alias('test')).to.equal(testAlias);
+        });
+        it('should throw if attempting to overwrite an alias', () => {
+            expect(function() { app.alias('test',"overwrite") }).to.throw(/alias already exists/);
+        })
+    });
+
     describe('app.event()', function()
     {
+        it('should be a method', () => {
+            expect(app).to.respondTo('event');
+        });
         it('should call a function with injected service', () => {
             let test;
             app.event('test', function(testStr,testObj,testFn) {

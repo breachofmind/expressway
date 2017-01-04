@@ -214,6 +214,9 @@ class Application extends EventEmitter
     get models() {
         return this._models;
     }
+    get aliases() {
+        return this._aliases;
+    }
 
     get version() {
         return this._package.version;

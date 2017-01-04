@@ -118,9 +118,9 @@ class Extension
 
     /**
      * Default boot method.
-     * @param done Function
+     * @param next Function
      */
-    boot(done)
+    boot(next)
     {
         this.add(this.middleware);
         this.add(this.routes);
@@ -129,7 +129,7 @@ class Extension
             this.app.root.mount(this)
         }
 
-        done();
+        next();
     }
 
     /**
@@ -163,8 +163,7 @@ class Extension
             return this;
         }
         args = [this.app,this].concat([args]);
-        let module = typeof fn == 'string' ? require(fn) : fn;
-        this.app.call(module,null,args);
+        this.app.call(typeof fn == 'string' ? require(fn) : fn, null, args);
 
         return this;
     }
