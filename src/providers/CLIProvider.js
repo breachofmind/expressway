@@ -42,6 +42,8 @@ class CLIProvider extends Provider
     {
         super(app);
 
+        this.order = 0;
+
         this.contexts = CXT_CLI;
 
         /**

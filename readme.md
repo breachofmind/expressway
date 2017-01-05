@@ -22,7 +22,12 @@ extend core classes to overwrite or enhance existing functionality.
 - __Not opinionated.__ Developers are anal. Some like `src`, some like `lib`. 
 Expressway is designed to be agnostic to your application's structure.
 - __Big or Little.__ Your project could be as simple as a couple routes or massive with many controllers and routes.
-Expressway is designed to be as organized or disorganized as you want.
+Expressway can be as organized or disorganized as you want.
+- __Controller and Middleware classes.__ Separate your middleware stacks 
+and business logic into composable and configurable modules.
+- __The Missing CLI.__ Need to quickly see your route stack, services and models? Never look through your routes file again.
+
+![Route Stack output](http://bom.us/theme/images/route-stack.png)
 
 ### Dependency Injection
 Quite possibly the most useful feature is Expressway's IOC implementation, which is borrowed almost exactly from AngularJS.

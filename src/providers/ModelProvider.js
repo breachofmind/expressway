@@ -55,8 +55,9 @@ class ModelProvider extends Expressway.Provider
         let credentials = config('db');
 
         if (app.providers.has('CLIProvider')) {
-            app.providers.get('CLIProvider').add('seedCommand', this.seedCommand);
-            app.providers.get('CLIProvider').add('listModelsCommand', this.listModelsCommand);
+            app.providers.get('CLIProvider')
+                .add('seedCommand', this.seedCommand)
+                .add('listModelsCommand', this.listModelsCommand)
         }
 
         db.connection.on('error', (err) => {
