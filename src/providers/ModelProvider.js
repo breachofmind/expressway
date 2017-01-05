@@ -4,7 +4,9 @@ var Expressway = require('expressway');
 var mongoose   = require('mongoose');
 var session    = require('express-session');
 var MongoStore = require('connect-mongo')(session);
+var Converter  = require("csvtojson").Converter;
 var Promise    = require('bluebird');
+var utils      = require('../support/utils');
 var _          = require('lodash');
 
 mongoose.Promise = Promise;
@@ -22,37 +24,19 @@ class ModelProvider extends Expressway.Provider
      * @param app Application
      * @param utils Object
      */
-    constructor(app,utils)
+    constructor(app)
     {
         super(app);
 
         this.order = 1;
 
+        app.service(csvToJson);
+        app.service(permissions);
         app.service('db', mongoose);
         app.service('ObjectId', mongoose.Types.ObjectId);
         app.service('ObjectIdType', mongoose.Schema.Types.ObjectId);
         app.service('SchemaTypes', mongoose.Schema.Types);
         app.service('seeder', app.load(require('../services/SeederService')));
-
-        /**
-         * A helper function for creating permissions.
-         * @param modelNames {String|Array}
-         * @param actions {Array} - defaults to [create,read,update,delete]
-         * @returns {Array}
-         */
-        function permissions(modelNames, actions=CRUD)
-        {
-            let models = [].concat(modelNames);
-            return utils.compound (models.map(modelName => {
-                return actions.map(action => {
-                    return `${modelName}.${action}`;
-                })
-            }));
-        }
-
-        permissions.CRUD = CRUD;
-
-        app.service(permissions);
 
         app['db'] = mongoose;
     }
@@ -87,5 +71,44 @@ class ModelProvider extends Expressway.Provider
         app.emit('database.boot',db,MongoStore);
     }
 }
+
+/**
+ * Convert a CSV file to a data array.
+ * @param file string
+ * @param opts object
+ * @returns {Promise}
+ */
+function csvToJson(file,opts={})
+{
+    return new Promise((resolve,reject) =>
+    {
+        let converter = new Converter(opts);
+
+        converter.fromFile(file, function(err,results)
+        {
+            if (err) return reject(err,file);
+
+            return resolve(results);
+        })
+    })
+}
+
+/**
+ * A helper function for creating permissions.
+ * @param modelNames {String|Array}
+ * @param actions {Array} - defaults to [create,read,update,delete]
+ * @returns {Array}
+ */
+function permissions(modelNames, actions=CRUD)
+{
+    let models = [].concat(modelNames);
+    return utils.compound (models.map(modelName => {
+        return actions.map(action => {
+            return `${modelName}.${action}`;
+        })
+    }));
+}
+
+permissions.CRUD = CRUD;
 
 module.exports = ModelProvider;

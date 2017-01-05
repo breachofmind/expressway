@@ -320,7 +320,7 @@ class CLIProvider extends Provider
      * Run the seeder.
      * @usage ./bin/cli seed
      */
-    seedCommand(app,cli,paths,log,config)
+    seedCommand(app,cli,log,seeder)
     {
         cli.command('seed [options]', "Seed the database with data")
             .option('-s, --seeder [name]', "Run only the given seeder name")
@@ -334,7 +334,13 @@ class CLIProvider extends Provider
                     return process.exit(1);
                 }
 
-                app.load(config('seeder',paths.db('seeder.js')),[app,opts]);
+                let start = Date.now();
+                seeder.run(opts).then(function(result) {
+                    let end = Date.now();
+                    let elasped = ((end - start) / 1000).toFixed(3);
+                    log.info('done seeding in %s sec',elasped);
+                    process.exit();
+                });
             });
     }
 

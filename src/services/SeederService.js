@@ -1,118 +1,171 @@
 "use strict";
 
 var expressway = require('expressway');
-var Converter  = require("csvtojson").Converter;
 var Promise    = require('bluebird');
+var path       = require('path');
 var fs         = require('fs');
+var _          = require('lodash');
 var colors     = require('colors/safe');
 var columnify  = require('columnify');
+var EventEmitter = require('events');
+var ObjectCollection = require('../ObjectCollection');
 
-var msg = {
-    running: `Running Seeder: ${colors.green("%s")}`,
-    seeding: `Seeding: ${colors.green("%s")}`,
-    parsed:  `Parsed Seed: ${colors.green("%s")} (${colors.blue("%s")} rows)`,
-    prepare: `Preparing Seed: ${colors.green("%s")}`,
-    created: `Created Models: ${colors.green("%s")} in table ${colors.green("%s")}, ${colors.blue("%s")} objects`,
-    dumping: `Dumping models: ${colors.green("%s")}`,
-    err_noModel:  `Error seeding, no model: ${colors.red("%s")}`,
-    err_creating: `Error creating models: ${colors.red("%s")}`,
-    err_dumping:  `Error dumping models: ${colors.red("%s")}`
+const MESSAGES = {
+    "dumping" : "error dumping models: %s",
+    "creating" : "error creating models: %s",
+    "seeding" : "error seeding: %s",
 };
 
-module.exports = function(app,debug,log,ObjectId,paths)
+module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
 {
-    /**
-     * The main seeder class.
-     * @author Mike Adamczyk <mike@bom.us>
-     */
-    class Seeder
+    class SeederService extends ObjectCollection
     {
-        constructor(name, opts={}, factory)
+        constructor()
         {
-            this.name = name;
-            this.path = opts.seedDir || paths.db('seeds/');
-            this.opts = opts;
-            this.factory = factory;
+            super(app,'seeder');
 
-            /**
-             * Dump the database table before seeding?
-             * @type {boolean}
-             */
-            this.dump = this.opts.dump || false;
-
-            /**
-             * Allows the seeder to be seeded.
-             * It can still be prepared, however.
-             * @type {boolean}
-             */
-            this.active = true;
-
-            // Allow the user to disable this seeder
-            // from the command line utility.
-            if ((this.opts.seeder && this.opts.seeder !== this.name) || this.opts.parseonly)
-                this.active = false;
-
-            /**
-             * Seeds in this object.
-             * @type {Array<Seed>}
-             */
-            this.seeds = [];
+            this.class = Seeder;
         }
 
         /**
-         * Gets the ID of a row.
-         * This is the default method.
-         * @returns {number}
+         * Add a new seeder instance.
+         * @param name string
+         * @param opts object
+         * @returns {Seeder}
          */
-        static getId()
+        add(name,opts={})
         {
-            return new ObjectId();
-            // Seeder.counter ++;
-            // return Seeder.counter;
+            super.add(name, new Seeder(name,opts));
+
+            return this.get(name);
+        }
+
+        /**
+         * Run the seeder.
+         * @param opts object - could be from CLI
+         * @returns {Promise}
+         */
+        run(opts={})
+        {
+            return new Promise((resolve,reject) =>
+            {
+                let preparing = this.each(seeder => {
+                    seeder.set(opts);
+                    return seeder.prepare();
+                });
+
+                Promise.all(preparing).then(result => {
+                    this.emit('parsed',result);
+                    let seeding = this.each(seeder => {
+                        return seeder.seed();
+                    });
+                    Promise.all(seeding).then(result => {
+                        this.emit('seeded',result);
+                        return resolve(result);
+                    });
+                });
+            })
+
+        }
+    }
+
+    /**
+     * A seeder instance.
+     */
+    class Seeder extends EventEmitter
+    {
+        constructor(name,opts={})
+        {
+            super();
+
+            this.name = name;
+            this.path = paths.db('seeds');
+            this.dump = false;
+            this.list = false;
+            this.active = true;
+            this.parse = null;
+            this.seeds = [];
+
+            this.set(opts);
+        }
+
+        /**
+         * Set options for this seeder.
+         * @param opts object
+         * @returns {Seeder}
+         */
+        set(opts={})
+        {
+            if (opts.parsed) this.once('parsed', opts.parsed);
+            ['active','list','dump','parse','path'].forEach(key => {
+                if (opts.hasOwnProperty(key)) this[key] = opts[key];
+            });
+            return this;
+        }
+
+        /**
+         * Get a new object id.
+         * @returns {ObjectId}
+         */
+        getId()
+        {
+            return new ObjectId;
         }
 
         /**
          * Add a new seed.
-         * @param model string model name
-         * @param source array|string filename
-         * @param parse function, optional
+         * @param model string
+         * @param source string|array
          * @returns {Seed}
          */
-        add(model, source, parse)
+        add(model,source)
         {
-            var seed = new Seed(model, source, this);
-
-            if (typeof parse === 'function') {
-                seed.parse = parse;
+            if (! source) {
+                throw new TypeError('source should be array of objects or path to seed file');
+            } else if (typeof source == 'string') {
+                source = path.resolve(this.path,source);
             }
+            let seed = new Seed(model,source,this);
             this.seeds.push(seed);
+
             return seed;
         }
 
         /**
-         * Parse the seeds.
-         * @returns Promise
+         * Prepare all seeds.
+         * @returns {Promise.<*>}
          */
         prepare()
         {
-            log.info(msg.running, this.name);
-            var promises = this.seeds.map(seed => { return seed.prepare() });
-            return Promise.all(promises).catch(err => {
-                log.error(err.message);
+            log.info('preparing seeder: %s', this.name);
+            let promises = this.seeds.map(seed => { return seed.prepare() });
+            return Promise.all(promises).then(done => {
+                this.emit('parsed', this.toJSON(), this);
             });
         }
 
         /**
-         * Seed the database.
-         * @returns Promise
+         * Seed all seeds.
+         * @returns {Promise.<*>}
          */
         seed()
         {
-            if (this.active) log.info(msg.seeding, this.name);
-            var promises = this.seeds.map(seed => { return seed.seed() });
-            return Promise.all(promises).catch(err => {
-                log.error(err);
+            log.info('seeding seeder: %s', this.name);
+            let promises = this.seeds.map(seed => { return seed.seed() });
+            return Promise.all(promises);
+        }
+
+        /**
+         * Get an object with all seed data attached.
+         * @returns {{}}
+         */
+        toJSON()
+        {
+            let out = {};
+            this.seeds.forEach(seed => {
+                out[seed.name] = seed.data;
             });
+            return out;
         }
     }
 
@@ -120,272 +173,242 @@ module.exports = function(app,debug,log,ObjectId,paths)
      * A little seed that will grow into a beautify tree of data.
      * @author Mike Adamczyk <mike@bom.us>
      */
-    class Seed
+    class Seed extends EventEmitter
     {
         constructor(model,source,seeder)
         {
-            this.model  = model;
-            this.Model  = app.models.get(this.model);
-            this.source = source;
+            super();
+
+            this.name = model;
+            this.model = app.models.has(model) ? app.models.get(model) : null;
             this.seeder = seeder;
+            this.source = source;
+
             this.parsed = false;
             this.seeded = false;
-            this.data   = [];
-            this.models = [];
-            this.dump  = seeder.dump;
-        }
 
-        setId(row)
-        {
-            var primaryKey = this.Model.primaryKey;
-            if (! row.hasOwnProperty(primaryKey)) {
-                row[primaryKey] = Seeder.getId();
+            this._data = [];
+            this._models = [];
+
+            // Add an 'id' field if the model has a primary key.
+            if (this.model && this.model.primaryKey) {
+                this.on('parse', (row,i,arr) => {
+                    row[this.model.primaryKey] = this.seeder.getId();
+                })
             }
-            return row;
+            // If parser was passed in the options, use that.
+            if (this.seeder.parse) {
+                this.on('parse', this.seeder.parse);
+            }
+            // Show a list of data after it's parsed.
+            this.once('parsed', arr => {
+                if (this.seeder.list) {
+                    console.log(columnify(arr));
+                }
+            })
         }
 
         /**
-         * Set the parsed data array.
-         * The data array can be created into models.
-         * @param array {Array}
-         * @returns {*}
+         * Get the data array.
+         * @returns {Array}
          */
-        setData(array)
-        {
-            for (let i=0; i<array.length; i++)
-            {
-                array[i] = this.setId(array[i]);
-                array[i] = this.parse(array[i], i);
-            }
-
-            // Reset the counter for
-            // the next bunch of seeds.
-            Seeder.counter = 0;
-
-            this.data = this.seeder[this.model] = array;
-
-            this.parsed = true;
-
-            log.info(msg.parsed, this.model, array.length);
-
-            if (this.seeder.opts.list) {
-                console.log(columnify(array) + "\n");
-            }
-
-            return array;
+        get data() {
+            return this._data;
         }
 
         /**
-         * Prepare this seed to be parsed.
-         * @returns {Seed}
+         * Get the created models collection.
+         * @returns {Array}
+         */
+        get models() {
+            return this._models;
+        }
+
+        /**
+         * Set the data array.
+         * @param array {Array}
+         */
+        set data(array)
+        {
+            if (! Array.isArray(array)) {
+                this._data = [];
+                return;
+            }
+            array.forEach((row,index) => {
+                this.emit('parse', row,index,array);
+            });
+
+            this._data = array;
+
+            success('parsed seed: %s -> %s', this.name, array.length);
+
+            this.emit('parsed', this._data);
+        }
+
+        /**
+         * Prepare the seeds for seeding.
+         * @returns {Promise.<Seed>}
          */
         prepare()
         {
-            var seed = this;
-
-            if (seed.parsed) return seed;
-
-            if (Array.isArray(seed.source)) {
-                this.setData(seed.source);
-                return seed;
+            log.info('preparing seed: %s', this.name);
+            if (this.parsed) {
+                return Promise.resolve(this);
+            } else if (Array.isArray(this.source)) {
+                this.data = this.source;
+                this.parsed = true;
+                return Promise.resolve(this);
             }
-
-            var file = seed.seeder.path + seed.source;
 
             return new Promise((resolve,reject) =>
             {
-                var converter = new Converter({});
-
-                var converted = (err,results) =>
-                {
-                    if (err || ! results.length) return reject(err,seed);
-
-                    this.setData(results);
-
-                    return resolve(seed);
-                };
-
-                converter.fromFile(file, converted);
-            });
+                log.info('parsing seed: %s -> %s', this.source, this.name);
+                csvToJson(this.source).then(array => {
+                    this.data = array;
+                    this.parsed = true;
+                    resolve(this);
+                }).catch(err => {
+                    reject(err);
+                });
+            })
         }
 
         /**
-         * Inspect this seed to see if seeding is possible.
+         * Check if this seed can run.
          * @returns {boolean}
          */
-        check()
+        get canSeed()
         {
-            if (this.seeder.active === false) {
-                return false;
-            }
-            if (! this.model)
-            {
-                log.warn(msg.err_noModel, this.model);
-                return false;
-            }
-
-            return ! this.seeded;
+            return this.seeder.active
+                && ! this.seeded
+                && this.model;
         }
 
         /**
          * Seed the database.
-         * @returns {Promise|null}
+         * @returns {Promise}
          */
         seed()
         {
-            var seed = this;
-
-            if (seed.check() === false) return null;
+            if (! this.canSeed) {
+                log.warn('skipped seeding seed: %s', this.name);
+                return Promise.resolve(this);
+            }
 
             return new Promise((resolve,reject) =>
             {
-                if (this.dump) {
-                    log.info(msg.dumping, seed.model);
-                    return seed.Model.remove().then(response => {
-                        if (! seed.data.length) return resolve(seed);
-                        return seed.create(resolve).then(models => {
-                            resolve(seed);
-                        });
-                    }).error(seed.error(msg.err_dumping, resolve));
+                log.info('seeding seed: %s', this.name);
 
-                } else {
-                    return seed.create(resolve).then(models => {
-                        resolve(seed);
+                this.dump().then(result => {
+                    this.create().then(result => {
+                        log.info('seeded seed: %s', this.name);
+                        this.emit('seeded',this);
+                        resolve(this);
                     })
-                }
+                }).catch(this._onError('seeding',resolve,reject));
             });
         }
 
         /**
-         * Create models from the data array.
-         * @param done {Function}
+         * Create new models.
          * @returns {Promise}
          */
-        create(done)
+        create()
         {
-            var seed = this;
+            if (! this.data.length) return Promise.resolve(this);
 
-            return seed.Model.create(seed.data)
-                .catch(seed.error(msg.err_creating, done))
-                .then( response =>
-                {
-                    seed.seeded = true;
-                    seed.models = response;
-
-                    log.info(msg.created, seed.model, seed.Model.table, response.length);
-
-                    return response;
-                });
+            return new Promise((resolve,reject) =>
+            {
+                this.model
+                    .create(this.data)
+                    .then(response => {
+                        this.seeded = true;
+                        this._models = response;
+                        success('created models for seed: %s -> %s records', this.name, response.length);
+                        this.emit('created', this, response);
+                        resolve(this);
+                    }, this._onError('creating',resolve,reject));
+            });
         }
 
         /**
-         * Default error handling.
-         * @param message {string}
-         * @param done {Function}
-         * @returns {function(this:Seed)}
+         * Dump the models from the database.
+         * @returns {Promise.<Seed>}
          */
-        error(message, done)
+        dump()
         {
-            return function(err) {
-                console.error(err);
-                log.error(message, this.model);
-                done(this);
-            }.bind(this);
+            if (! this.seeder.dump && this.canSeed) return Promise.resolve(this);
+
+            return new Promise((resolve,reject) =>
+            {
+                this.model
+                    .remove()
+                    .then(response => {
+                        success('dumped seed: %s', this.name);
+                        this.emit('dumped', this,response);
+                        resolve(this);
+                    }, this._onError('dumping',resolve,reject))
+            });
         }
 
         /**
-         * The default parsing method.
-         * @param row object
-         * @returns {object}
+         * Seeding error handler.
+         * @param key string message key
+         * @param resolve function
+         * @param reject function
+         * @returns {*}
+         * @private
          */
-        parse(row)
+        _onError(key,resolve,reject)
         {
-            return row;
+            let seed = this;
+            return function(err)
+            {
+                let message = MESSAGES[key];
+
+                error(message,seed.name);
+                console.error(err.message || "");
+
+                return resolve ? resolve(seed) : null;
+            }
         }
     }
 
     /**
-     * Return the seeder service.
+     * Color the arguments based on type.
+     * @param args array
+     * @returns {array}
      */
-    return new class SeederService
+    function colorArgs(args)
     {
-        constructor()
-        {
-            this.seeders = [];
-            this.counter = 0;
-            this.opts = {};
-        }
+        args.forEach((arg,i) => {
+            let color = isNaN(arg) ? 'green' : 'blue';
+            args[i] = colors[color](arg);
+        });
+        return args;
+    }
 
-        /**
-         * Get the name of the class.
-         * @returns {String}
-         */
-        get name()
-        {
-            return this.constructor.name;
-        }
+    /**
+     * A success message.
+     * @param message string
+     * @param args
+     */
+    function success(message,...args)
+    {
+        args = colorArgs(args);
+        log.info(colors.green('success! ') + message, ...args);
+    }
 
-        /**
-         * Add a new seeder.
-         * @param name String
-         * @param opts Object
-         * @returns {Seeder}
-         */
-        add(name,opts=this.opts)
-        {
-            if (this.has(name)) {
-                throw new Error('seeder already exists: '+name)
-            }
-            let seeder = new Seeder(name,opts,this);
-            this.seeders.push(seeder);
-            this[name] = seeder;
+    /**
+     * An error message.
+     * @param message string
+     * @param args
+     */
+    function error(message,...args)
+    {
+        args = colorArgs(args);
+        log.error(colors.red('error! ') + message, ...args);
+    }
 
-            return seeder;
-        }
-
-        /**
-         * Check if a seeder exists.
-         * @param name string
-         * @returns {boolean}
-         */
-        has(name)
-        {
-            return this.seeders.indexOf(name) > -1;
-        }
-
-        /**
-         * Prepare all seeders.
-         * @param done Function
-         * @returns {Promise|*|Promise.<T>}
-         */
-        prepare(done)
-        {
-            if (! done) done = function(result) {};
-
-            return Promise.all( this.seeders.map(seeder => { return seeder.prepare(); })).then(result => {
-                return done(result);
-            }).catch(err => {
-                log.warn("error post-processing seeds: %s", err.message);
-            });
-        }
-
-        /**
-         * Seed all seeders.
-         * @returns {*}
-         */
-        seed(done=this.done)
-        {
-            return Promise.all( this.seeders.map(seeder => { return seeder.seed(); }) ).then(done);
-        }
-
-        /**
-         * Default done method.
-         * @returns void
-         */
-        done()
-        {
-            log.info('done seeding');
-            process.exit();
-        }
-    };
+    return new SeederService;
 };

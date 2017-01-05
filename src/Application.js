@@ -234,10 +234,10 @@ class Application extends EventEmitter
      * @param args Array
      * @returns {*}
      */
-    load(module,args=[this])
+    load(module,args=[])
     {
         let fn = typeof module == 'string' ? require(module) : module;
-        return this.call(fn,args);
+        return this.call(fn,[this].concat(args));
     }
 
     /**

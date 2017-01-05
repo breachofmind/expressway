@@ -47,11 +47,6 @@ class ObjectCollection extends EventEmitter
          * @type {boolean}
          */
         this.createService = false;
-
-        this.on('exists', (name) => {
-            var debug = app.get('debug');
-            debug(`${this.name} object exists: %s`,name);
-        })
     }
 
     /**
@@ -140,8 +135,7 @@ class ObjectCollection extends EventEmitter
         // Could already be an instance.
         if (typeof fn == 'object' && fn instanceof this.class) {
             return fn;
-        }
-        if (typeof fn !== 'function') {
+        } else if (typeof fn !== 'function') {
             throw new TypeError(`not a function or ${this.type} class: ${name}`);
         }
 
