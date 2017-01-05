@@ -26,6 +26,7 @@ exports.config = {
     paths: {
         tmp: "./tmp",
         views: "./resources/views",
+        db: "./app/db",
     }
 };
 
