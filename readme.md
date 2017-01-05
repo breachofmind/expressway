@@ -56,7 +56,13 @@ Services can be anything - strings, functions, objects, etc.
 
 ## Usage
 ### Yeoman generator
-If you just want to get started quickly, the Yeoman generator is the fastest way.
+If you just want to get started with a sensible structure,
+the [Expressway Yeoman generator](https://github.com/breachofmind/generator-expressway) is the way to go.
+```bash
+npm install breachofmind/expressway-generator -g
+mkdir myApp && cd myApp
+yo expressway myApp
+```
 
 ### Quick and Dirty
 - Install the package using `npm install breachofmind/expressway.`
@@ -113,5 +119,14 @@ app.root.routes = [
 // Start the server.
 app.start();
 ```
+- Run the file: `node index.js`
+- Build something interesting.
+
 ## Documentation
-Check out the [Wiki](https://github.com/breachofmind/expressway/wiki) for way more info.
+The [Wiki](https://github.com/breachofmind/expressway/wiki) is where it's at.  
+I'll be adding more documentation very soon as the API smooths out.
+
+## Testing
+```bash
+mocha test
+```
