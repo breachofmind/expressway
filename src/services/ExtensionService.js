@@ -71,16 +71,16 @@ module.exports = function(app,debug,utils)
 
         /**
          * Boot the extensions.
-         * @returns Array<Promise>
+         * @returns {Promise}
          */
         boot()
         {
-            return this.each(extension => {
+            return Promise.all(this.each(extension => {
                 return new Promise(resolve => {
                     this.emit('boot', extension);
                     this.app.call(extension,'boot',[resolve]);
                 })
-            });
+            }));
         }
     }
 };

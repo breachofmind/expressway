@@ -33,16 +33,16 @@ module.exports = function(app,debug)
 
         /**
          * Boot each model.
-         * @returns Array<Promise>
+         * @returns {Promise}
          */
         boot()
         {
-            return this.each(model => {
+            return Promise.all(this.each(model => {
                 return new Promise(resolve => {
                     this.emit('boot',model);
                     this.app.call(model,'boot',[resolve]);
                 });
-            });
+            }));
         }
 
         /**

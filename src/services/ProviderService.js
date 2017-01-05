@@ -39,12 +39,13 @@ module.exports = function(app,debug,utils)
 
         /**
          * Sort and boot each provider that is loadable.
-         * @returns Array<Promise>
+         * @returns {Promise}
          */
         boot()
         {
-            return this.list().map(item =>
-            {
+            let promises = this.list().map(item => {
+                let provider = item.object;
+
                 return new Promise(resolve =>
                 {
                     let provider = item.object;
@@ -55,6 +56,8 @@ module.exports = function(app,debug,utils)
                     this.emit('boot',provider);
                 })
             });
+
+            return Promise.all(promises);
         }
     }
 };

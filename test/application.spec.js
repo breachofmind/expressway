@@ -22,7 +22,8 @@ describe('Application', function()
     });
 
     it('should set the config object', () => {
-        expect(app.config.appKey).to.equal(mock.config.appKey);
+        expect(app.config).to.be.an('object');
+        expect(app.config.port).to.equal(8081);
     });
 
     it('should set context, environment and rootPath', () => {

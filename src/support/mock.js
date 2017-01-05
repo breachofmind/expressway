@@ -18,25 +18,12 @@ exports.next = function(err) {
 
 exports.middleware = [exports.request,exports.response,exports.next];
 
-exports.config = {
-    appKey: "TEST",
-    env: ENV_LOCAL,
-    url: "http://localhost",
-    port: 8081,
-    paths: {
-        tmp: "./tmp",
-        views: "./resources/views",
-        db: "./app/db",
-    }
-};
-
 /**
  * Return a new Application instance.
  */
 Object.defineProperty(exports, 'app', {
     get() {
         return expressway({
-            config: exports.config,
             context: CXT_TEST,
             rootPath: path.resolve(__dirname,'../../demo')
         });

@@ -58,9 +58,7 @@ class CLIProvider extends Provider
             'listEventsCommand',
             'listControllersCommand',
             'listMiddlewaresCommand',
-            'listModelsCommand',
-            'borrowCommand',
-            'seedCommand'
+            'borrowCommand'
         ];
 
         app.service('cli', app.load('expressway/src/CLI'));
@@ -80,7 +78,7 @@ class CLIProvider extends Provider
             throw new Error('command exists: '+commandName);
         }
         this.commands.push(commandName);
-        this[fn] = fn;
+        if (fn) this[fn] = fn;
 
         return this;
     }
@@ -316,33 +314,6 @@ class CLIProvider extends Provider
             });
     }
 
-    /**
-     * Run the seeder.
-     * @usage ./bin/cli seed
-     */
-    seedCommand(app,cli,log,seeder)
-    {
-        cli.command('seed [options]', "Seed the database with data")
-            .option('-s, --seeder [name]', "Run only the given seeder name")
-            .option('-d, --dump', "Dump all models before seeding")
-            .option('-l, --list', "List the parsed data array in a column view")
-            .option('-p, --parseonly', "Run the parser but do not seed the database")
-            .action((env,opts) =>
-            {
-                if (app.env == ENV_PROD) {
-                    log.error("Seeding not allowed in production mode! Exiting");
-                    return process.exit(1);
-                }
-
-                let start = Date.now();
-                seeder.run(opts).then(function(result) {
-                    let end = Date.now();
-                    let elasped = ((end - start) / 1000).toFixed(3);
-                    log.info('done seeding in %s sec',elasped);
-                    process.exit();
-                });
-            });
-    }
 
     /**
      * Show all path options.
@@ -460,39 +431,6 @@ class CLIProvider extends Provider
 
             cli.output([columns], true);
         });
-    }
-
-    /**
-     * List available models.
-     * @usage ./bin/cli models
-     */
-    listModelsCommand(app,cli)
-    {
-        cli.command('models', "List all models").action((env,opts) =>
-        {
-            var columns = cli.columns(app.models.list(), {
-                title: "Models list",
-                map(item, index) {
-                    var model = item.object;
-                    return {
-                        order: item.index,
-                        name: model.name,
-                        slug: model.slug,
-                        title: model.title,
-                        expose: model.expose,
-                        guards: model.guarded
-                    }
-                },
-                colors: {
-                    order: ITEM_ORDER_COLOR,
-                    name: ITEM_TITLE_COLOR,
-                    title: 'gray',
-                    expose: CONSOLE_BOOLEAN
-                }
-            });
-
-            cli.output([columns], true);
-        })
     }
 }
 

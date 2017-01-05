@@ -22,7 +22,7 @@ const CLASS_COLLECTIONS = {
     models: Model,
 }
 
-class Root extends Extension {}
+var DefaultRootExtension = require('./support/DefaultRootExtension');
 
 /**
  * An Application instance is a container for all
@@ -107,7 +107,7 @@ class Application extends EventEmitter
         });
 
         // Create a base extension to add routes.
-        this.extensions.add('root', config('root',Root));
+        this.extensions.add('root', config('root',DefaultRootExtension));
     }
 
     /**
@@ -428,24 +428,19 @@ class Application extends EventEmitter
      */
     boot()
     {
+        if (this._booted) return Promise.resolve();
+
         return new Promise((resolve,reject) =>
         {
-            if (this.booted) return resolve();
-
-            var promises = [].concat(
-                this.models.boot(),
-                this.providers.boot(),
-                this.extensions.boot()
-            );
-            var iterator = function(item) { return item };
-
-            Promise.each(promises, iterator).then(() => {
-
-                this._booted = true;
-                this.emit('booted');
-
-                return resolve();
-            })
+            this.models.boot().then(result => {
+                this.providers.boot().then(result => {
+                    this.extensions.boot().then(result => {
+                        this._booted = true;
+                        this.emit('booted');
+                        return resolve();
+                    })
+                })
+            });
         });
     }
 

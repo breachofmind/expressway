@@ -43,6 +43,31 @@ var _           = require('lodash');
 var path        = require('path');
 var Application = require('./src/Application');
 
+var defaultConfig = {
+    env: ENV_LOCAL,
+    url: "http://localhost",
+    appKey: "basic",
+    port: 8081,
+    debug:true,
+    paths: {
+        tmp: "./tmp",
+        logs: "./tmp/logs",
+        views: "./resources/views",
+        locales: "./resources/locale",
+        resources: "./resources",
+        config: "./config",
+        models: "./app/models",
+        controllers: "./app/controllers",
+        middleware: "./app/middlewares",
+        providers: "./app/providers",
+        services: "./app/services",
+        components: "./app/components",
+        uploads: "./public/uploads",
+        public: "./public",
+        db: "./app/db",
+    }
+};
+
 /**
  * The expressway init function.
  * @param opts object
@@ -50,16 +75,13 @@ var Application = require('./src/Application');
  */
 function expressway(opts={})
 {
-    if (! opts.config) {
-        throw new TypeError('config is required');
-    }
     opts.rootPath = opts.rootPath || path.dirname(process.argv[1]);
     opts.context = opts.context || EXPRESSWAY_CONTEXT;
 
     if (opts.context == CXT_TEST) testing();
 
     // Merge all configurations into one config object.
-    var config = _.assign({},...([].concat(opts.config)));
+    var config = _.assign({},defaultConfig,...([].concat(opts.config)));
 
     return new Application(opts.rootPath,config,opts.context);
 }

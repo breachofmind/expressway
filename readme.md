@@ -1,68 +1,117 @@
-# Expressway v.0.6.0 alpha
+# Expressway (beta)
 
-Expressway is an extensible microframework for Node and Express. It is designed to be 
-agnostic to your application's requirements, meaning it can be used with MongoDB, MySQL,
-Any view engine, any mailer solution, etc. Since it's provider-based, every system module can
-be swapped out entirely with your own implementation, if you don't like the default implementation.
-
-- Express.js webserver
-- MySQL or MongoDB database drivers
-- IoC (Inversion of Control) dependency injection
-- Controllers and parameter binding
-- Controller-wide and route Middleware
-- Smart response rendering (objects render as JSON)
-- CRUD API and JSON response (if you want it!)
-- Range-based pagination in JSON API
-- User authentication and session storage
-- Fully customizable provider modules
-- CSV to JSON database seeding
-- CLI utility for custom actions
-- Locale support
-- Extension friendly
-
-## IOC (Inversion of Control) Dependency Injection
-Do you like how Angular injects services and class instances into your controllers? You can do that.
-In fact, the source code for dependency injection is taken almost directly from Angular.
-Here's an example:
-```javascript
-function sayHelloFunc() {
-    return "Hello";
-}
-app.register('sayHello', sayHelloFunc, "Says Hello");
-app.register('worldString', "World", "Just a value");
-
-function hello(sayHello, worldString) {
-    return sayHello() + " " + worldString;
-}
-
-// app.call injects the services by name as function arguments
-app.call(hello); // "Hello World"
+__Expressway__ is an extensible, [MEAN](http://mean.io/) microframework for Node.js, designed to be completely modular.
+It is heavily influenced by Taylor Otwell's [Laravel](https://laravel.com) for PHP and 
+Google's front-end framework, [AngularJS](https://angularjs.org).
+```bash
+npm install breachofmind/expressway --save
+# Or, for cool kids:
+yarn add breachofmind/expressway
 ```
+## Features
+- __Open source foundation.__
+Like Laravel, Expressway believes in using well-tested open-source components to make up it's core code.
+Core components include [Express](https://expressjs.com), [Mongoose](http://mongoosejs.com/),
+[NodeMailer](https://nodemailer.com/), [Passport](http://passportjs.org/),
+[Commander CLI](https://github.com/tj/commander.js/), and many common 
+[Express middleware modules](https://github.com/breachofmind/expressway/tree/master/src/middlewares).
+- __Angular-style Dependency Injection.__ Also known as IOC (Inversion of control), Expressway allows you
+to declare services that can be injected into your functions and class methods.
+- __Cutting edge.__ Expressway is written in ES2015 using classes and inheritance. This makes it easy to 
+extend core classes to overwrite or enhance existing functionality.
+- __Not opinionated.__ Developers are anal. Some like `src`, some like `lib`. 
+Expressway is designed to be agnostic to your application's structure.
+- __Big or Little.__ Your project could be as simple as a couple routes or massive with many controllers and routes.
+Expressway is designed to be as organized or disorganized as you want.
 
-Even better, you can register a constructor to do all this work for you.
-Very useful if your classes depend on a number of other classes.
-Beats doing `new Class()` all day!
+### Dependency Injection
+Quite possibly the most useful feature is Expressway's IOC implementation, which is borrowed almost exactly from AngularJS.
+
+1. Define a service.
+2. Add the service name to a function's arguments.
+3. Call the function using `app.call(function)`.
+4. Profit.
 ```javascript
-function HelloWorldClass(sayHello, worldString) {
-    this.output = sayHello() + " " + worldString;
-}
-// Don't forget the "true" argument at the end.
-// This tells the application to construct the class each time, with the injected services.
-app.register('helloWorld', HelloWorldClass, "Creates a new class each time the service is called", true);
+app.service('profit', "No more require()!");
 
-function hello(helloWorld) {
-    return helloWorld.output;
+function myFunction(profit) {
+    return profit;
 }
-app.call(hello); // "Hello World"
+app.call(myFunction); // "No more require()"!
 ```
-
-Get services anytime, if you're using them in modules.
+This is a very simple example. Imagine how useful this is when it's available in your controller routes:
 ```javascript
-var app = require('expressway').instance.app;
-var helloWorld = app.get('helloWorld');
-
-console.log(helloWorld.output); // "Hello World"
+class MyController extends expressway.Controller
+{
+    /**
+    * MyController.index route.
+    * GET /
+    */
+    index(request,response,next,profit) {
+        return profit;
+    }
+}
 ```
+Services can be anything - strings, functions, objects, etc.
 
+## Usage
+### Yeoman generator
+If you just want to get started quickly, the Yeoman generator is the fastest way.
+
+### Quick and Dirty
+- Install the package using `npm install breachofmind/expressway.`
+- Create an entry file:
+
+```javascript
+// index.js
+var expressway = require('expressway');
+var app = expressway({
+    rootPath: __dirname,
+});
+
+// Add some services.
+function motivationalQuote() {
+    return `A nation that separates it's warriors from 
+    its scholars will have its fighting done by fools 
+    and its thinking done by cowards.`;
+}
+
+app.service(motivationalQuote);
+
+// Expressway apps have a "root" app.
+// Any extensions you might add later are mounted to this root app.
+app.root.routes = [
+    {
+        // Routes are added in a declarative manner.
+        "GET /" : function(request,response,next) {
+            return response.send("Hello World");
+        },
+        // Anonymous routes allow for dependency injection.
+        "GET /quote" : function(request,response,next,motivationalQuote) {
+            return response.send( motivationalQuote() );
+        },
+        // As your app gets bigger, you might want to add a controller.
+        "GET /:model" : "ModelController.fetchAll",
+        
+        // You may want to stack middleware on a route.
+        "POST /:model/:id" : [
+            // The name of a middleware to pass through.
+            "ModelRequest", 
+            // An anonymous middleware.
+            function(request,response,next) {
+                console.log('middleware test');
+                next();
+            },
+            // Add finally, the controller method I wanted.
+            "ModelController.save"
+        ]
+    },
+    // A simple "NotFound" middleware in case nothing is matched.
+    'NotFound'
+];
+
+// Start the server.
+app.start();
+```
 ## Documentation
 Check out the [Wiki](https://github.com/breachofmind/expressway/wiki) for way more info.

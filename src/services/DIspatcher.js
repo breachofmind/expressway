@@ -73,10 +73,18 @@ module.exports = function(app,debug,utils)
                 {
                     case "object" :
                         return this.routesFromObject(value,extension);
+
                     case "string" :
                         return this.routesFromString(value,extension);
+
                     case "function" :
-                        return value;
+                        let fn = function anonymous(request,response,next) {
+                            value.callable();
+                            return app.call(value,null,[request,response,next]);
+                        };
+                        fn.$name = value.name;
+                        return fn;
+
                     default:
                         return null;
                 }

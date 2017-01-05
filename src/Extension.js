@@ -12,6 +12,8 @@ class Extension
      */
     constructor(app)
     {
+        this._booted = false;
+
         /**
          * Application instance.
          * @type Application
@@ -122,12 +124,15 @@ class Extension
      */
     boot(next)
     {
-        this.add(this.middleware);
-        this.add(this.routes);
+        if (! this._booted) {
+            this.add(this.middleware);
+            this.add(this.routes);
 
-        if (this.base !== "/") {
-            this.app.root.mount(this)
+            if (this.base !== "/") {
+                this.app.root.mount(this);
+            }
         }
+        this._booted = true;
 
         next();
     }
