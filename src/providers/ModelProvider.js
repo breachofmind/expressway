@@ -34,9 +34,9 @@ class ModelProvider extends Expressway.Provider
         app.service(permissions);
         app.service('db', mongoose);
         app.service('ObjectId', mongoose.Types.ObjectId);
-        app.service('ObjectIdType', mongoose.Schema.Types.ObjectId);
         app.service('SchemaTypes', mongoose.Schema.Types);
         app.service('seeder', app.load(require('../services/SeederService')));
+        app.service('FieldTypes', app.load(require('../services/MongooseTypesService')));
 
         app['db'] = mongoose;
     }

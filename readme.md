@@ -25,7 +25,7 @@ Expressway is designed to be agnostic to your application's structure.
 Expressway can be as organized or disorganized as you want.
 - __Controller and Middleware classes.__ Separate your middleware stacks 
 and business logic into composable and configurable modules.
-- __The Missing CLI.__ Need to quickly see your route stack, services and models? Never look through your routes file again.
+- __The Missing CLI.__ Need to quickly see your route stack, services and models? You need a CLI for that.
 
 ![Route Stack output](http://bom.us/theme/images/route-stack.png)
 

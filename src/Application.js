@@ -25,16 +25,24 @@ const CLASS_COLLECTIONS = {
 var DefaultRootExtension = require('./support/DefaultRootExtension');
 
 /**
- * An Application instance is a container for all
- * services, providers, and express extensions.
+ * An Application instance is a container for all services, providers, and express extensions.
+ *
+ * @author Mike Adamczyk <mike@bom.us>
+ * @since 0.1.0
+ * @implements EventEmitter
+ * @example
+ * ```javascript
+ * var app = expressway();
+ * ```
  */
 class Application extends EventEmitter
 {
     /**
-     * Constructor.
-     * @param rootPath String
-     * @param config Object
-     * @param context String
+     * Create a new Application instance.
+     * @param rootPath {String}
+     * @param config {Object}
+     * @param context {String}
+     * @returns {Application}
      */
     constructor(rootPath, config, context)
     {
@@ -58,11 +66,12 @@ class Application extends EventEmitter
         this._middleware  = this.load('./services/MiddlewareService');
         this._dispatcher  = this.load('./services/Dispatcher');
 
-        this.call(this,'init');
+        this.call(this,'_init');
     }
 
     /**
-     * Create some basic services.
+     * Create some basic services, such as app, config and debug.
+     * @returns void
      * @private
      */
     _createBaseServices()
@@ -95,10 +104,13 @@ class Application extends EventEmitter
 
     /**
      * Initial application setup.
-     * @param config
-     * @param paths
+     * @injectable
+     * @param config {Function}
+     * @param paths {PathService}
+     * @returns void
+     * @private
      */
-    init(config,paths)
+    _init(config,paths)
     {
         paths.add('root', this.rootPath);
         _.each(config('paths', []), (value,key) => {
@@ -110,19 +122,6 @@ class Application extends EventEmitter
         this.extensions.add('root', config('root',DefaultRootExtension));
     }
 
-    /**
-     * Add an event listener that will inject services into the callback.
-     * @param name string
-     * @param fn Function - injectable
-     * @returns {Application}
-     */
-    event(name, fn)
-    {
-        this.on(name, (...args) => {
-            this.call(fn,null,args);
-        });
-        return this;
-    }
 
     /**
      * Return the name of the constructor.
@@ -187,49 +186,87 @@ class Application extends EventEmitter
         return path.normalize(this._rootPath);
     }
 
+    /**
+     * Get the protected dispatcher service.
+     * @returns {Dispatcher}
+     */
     get dispatcher() {
         return this._dispatcher;
     }
 
+    /**
+     * Get the protected middleware service.
+     * @returns {MiddlewareService}
+     */
     get middleware() {
         return this._middleware;
     }
-
+    /**
+     * Get the protected controller service.
+     * @returns {ControllerService}
+     */
     get controllers() {
         return this._controllers;
     }
 
+    /**
+     * Get the protected services collection.
+     * @returns {ObjectCollection}
+     */
     get services() {
         return this._services;
     }
 
+    /**
+     * Get the protected providers service.
+     * @returns {ProviderService}
+     */
     get providers() {
         return this._providers;
     }
 
+    /**
+     * Get the protected extension service.
+     * @returns {ExtensionService}
+     */
     get extensions() {
         return this._extensions;
     }
-
+    /**
+     * Get the protected models service.
+     * @returns {ModelService}
+     */
     get models() {
         return this._models;
     }
+    /**
+     * Get the protected alias collection.
+     * @returns {ObjectCollection}
+     */
     get aliases() {
         return this._aliases;
     }
 
+    /**
+     * Get the expressway version.
+     * @returns {String}
+     */
     get version() {
         return this._package.version;
     }
 
+    /**
+     * Check if this application instance is booted.
+     * @returns {Boolean}
+     */
     get booted() {
         return this._booted;
     }
 
     /**
-     * Load a module with the Application as a dependency.
-     * Will also inject services into it.
+     * Load a module with the Application as a dependency and also inject services into it.
      * A module should be a function with the first argument being the Application instance.
+     * @public
      * @param module string|function
      * @param args Array
      * @returns {*}
@@ -242,8 +279,10 @@ class Application extends EventEmitter
 
     /**
      * Get or set a service.
-     * @param name string
+     * @public
+     * @param name {String|Function}
      * @param service *
+     * @throws {TypeError}
      * @returns {*|Application}
      */
     service(name,service)
@@ -265,7 +304,8 @@ class Application extends EventEmitter
 
     /**
      * Return one or more services.
-     * @param serviceNames string
+     * @public
+     * @param serviceNames {String}
      * @returns {Array|*}
      */
     get(...serviceNames)
@@ -278,7 +318,8 @@ class Application extends EventEmitter
 
     /**
      * Add an object to the Application.
-     * @param fn Function|Array
+     * @public
+     * @param fn {Function}|{Array}
      * @returns {Application}
      */
     use(fn)
@@ -313,6 +354,7 @@ class Application extends EventEmitter
 
     /**
      * Get or set an alias.
+     * @public
      * @param name string
      * @param string string
      * @returns {String|Application}
@@ -332,7 +374,8 @@ class Application extends EventEmitter
     /**
      * Call a method or function with the services injected.
      * The function arguments should be the service names.
-     * @param params context:function|object,method:string|args:Array,args:Array
+     * @public
+     * @param params
      * @throws TypeError|ApplicationCallError
      * @returns {*}
      */
@@ -378,7 +421,6 @@ class Application extends EventEmitter
             throw new ApplicationCallTypeError(`context must be a function`,context,method);
         }
 
-
         try {
             // This is a class or constructor function.
             // This is difficult to detect, hence the function $constructor property.
@@ -395,10 +437,36 @@ class Application extends EventEmitter
         }
     }
 
+    /**
+     * Wrap an app.call() function with a function.
+     * Useful for passing injectable functions to event listeners.
+     * @example
+     * ```javascript
+     * function myFunction(arg1,arg2,injected) {...}
+     *
+     * app.on('boot', app.callFn(myFunction));
+     * app.emit('boot', arg1, arg2)
+     * ```
+     * @public
+     * @param fn Function
+     * @throws TypeError
+     * @returns {function(this:Application)}
+     */
+    callFn(fn)
+    {
+        if (typeof fn !== 'function') {
+            throw new TypeError('argument must be a function');
+        }
+        fn.$constructor = false;
+        return function(...args) {
+            return this.call(fn,null,args);
+        }.bind(this);
+    }
 
     /**
      * Given a function with arguments,
      * find the services matching the argument names.
+     * @public
      * @param fn Function
      * @param padding Array
      * @returns {Array}
@@ -424,7 +492,9 @@ class Application extends EventEmitter
 
     /**
      * Bootstrap the application if not booted.
-     * @returns {Application}
+     * Objects are booted in this order: models, providers, extensions
+     * @public
+     * @returns {Promise}
      */
     boot()
     {
@@ -432,11 +502,16 @@ class Application extends EventEmitter
 
         return new Promise((resolve,reject) =>
         {
-            this.models.boot().then(result => {
-                this.providers.boot().then(result => {
-                    this.extensions.boot().then(result => {
+            this.models.boot().then(result =>
+            {
+                this.providers.boot().then(result =>
+                {
+                    this.extensions.boot().then(result =>
+                    {
                         this._booted = true;
+
                         this.emit('booted');
+
                         return resolve();
                     })
                 })

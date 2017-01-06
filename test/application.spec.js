@@ -245,30 +245,44 @@ describe('Application', function()
         })
     });
 
-    describe('app.event()', function()
+    describe('app.callFn()', function()
     {
         it('should be a method', () => {
-            expect(app).to.respondTo('event');
+            expect(app).to.respondTo('callFn');
         });
-        it('should call a function with injected service', () => {
-            let test;
-            app.event('test', function(testStr,testObj,testFn) {
-                test = arguments;
-            });
-            app.emit('test');
-            expect(test[0]).to.equal(testStr);
-            expect(test[1]).to.equal(testObj);
-            expect(test[2]).to.equal(testFn);
+        it('should return a function that is the wrapper', () => {
+            let fn = function(testStr) {
+                return testStr;
+            };
+            let wrapper = app.callFn(fn);
+            expect(wrapper).to.be.a('function');
+            expect(wrapper).to.not.equal(fn);
+            expect(wrapper()).to.equal(testStr);
         });
         it('should call a function using padding args', () => {
-            let test;
-            app.event('test2', function(testStr,testObj,testFn) {
-                test = arguments;
-            });
-            app.emit('test2','overwrite0','overwrite1');
-            expect(test[0]).to.equal('overwrite0');
-            expect(test[1]).to.equal('overwrite1');
-            expect(test[2]).to.equal(testFn);
+            let fn = function(arg0,arg1,testStr) {
+                return arguments;
+            };
+            let wrapper = app.callFn(fn);
+            let output = wrapper(1,2);
+            expect(output[0]).to.equal(1);
+            expect(output[1]).to.equal(2);
+            expect(output[2]).to.equal(testStr);
+        });
+        it('should work with event listeners', () => {
+            let output;
+            let fn = function(arg0,arg1,testStr) {
+                output = arguments;
+            };
+            app.on('test', app.callFn(fn));
+            app.emit('test', 1,2);
+            expect(output[0]).to.equal(1);
+            expect(output[1]).to.equal(2);
+            expect(output[2]).to.equal(testStr);
+        });
+        it('should throw if non-function given as argument', () => {
+            expect(function() { app.callFn('whaaa') }).to.throw(TypeError);
+            expect(function() { app.callFn('whaaa') }).to.throw('argument must be a function');
         })
     })
 });

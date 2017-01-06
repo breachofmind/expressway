@@ -2,6 +2,7 @@
 
 var _ = require('lodash');
 var utils = require('./support/utils');
+var SchemaBuilder = require('./SchemaBuilder');
 
 /**
  * The base model class.
@@ -100,15 +101,6 @@ class Model
          * @type {number} 1|-1
          */
         this.sort = 1;
-
-        /**
-         * The most recent compiled schema and methods.
-         * @type {{}}
-         * @private
-         */
-        this.__schema = {};
-        this.__methods = {};
-        this.__old = {schema:{}, methods:{}};
     }
 
     /**
@@ -143,29 +135,15 @@ class Model
 
 
     /**
-     * Get the schema object.
+     * Edit the schema object.
      * @injectable
+     * @param builder SchemaBuilder
      * @returns {Object}
      */
-    schema()
+    schema(builder)
     {
-        return {
-            created_at   : { type: Date, default: Date.now },
-            modified_at  : { type: Date, default: Date.now },
-            [this.title] : { type: String, required: true }
-        }
+        return builder;
     }
-
-    /**
-     * Return the field labels.
-     * @param array
-     * @returns {Array}
-     */
-    fields(array=[])
-    {
-        return array;
-    }
-
 
     /**
      * Get the methods object.
@@ -249,12 +227,12 @@ class Model
      * @params done Function
      * @returns {boolean}
      */
-    boot(done)
+    boot(next)
     {
-        if (! this.booted) this.refresh();
+        this.refresh();
 
         this._booted = true;
-        done();
+        next();
     }
 
     /**
@@ -269,23 +247,20 @@ class Model
             delete this.db.modelSchemas[this.name];
         }
 
-        // Create a reference to the previous state.
-        this.__old.schema  = this.__schema;
-        this.__old.methods = this.__methods;
+        let builder = new SchemaBuilder(this.app, this);
+        this.app.call(this,'schema',[builder]);
 
-        this.__schema  = this.app.call(this,'schema',[{}]);
-        this.__methods = this.app.call(this,'methods',[{}]);
+        this.app.emit('schema.create', this, builder);
 
-        this.app.emit('schema.create', this);
+        let schema = new this.db.Schema(builder.toJSON(), {collection: this.table});
 
-        let schema = new this.db.Schema(this.__schema, {collection: this.table});
         this.booting(schema);
         schema.virtual('$base').get(() => {return this});
 
         if (this.fillable.length == 0) {
-            this.fillable = Object.keys(this.__schema);
+            this.fillable = builder.fieldNames();
         }
-        schema.methods = this.__methods;
+        schema.methods = this.app.call(this,'methods',[{}]);
 
         this._model = this.db.model(this.name, schema);
     }
