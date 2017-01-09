@@ -64,11 +64,13 @@ class ObjectCollection extends EventEmitter
     /**
      * Check if the given object name exists in the index.
      * @param name string
-     * @returns {boolean}
+     * @param then Function - optional callback if exists.
+     * @returns {boolean|*}
      */
-    has(name)
+    has(name, then)
     {
-        return this.index.hasOwnProperty(name);
+        let exists = this.index.hasOwnProperty(name);
+        return typeof then == 'function' && exists ? then(this.get(name)) : exists;
     }
 
     /**
@@ -117,7 +119,7 @@ class ObjectCollection extends EventEmitter
             this.app.service(name,value);
         }
 
-        this.emit('add', this.app,name,value);
+        this.emit('add', name,value);
 
         return this;
     }

@@ -16,7 +16,7 @@ module.exports = function(app,debug,utils)
 
             this.class = Middleware;
 
-            this.on('add', (app,name,value) => {
+            this.on('add', (name,value) => {
                 debug("MiddlewareService added: %s", name);
             });
         }

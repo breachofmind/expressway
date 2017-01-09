@@ -2,13 +2,14 @@
 
 var _ = require('lodash');
 var utils = require('./support/utils');
-var SchemaBuilder = require('./SchemaBuilder');
+var EventEmitter = require('events');
+var FieldCollection = require('./FieldCollection');
 
 /**
  * The base model class.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class Model
+class Model extends EventEmitter
 {
     /**
      * Constructor.
@@ -17,16 +18,28 @@ class Model
      */
     constructor(app)
     {
-        this._app = app;
-
-        this._booted = false;
+        super();
 
         /**
-         * The model instance, which does the interacting with the database.
-         * This depends on the driver being used, ie mysql|mongodb
-         * @type {object}
+         * Application instance.
+         * @type Application
+         * @private
          */
-        this._model = null;
+        this._app = app;
+
+        /**
+         * FieldCollection instance.
+         * @type {FieldCollection}
+         * @private
+         */
+        this._fields = new FieldCollection(this, app.get('db'));
+
+        /**
+         * Is this model booted?
+         * @type {boolean}
+         * @private
+         */
+        this._booted = false;
 
         /**
          * The default primary key field name.
@@ -66,25 +79,6 @@ class Model
         this.managed = false;
 
         /**
-         * Fields that do not display in the JSON result set.
-         * @type {Array}
-         */
-        this.guarded = [];
-
-        /**
-         * Fields that display in the JSON result set.
-         * @type {Array}
-         */
-        this.fillable = [];
-
-        /**
-         * Fields or functions that append tot he JSON result set.
-         * If using a custom function, pass in [fieldName, function].
-         * @type {Array}
-         */
-        this.appends = [];
-
-        /**
          * Fields that represent joins with other tables.
          * @type {Array}
          */
@@ -101,6 +95,19 @@ class Model
          * @type {number} 1|-1
          */
         this.sort = 1;
+
+        /**
+         * The default model icon.
+         * @type {string}
+         */
+        this.icon = "action.class";
+
+        /**
+         * Model pre/post hooks.
+         * @type {Array}
+         * @private
+         */
+        this._hooks = [];
     }
 
     /**
@@ -108,12 +115,6 @@ class Model
      * @returns {Application}
      */
     get app() { return this._app; }
-
-    /**
-     * Get the database instance.
-     * @returns {Mongoose}
-     */
-    get db() { return this.app.db; }
 
     /**
      * Return the name of the object.
@@ -128,21 +129,38 @@ class Model
     get booted() { return this._booted; }
 
     /**
-     * Return the mongoose model.
-     * @returns {Object}
+     * Get the schema builder object.
+     * @returns {SchemaBuilder}
      */
-    get model() { return this._model; }
-
+    get fields() { return this._fields; }
 
     /**
-     * Edit the schema object.
-     * @injectable
-     * @param builder SchemaBuilder
-     * @returns {Object}
+     * Return the protected hooks array.
+     * @returns {Array}
      */
-    schema(builder)
+    get hooks() { return this._hooks; }
+
+    /**
+     * Create a new hook.
+     * @param fn Function
+     * @returns {Model}
+     */
+    hook(fn)
     {
-        return builder;
+        this._hooks.push(fn);
+        return this;
+    }
+
+    /**
+     * Edit the FieldCollection object.
+     * @injectable
+     * @param fields {FieldCollection}
+     * @param types Object
+     * @returns void
+     */
+    schema(fields, types)
+    {
+        //
     }
 
     /**
@@ -152,50 +170,37 @@ class Model
      */
     methods(object)
     {
-        let self = this;
+        let blueprint = this;
 
         let methods = {
             /**
              * The default toJSON method.
              * @returns {{}}
              */
-            toJSON() {
-
+            toJSON()
+            {
                 let json = {
-                    id:     this.id,
-                    $title: this[self.title],
+                    $title: this[blueprint.title],
                 };
+                let primaryKey = blueprint.primaryKey;
 
-                self.fillable.forEach(field =>
+                if (primaryKey) json[_.trimStart(primaryKey, "_")] = this[primaryKey];
+
+                blueprint.fields.each(field =>
                 {
-                    // Skip fields that are in the guarded column.
-                    if (self.guarded.indexOf(field) > -1) {
-                        return;
-                    }
+                    // Skip fields that are guarded.
+                    if (field.guarded) return;
 
-                    return json[field] = typeof this[field] == 'undefined' ? null : this[field];
+                    let value = this[field.name];
+
+                    json[field.name] = typeof value == 'undefined' ? null : value;
                 });
 
-                // The developer can append other columns to the output.
-                self.appends.forEach(field =>
-                {
-                    // This is a computed property.
-                    if (typeof field == 'function') {
-                        let arr = field.apply(this,[this,self]);
-                        if (Array.isArray(arr)) {
-                            return json[arr[0]] = arr[1];
-                        }
-                    }
-                    // This is a method call or property from the object.
-                    if (this[field]) {
-                        return json[field] = typeof this[field] == 'function' ? this[field]() : this[field];
-                    }
+                blueprint.emit('toJSON', json,blueprint,this);
 
-                });
-
-                return utils.alphabetizeKeys(json);
+                return json;
             }
-        }
+        };
 
         return _.assign({},methods,object);
     }
@@ -227,67 +232,15 @@ class Model
      * @params done Function
      * @returns {boolean}
      */
-    boot(next)
+    boot(next,db)
     {
-        this.refresh();
+        if (! this._booted) {
+            db.boot(this);
+        }
 
         this._booted = true;
         next();
     }
-
-    /**
-     * Assign a new schema and model instance.
-     * @returns void
-     */
-    refresh()
-    {
-        // Unregister and re-register the models.
-        if (this.db.models[this.name]) {
-            delete this.db.models[this.name];
-            delete this.db.modelSchemas[this.name];
-        }
-
-        let builder = new SchemaBuilder(this.app, this);
-        this.app.call(this,'schema',[builder]);
-
-        this.app.emit('schema.create', this, builder);
-
-        let schema = new this.db.Schema(builder.toJSON(), {collection: this.table});
-
-        this.booting(schema);
-        schema.virtual('$base').get(() => {return this});
-
-        if (this.fillable.length == 0) {
-            this.fillable = builder.fieldNames();
-        }
-        schema.methods = this.app.call(this,'methods',[{}]);
-
-        this._model = this.db.model(this.name, schema);
-    }
-
-    /**
-     * Modify the Schema object before attaching to the model.
-     * @param schema
-     */
-    booting(schema)
-    {
-        // Unimplemented
-    }
 }
-
-
-const POPULATE_METHODS = ['find','findOne','findById'];
-
-// Attach the mongoose methods to the blueprint.
-['find','findOne','findById','findByIdAndUpdate','count','remove','create','update'].forEach(method =>
-{
-    Model.prototype[method] = function() {
-        var out = this.model[method] (...arguments);
-        if (POPULATE_METHODS.indexOf(method) > -1) {
-            out.populate(this.populate).sort(this.range);
-        }
-        return out;
-    }
-});
 
 module.exports = Model;

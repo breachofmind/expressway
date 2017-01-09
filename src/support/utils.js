@@ -113,7 +113,7 @@ exports.toMap = function(object, manipulateKey)
     var map = new Map();
     Object.keys(object).forEach(key => {
         map.set(
-            typeof manipulateKey == 'function' ? manipulateKey(key) : key,
+            typeof manipulateKey == 'function' ? manipulateKey(key,object[key]) : key,
             object[key]
         );
     });
@@ -123,12 +123,12 @@ exports.toMap = function(object, manipulateKey)
 
 /**
  * Convert an object of VERB ROUTE -> MIDDLEWARE to a parsed Map object.
- * @param routes
+ * @param routes Object
  * @returns {Map}
  */
 exports.toRouteMap = function(routes)
 {
-    return this.toMap(routes, (key) =>
+    return this.toMap(routes, (key,value) =>
     {
         let parts = key.split(/\s+/);
         let [verb,url] = parts;

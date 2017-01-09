@@ -64,25 +64,6 @@ class CLIProvider extends Provider
         ];
 
         app.service('cli', app.load('expressway/src/CLI'));
-
-        app['cli'] = app.get('cli');
-    }
-
-    /**
-     * Add a command.
-     * @param commandName string
-     * @param fn
-     * @returns {CLIProvider}
-     */
-    add(commandName, fn)
-    {
-        if (this.commands.indexOf(commandName) > -1) {
-            throw new Error('command exists: '+commandName);
-        }
-        this.commands.push(commandName);
-        if (fn) this[fn] = fn;
-
-        return this;
     }
 
     /**

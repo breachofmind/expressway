@@ -1,15 +1,10 @@
 "use strict";
 
-var Expressway = require('expressway');
-var mongoose   = require('mongoose');
-var session    = require('express-session');
-var MongoStore = require('connect-mongo')(session);
+var expressway = require('expressway');
 var Converter  = require("csvtojson").Converter;
 var Promise    = require('bluebird');
 var utils      = require('../support/utils');
 var _          = require('lodash');
-
-mongoose.Promise = Promise;
 
 const CRUD = ['create','read','update','delete'];
 
@@ -17,12 +12,11 @@ const CRUD = ['create','read','update','delete'];
  * ORM and Database provider.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ModelProvider extends Expressway.Provider
+class ModelProvider extends expressway.Provider
 {
     /**
      * Constructor
      * @param app Application
-     * @param utils Object
      */
     constructor(app)
     {
@@ -32,49 +26,22 @@ class ModelProvider extends Expressway.Provider
 
         app.service(csvToJson);
         app.service(permissions);
-        app.service('db', mongoose);
-        app.service('ObjectId', mongoose.Types.ObjectId);
-        app.service('SchemaTypes', mongoose.Schema.Types);
+        app.service('db', app.load(require('../drivers/MongooseDriver')));
         app.service('seeder', app.load(require('../services/SeederService')));
-        app.service('FieldTypes', app.load(require('../services/MongooseTypesService')));
-
-        app['db'] = mongoose;
     }
 
     /**
      * When the app boots, connect to the database.
      * @param next Function
      * @param app Application
-     * @param db Mongoose
-     * @param config Function
-     * @param log Winston
-     * @param debug Function
+     * @param db Driver
      */
-    boot(next,app,db,config,log,debug)
+    boot(next,app,db)
     {
-        let credentials = config('db');
+        app.call(this,'seedCommand');
+        app.call(this,'listModelsCommand');
 
-        if (app.providers.has('CLIProvider')) {
-            app.providers.get('CLIProvider')
-                .add('seedCommand', this.seedCommand)
-                .add('listModelsCommand', this.listModelsCommand)
-        }
-
-        db.connection.on('error', (err) => {
-            log.error('ModelProvider connection error: %s on %s', err.message, credentials);
-            process.exit(1);
-        });
-
-        db.connection.on('open', () => {
-            debug('ModelProvider connected to MongoDB: %s', credentials);
-            app.emit('database.connected', db);
-            next();
-        });
-
-        db.connect(credentials);
-
-        // This should tell the Session middleware which store to use.
-        app.emit('database.boot',db,MongoStore);
+        db.connect().then(next, process.exit);
     }
 
 

@@ -16,7 +16,7 @@ module.exports = function(app,debug)
 
             this.class = Controller;
 
-            this.on('add', (app,name,value) => {
+            this.on('add', (name,value) => {
                 debug("ControllerService added: %s", name);
             });
 

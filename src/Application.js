@@ -120,6 +120,8 @@ class Application extends EventEmitter
 
         // Create a base extension to add routes.
         this.extensions.add('root', config('root',DefaultRootExtension));
+
+        this.use(require('./providers/CLIProvider'));
     }
 
 
@@ -343,6 +345,7 @@ class Application extends EventEmitter
         } catch (err) {
 
             // When adding classes via app.use(), we're going to let it slide if the objects exist.
+            // We're assuming an extension or provider already included the objects.
             let isObjectExistError = err instanceof ObjectExistsException
                 || (err instanceof ApplicationCallError && err.thrown instanceof ObjectExistsException);
 

@@ -105,5 +105,6 @@ expressway.Middleware = require('./src/Middleware');
 expressway.Extension  = require('./src/Extension');
 expressway.Provider   = require('./src/Provider');
 expressway.Model      = require('./src/Model');
+expressway.Driver     = require('./src/Driver');
 
 module.exports = expressway;

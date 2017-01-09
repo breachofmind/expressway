@@ -19,7 +19,7 @@ module.exports = function(app,debug,utils)
             this.createService = true;
             this.aliases = {};
 
-            this.on('add', (app,name,value) =>
+            this.on('add', (name,value) =>
             {
                 // If it also has an alias, make sure to add that too.
                 if (value.alias) {

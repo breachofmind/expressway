@@ -19,7 +19,7 @@ module.exports = function(app,debug)
             this.slugs = {};
             this.createService = true;
 
-            this.on('add', (app,name,value) =>
+            this.on('add', (name,value) =>
             {
                 this.slugs[value.slug] = value;
                 debug('ModelService added: %s -> %s', name, value.slug);
@@ -37,7 +37,8 @@ module.exports = function(app,debug)
          */
         boot()
         {
-            return Promise.all(this.each(model => {
+            return Promise.all(this.each(model =>
+            {
                 return new Promise(resolve => {
                     this.emit('boot',model);
                     this.app.call(model,'boot',[resolve]);

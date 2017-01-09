@@ -342,7 +342,7 @@ module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
             return new Promise((resolve,reject) =>
             {
                 this.model
-                    .remove()
+                    .delete()
                     .then(response => {
                         success('dumped seed: %s', this.name);
                         this.emit('dumped', this,response);
