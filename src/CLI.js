@@ -11,7 +11,7 @@ var _           = require('lodash');
 
 module.exports = function(app,log)
 {
-    return new class CLI
+    class CLI
     {
         /**
          * Constructor.
@@ -142,4 +142,18 @@ module.exports = function(app,log)
             });
         }
     }
+
+    // Default console colors.
+    CLI.prototype.Console = {
+        Break: "",
+        Line: Array(30).join("-"),
+        Index: 'blue',
+        Secondary: 'gray',
+        Title: 'magenta',
+        Boolean(boolean) {
+            return boolean ? colors.green('yes') : colors.red('no');
+        }
+    };
+
+    return new CLI;
 };

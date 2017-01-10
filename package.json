@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test",
-    "demo" : "node ./demo/index.js start",
+    "demo": "node ./demo/index.js start",
     "mongod": "mongod"
   },
   "keywords": [
@@ -48,6 +48,7 @@
     "mongoose": "^4.7.2",
     "nodemailer": "^2.6.4",
     "nodemailer-stub-transport": "^1.1.0",
+    "sequelize": "^3.29.0",
     "session-file-store": "^1.0.0",
     "webpack": "^1.14.0",
     "webpack-dev-middleware": "^1.8.4",

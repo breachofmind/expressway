@@ -1,29 +1,24 @@
 "use strict";
 
-var mongoose    = require('mongoose');
-var session     = require('express-session');
-var MongoStore  = require('connect-mongo')(session);
-var Promise     = require('bluebird');
-var _           = require('lodash');
-
-const MONGODB_PORT = 27017;
+var Driver = require('expressway').Driver;
+var mongoose = require('mongoose');
+var session = require('express-session');
+var MongoStore = require('connect-mongo')(session);
+var Promise = require('bluebird');
+var _ = require('lodash');
 
 mongoose.Promise = Promise;
 
 
 module.exports = function(app,config,log)
 {
-    var Driver = require('expressway').Driver;
-
-    return new class MongooseDriver extends Driver
+    return new class SequelizeDriver extends Driver
     {
         constructor()
         {
             super();
 
-            this.types = require('./MongooseDriverTypes');
-
-            app.service('ObjectId', mongoose.Types.ObjectId);
+            this.types = require('./SequelizeDriverTypes');
         }
 
         /**
@@ -36,48 +31,22 @@ module.exports = function(app,config,log)
         }
 
         /**
-         * Get the mongoose db instance.
-         * @returns {mongoose}
-         */
-        get instance()
-        {
-            return mongoose;
-        }
-
-        _getConnectionUri(db)
-        {
-            let arr = ['mongodb://'];
-            if (db.username) arr.push(`${db.username}:${db.password}@`);
-            arr.push(db.hostname);
-            arr.push(":" + (db.port || MONGODB_PORT));
-            arr.push("/"+db.database);
-
-            return arr.join("");
-        }
-        /**
          * Connect to the mongoDB database.
          * @returns {Promise}
          */
         connect()
         {
-            let db = config('db');
-            let uri = this._getConnectionUri(db);
-
-            // This should tell the Session middleware which store to use.
-            app.emit('database.boot',mongoose,MongoStore);
+            let credentials = config('db');
 
             return new Promise((resolve, reject) =>
             {
-                mongoose.connection.on('error', err => {
-                    log.error('MongoDriver connection error: %s on %s', err.message, uri);
-                    reject(err);
-                });
-                mongoose.connection.on('open', () => {
-                    log.info('MongoDriver connected: %s', uri);
-                    resolve(null);
-                });
+                try {
+                    this.instance = new Sequelize(credentials);
+                } catch(err) {
+                    return reject(err);
+                }
 
-                mongoose.connect(uri);
+                return resolve(null);
             });
         }
 
@@ -87,29 +56,29 @@ module.exports = function(app,config,log)
          */
         boot(blueprint)
         {
-            // Unregister and re-register the models.
-            if (mongoose.models[blueprint.name]) {
-                blueprint.fields.clear();
-                delete mongoose.models[blueprint.name];
-                delete mongoose.modelSchemas[blueprint.name];
-            }
-
-            app.call(blueprint,'schema',[blueprint.fields, this.types]);
-
-            // Create the mongoose schema.
-            let schema = new mongoose.Schema(blueprint.fields.toSchema(), {
-                collection: blueprint.table
-            });
-
-            // Allow the user to create hooks on the schema.
-            blueprint.hooks.forEach(fn => {
-                fn.apply(blueprint,[schema]);
-            });
-
-            // Attach the methods to the schema.
-            schema.methods = app.call(blueprint,'methods',[{}]);
-
-            let model = mongoose.model(blueprint.name, schema);
+            // // Unregister and re-register the models.
+            // if (mongoose.models[blueprint.name]) {
+            //     blueprint.fields.clear();
+            //     delete mongoose.models[blueprint.name];
+            //     delete mongoose.modelSchemas[blueprint.name];
+            // }
+            //
+            // app.call(blueprint,'schema',[blueprint.fields, this.types]);
+            //
+            // // Create the mongoose schema.
+            // let schema = new mongoose.Schema(blueprint.fields.toSchema(), {
+            //     collection: blueprint.table
+            // });
+            //
+            // // Allow the user to create hooks on the schema.
+            // blueprint.hooks.forEach(fn => {
+            //     fn.apply(blueprint,[schema]);
+            // });
+            //
+            // // Attach the methods to the schema.
+            // schema.methods = app.call(blueprint,'methods',[{}]);
+            //
+            // let model = mongoose.model(blueprint.name, schema);
 
             this.assign(blueprint, model);
         }

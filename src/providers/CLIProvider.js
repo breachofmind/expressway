@@ -10,10 +10,6 @@ var fs          = require('fs');
 var https        = require('https');
 var _           = require('lodash');
 
-const LINE = Array(30).join("-");
-const BREAK = "";
-const ITEM_TITLE_COLOR = 'magenta';
-const ITEM_ORDER_COLOR = 'blue';
 const OBJECT_INDEX = {
     "controller" : 'controllers',
     "middleware" : 'middleware',
@@ -23,14 +19,6 @@ const OBJECT_INDEX = {
     "model"      : 'models',
 };
 
-/**
- * Function for coloring a boolean value.
- * @param boolean
- * @returns {string}
- */
-const CONSOLE_BOOLEAN = function(boolean) {
-    return boolean ? colors.green('yes') : colors.red('no');
-};
 
 /**
  * Provides a Command Line interface module.
@@ -165,8 +153,8 @@ class CLIProvider extends Provider
                         }
                     },
                     colors: {
-                        index: ITEM_ORDER_COLOR,
-                        flags: 'gray',
+                        index: cli.Console.Index,
+                        flags: cli.Console.Secondary,
                         middleware: function(routes)
                         {
                             return routes.map((object,i) =>
@@ -198,8 +186,8 @@ class CLIProvider extends Provider
 
                 return cli.output([
                     columns,
-                    LINE,
-                    BREAK
+                    cli.Console.Line,
+                    cli.Console.Break
                 ]);
             });
 
@@ -236,9 +224,9 @@ class CLIProvider extends Provider
                     return object.name;
                 },
                 colors: {
-                    order: ITEM_ORDER_COLOR,
-                    type: 'gray',
-                    service: ITEM_TITLE_COLOR,
+                    order: cli.Console.Index,
+                    type: cli.Console.Secondary,
+                    service: cli.Console.Title,
                     value: 'blue',
                     call: 'red',
                 },
@@ -276,9 +264,9 @@ class CLIProvider extends Provider
                         }
                     },
                     colors: {
-                        order: ITEM_ORDER_COLOR,
-                        name: ITEM_TITLE_COLOR,
-                        loaded: CONSOLE_BOOLEAN,
+                        order: cli.Console.Index,
+                        name: cli.Console.Title,
+                        loaded: cli.Console.Boolean,
                         contexts(contexts) {
                             return contexts.map(context => { return colors.gray(context) });
                         }
@@ -287,11 +275,11 @@ class CLIProvider extends Provider
                 });
 
                 cli.output([
-                    BREAK,
-                    LINE,
+                    cli.Console.Break,
+                    cli.Console.Line,
                     "Environment: " + colors.green(opts.environment.toString()),
                     "Context: " + colors.green(opts.context.toString()),
-                    LINE,
+                    cli.Console.Line,
                     columns
                 ],true);
             });
@@ -321,9 +309,9 @@ class CLIProvider extends Provider
                     return item.name;
                 },
                 colors: {
-                    order: ITEM_ORDER_COLOR,
-                    key: ITEM_TITLE_COLOR,
-                    exists: CONSOLE_BOOLEAN
+                    order: cli.Console.Index,
+                    key: cli.Console.Title,
+                    exists: cli.Console.Boolean
                 }
             });
 
@@ -349,7 +337,7 @@ class CLIProvider extends Provider
                     }
                 },
                 colors: {
-                    event: ITEM_TITLE_COLOR,
+                    event: cli.Console.Index,
                     listeners: 'blue'
                 }
             });
@@ -376,8 +364,8 @@ class CLIProvider extends Provider
                     }
                 },
                 colors: {
-                    order: ITEM_ORDER_COLOR,
-                    name: ITEM_TITLE_COLOR,
+                    order: cli.Console.Index,
+                    name: cli.Console.Title,
                 }
             });
 
@@ -406,8 +394,8 @@ class CLIProvider extends Provider
                     return item.name;
                 },
                 colors: {
-                    order: ITEM_ORDER_COLOR,
-                    name: ITEM_TITLE_COLOR,
+                    order: cli.Console.Index,
+                    name: cli.Console.Title,
                     type: 'blue',
                 }
             });

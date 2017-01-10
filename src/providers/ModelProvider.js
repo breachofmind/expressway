@@ -1,10 +1,10 @@
 "use strict";
 
-var expressway = require('expressway');
-var Converter  = require("csvtojson").Converter;
-var Promise    = require('bluebird');
-var utils      = require('../support/utils');
-var _          = require('lodash');
+var Provider  = require('expressway').Provider;
+var Converter = require("csvtojson").Converter;
+var Promise   = require('bluebird');
+var utils     = require('../support/utils');
+var _         = require('lodash');
 
 const CRUD = ['create','read','update','delete'];
 
@@ -12,21 +12,24 @@ const CRUD = ['create','read','update','delete'];
  * ORM and Database provider.
  * @author Mike Adamczyk <mike@bom.us>
  */
-class ModelProvider extends expressway.Provider
+class ModelProvider extends Provider
 {
     /**
-     * Constructor
-     * @param app Application
+     * Constructor.
+     * @param app {Application}
+     * @param config {Function}
      */
-    constructor(app)
+    constructor(app,config)
     {
         super(app);
 
         this.order = 1;
 
+        let driver = config('db.driver', require('../drivers/MongooseDriver'));
+
         app.service(csvToJson);
         app.service(permissions);
-        app.service('db', app.load(require('../drivers/MongooseDriver')));
+        app.service('db', app.load(driver));
         app.service('seeder', app.load(require('../services/SeederService')));
     }
 
@@ -38,18 +41,20 @@ class ModelProvider extends expressway.Provider
      */
     boot(next,app,db)
     {
-        app.call(this,'seedCommand');
-        app.call(this,'listModelsCommand');
+        app.call(this,'commands');
 
         db.connect().then(next, process.exit);
     }
 
 
     /**
-     * Run the seeder.
-     * @usage ./bin/cli seed
+     * Add some command line options.
+     * @param app {Application}
+     * @param cli {CLI}
+     * @param log {Winston}
+     * @param seeder {SeederService}
      */
-    seedCommand(app,cli,log,seeder)
+    commands(app,cli,log,seeder)
     {
         cli.command('seed [options]', "Seed the database with data")
             .option('-s, --seeder [name]', "Run only the given seeder name")
@@ -71,14 +76,8 @@ class ModelProvider extends expressway.Provider
                     process.exit();
                 });
             });
-    }
 
-    /**
-     * List available models.
-     * @usage ./bin/cli models
-     */
-    listModelsCommand(app,cli)
-    {
+
         cli.command('models', "List all models").action((env,opts) =>
         {
             var columns = cli.columns(app.models.list(), {
@@ -91,14 +90,15 @@ class ModelProvider extends expressway.Provider
                         slug: model.slug,
                         title: model.title,
                         expose: model.expose,
-                        guards: model.guarded
+                        guards: model.fields.names(field => { return field.guarded }),
+                        unique: model.fields.names(field => { return field.unique }),
                     }
                 },
                 colors: {
-                    order: ITEM_ORDER_COLOR,
-                    name: ITEM_TITLE_COLOR,
-                    title: 'gray',
-                    expose: CONSOLE_BOOLEAN
+                    order: cli.Console.Index,
+                    name: cli.Console.Name,
+                    title: cli.Console.Secondary,
+                    expose: cli.Console.Boolean
                 }
             });
 

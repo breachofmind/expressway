@@ -236,6 +236,7 @@ class Model extends EventEmitter
     {
         if (! this._booted) {
             db.boot(this);
+            this.emit('boot');
         }
 
         this._booted = true;

@@ -49,6 +49,14 @@ var defaultConfig = {
     appKey: "basic",
     port: 8081,
     debug:true,
+    db: {
+        driver: require('expressway/src/drivers/MongooseDriver'),
+        hostname: 'localhost',
+        database: 'expressway',
+        username: null,
+        password: null,
+        port: undefined
+    },
     paths: {
         tmp: "./tmp",
         logs: "./tmp/logs",

@@ -63,6 +63,35 @@ class FieldCollection extends EventEmitter
     }
 
     /**
+     * Return the field names.
+     * @param where {Function} filter
+     * @returns {Array}
+     */
+    names(where)
+    {
+        return this.each(field => {
+            if (typeof where == 'function') {
+                return where(field) ? field.name : null;
+            }
+            return field.name;
+        })
+    }
+
+    /**
+     * Return a count of fields if the field property is true.
+     * @param boolProperty {String}
+     * @returns {number}
+     */
+    count(boolProperty)
+    {
+        let count = 0;
+        this.each(field => {
+            if (field[boolProperty] === true) count ++;
+        });
+        return count;
+    }
+
+    /**
      * Clear all previously set fields.
      * @returns {FieldCollection}
      */
