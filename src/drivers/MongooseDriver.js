@@ -5,6 +5,7 @@ var session     = require('express-session');
 var MongoStore  = require('connect-mongo')(session);
 var Promise     = require('bluebird');
 var _           = require('lodash');
+var ObjectId    = mongoose.Types.ObjectId;
 
 const MONGODB_PORT = 27017;
 
@@ -13,19 +14,15 @@ mongoose.Promise = Promise;
 
 module.exports = function(app,config,log)
 {
-    var Driver = require('expressway').Driver;
+    var Driver      = require('expressway').Driver;
+    var driverTypes = require('./MongooseDriverTypes');
 
+    /**
+     * Return a new instance of the Mongoose driver.
+     * @returns {MongooseDriver}
+     */
     return new class MongooseDriver extends Driver
     {
-        constructor()
-        {
-            super();
-
-            this.types = require('./MongooseDriverTypes');
-
-            app.service('ObjectId', mongoose.Types.ObjectId);
-        }
-
         /**
          * Get the driver name.
          * @returns {String}
@@ -36,24 +33,23 @@ module.exports = function(app,config,log)
         }
 
         /**
+         * Return the field types for this driver.
+         * @returns {Object}
+         */
+        get types()
+        {
+            return driverTypes;
+        }
+
+        /**
          * Get the mongoose db instance.
          * @returns {mongoose}
          */
-        get instance()
+        get db()
         {
             return mongoose;
         }
 
-        _getConnectionUri(db)
-        {
-            let arr = ['mongodb://'];
-            if (db.username) arr.push(`${db.username}:${db.password}@`);
-            arr.push(db.hostname);
-            arr.push(":" + (db.port || MONGODB_PORT));
-            arr.push("/"+db.database);
-
-            return arr.join("");
-        }
         /**
          * Connect to the mongoDB database.
          * @returns {Promise}
@@ -61,7 +57,7 @@ module.exports = function(app,config,log)
         connect()
         {
             let db = config('db');
-            let uri = this._getConnectionUri(db);
+            let uri = MongooseDriver.getConnectionUri(db);
 
             // This should tell the Session middleware which store to use.
             app.emit('database.boot',mongoose,MongoStore);
@@ -97,7 +93,7 @@ module.exports = function(app,config,log)
             app.call(blueprint,'schema',[blueprint.fields, this.types]);
 
             // Create the mongoose schema.
-            let schema = new mongoose.Schema(blueprint.fields.toSchema(), {
+            let schema = new mongoose.Schema(this._fieldCollectionToSchema(blueprint.fields), {
                 collection: blueprint.table
             });
 
@@ -116,11 +112,10 @@ module.exports = function(app,config,log)
 
         /**
          * Instructions for assembling the schema sent to mongoose.Schema.
-         * @param blueprint Model
          * @param collection FieldCollection
          * @returns {{}}
          */
-        schema(blueprint,collection)
+        _fieldCollectionToSchema(collection)
         {
             let out = {};
 
@@ -149,16 +144,25 @@ module.exports = function(app,config,log)
         }
 
         /**
-         * Return prototype database methods.
-         * @param blueprint Model
+         * When seeding an object, ID's are created with this method.
+         * @param row
+         * @param i
          * @returns {*}
          */
-        methods(blueprint)
+        newId(row,i)
         {
-            let model = this.models[blueprint.name];
+            return new ObjectId;
+        }
 
-            return {
-                model: model,
+        /**
+         * Return prototype database methods.
+         * @param blueprint Model
+         * @param model mongooseModel
+         * @returns {*}
+         */
+        methods(blueprint,model)
+        {
+            let methods = {
                 all() {
                     return model
                         .find()
@@ -193,7 +197,25 @@ module.exports = function(app,config,log)
                 delete(args) {
                     return model.remove(args);
                 }
-            }
+            };
+
+            return _.assign({},super.methods(blueprint,model), methods);
+        }
+
+        /**
+         * Given the db object, convert to a connection uri string.
+         * @param db {Object}
+         * @returns {string}
+         */
+        static getConnectionUri(db)
+        {
+            let arr = ['mongodb://'];
+            if (db.username) arr.push(`${db.username}:${db.password}@`);
+            arr.push(db.hostname);
+            arr.push(":" + (db.port || MONGODB_PORT));
+            arr.push("/"+db.database);
+
+            return arr.join("");
         }
     }
 };

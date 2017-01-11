@@ -16,7 +16,7 @@ const MESSAGES = {
     "seeding" : "error seeding: %s",
 };
 
-module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
+module.exports = function(app,debug,log,paths,csvToJson)
 {
     class SeederService extends ObjectCollection
     {
@@ -104,15 +104,6 @@ module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
         }
 
         /**
-         * Get a new object id.
-         * @returns {ObjectId}
-         */
-        getId()
-        {
-            return new ObjectId;
-        }
-
-        /**
          * Add a new seed.
          * @param model string
          * @param source string|array
@@ -179,6 +170,8 @@ module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
         {
             super();
 
+            let driver = app.models.driver;
+
             this.name = model;
             this.model = app.models.has(model) ? app.models.get(model) : null;
             this.seeder = seeder;
@@ -193,7 +186,7 @@ module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
             // Add an 'id' field if the model has a primary key.
             if (this.model && this.model.primaryKey) {
                 this.on('parse', (row,i,arr) => {
-                    row[this.model.primaryKey] = this.seeder.getId();
+                    row[this.model.primaryKey] = driver.newId(row,i);
                 })
             }
             // If parser was passed in the options, use that.
@@ -203,7 +196,7 @@ module.exports = function(app,debug,log,ObjectId,paths,csvToJson)
             // Show a list of data after it's parsed.
             this.once('parsed', arr => {
                 if (this.seeder.list) {
-                    console.log(columnify(arr));
+                    console.log("\n"+columnify(arr));
                 }
             })
         }

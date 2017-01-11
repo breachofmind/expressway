@@ -33,7 +33,8 @@ module.exports = {
         return [
             'indexed',
             'required',
-            this.String
+            this.Text,
+            {typeName: "Email"}
         ];
     },
 
@@ -46,7 +47,7 @@ module.exports = {
         }
     },
 
-    String()
+    Text()
     {
         return {type: String};
     },
@@ -55,7 +56,7 @@ module.exports = {
     {
         return {
             type: Array,
-            child: new Field(field.name, field.collection).use(this.String)
+            child: new Field(field.name, field.collection).use(this.Text)
         };
     },
 
@@ -76,6 +77,15 @@ module.exports = {
     {
         return {type: Number}
     },
+    Password() {
+        return [
+            'required',
+            'fillable',
+            'guarded',
+            this.Text,
+            {typeName: "Password"}
+        ]
+    },
 
     Date()
     {
@@ -92,7 +102,7 @@ module.exports = {
 
     URL() {
         // TODO, also add validators
-        return this.String
+        return this.Text
     },
 
     /**
@@ -102,11 +112,12 @@ module.exports = {
     Title()
     {
         return [
+            -1,
             'indexed',
             'display',
             'required',
-            {order: -1},
-            this.String,
+            'fillable',
+            this.Text,
         ];
     },
 
@@ -120,7 +131,12 @@ module.exports = {
 
     Slug()
     {
-        return ['required','unique', this.String];
+        return [
+            'required',
+            'unique',
+            'fillable',
+            this.Text
+        ];
     }
 
 };

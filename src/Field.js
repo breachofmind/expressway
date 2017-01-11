@@ -20,17 +20,22 @@ class Field
         this.guarded    = false;
         this.unique     = false;
         this.display    = false;
+        this.fillable   = false;
         this.ref        = null;
         this.label      = this.model.slug + "." + this.name + ".label";
         this.tip        = this.model.slug + "." + this.name + ".tip";
         this.default    = undefined;
         this.child      = null;
-        this.order      = collection._counter;
+        this.priority   = collection._counter;
     }
 
+    /**
+     * Get the FieldCollection's model.
+     * @returns {Model}
+     */
     get model()
     {
-        return this.collection._model;
+        return this.collection.model;
     }
 
     /**
@@ -55,16 +60,25 @@ class Field
 
         } else if (typeof value == 'string' && this.hasOwnProperty(value) && typeof this[value] == 'boolean') {
             this[value] = true;
+
+        } else if (typeof value == 'number') {
+            this.priority = value;
         }
 
         return this;
     }
 
+    /**
+     * Convert this object to a json object.
+     * @returns {{}}
+     */
     toJSON()
     {
         let out = {};
-        ['name','typeName','label','tip','display','required','unique','ref','order','guarded','indexed'].forEach(property => {
-            out[property] = this[property];
+        let skip = ['default', 'child', 'model','collection'];
+        _.each(this, (value,key) => {
+            if (skip.indexOf(key) > -1 || typeof value == 'function') return;
+            out[key] = value;
         });
         return out;
     }

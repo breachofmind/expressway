@@ -25,25 +25,28 @@ class ModelProvider extends Provider
 
         this.order = 1;
 
-        let driver = config('db.driver', require('../drivers/MongooseDriver'));
-
         app.service(csvToJson);
         app.service(permissions);
-        app.service('db', app.load(driver));
+
+        // Attach the driver instance to the models service.
+        app.models.loadDriver(config('db.driver', require('../drivers/MongooseDriver')));
+
+        app.service('driver', app.models.driver);
+        app.service('db', app.models.driver.db);
         app.service('seeder', app.load(require('../services/SeederService')));
     }
 
     /**
      * When the app boots, connect to the database.
-     * @param next Function
-     * @param app Application
-     * @param db Driver
+     * @param next {Function}
+     * @param app {Application}
+     * @param driver {Driver}
      */
-    boot(next,app,db)
+    boot(next,app,driver)
     {
         app.call(this,'commands');
 
-        db.connect().then(next, process.exit);
+        driver.connect().then(next);
     }
 
 

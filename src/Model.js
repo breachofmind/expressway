@@ -32,7 +32,7 @@ class Model extends EventEmitter
          * @type {FieldCollection}
          * @private
          */
-        this._fields = new FieldCollection(this, app.get('db'));
+        this._fields = new FieldCollection(app, this);
 
         /**
          * Is this model booted?
@@ -40,6 +40,13 @@ class Model extends EventEmitter
          * @private
          */
         this._booted = false;
+
+        /**
+         * The database model associated with this blueprint.
+         * This is created by the database driver.
+         * @type {null|*}
+         */
+        this.model = null;
 
         /**
          * The default primary key field name.
@@ -103,6 +110,12 @@ class Model extends EventEmitter
         this.icon = "action.class";
 
         /**
+         * The default group for a model.
+         * @type {string}
+         */
+        this.group = "system";
+
+        /**
          * Model pre/post hooks.
          * @type {Array}
          * @private
@@ -130,7 +143,7 @@ class Model extends EventEmitter
 
     /**
      * Get the schema builder object.
-     * @returns {SchemaBuilder}
+     * @returns {FieldCollection}
      */
     get fields() { return this._fields; }
 
@@ -160,46 +173,21 @@ class Model extends EventEmitter
      */
     schema(fields, types)
     {
-        //
+        // If unimplemented, just adds the title and some timestamps.
+        fields.add(this.title, types.Title);
+        fields.timestamps();
     }
 
     /**
      * Get the methods object.
      * @injectable
+     * @param object {Object} inherited from parent
      * @returns {Object}
      */
     methods(object)
     {
-        let blueprint = this;
-
         let methods = {
-            /**
-             * The default toJSON method.
-             * @returns {{}}
-             */
-            toJSON()
-            {
-                let json = {
-                    $title: this[blueprint.title],
-                };
-                let primaryKey = blueprint.primaryKey;
-
-                if (primaryKey) json[_.trimStart(primaryKey, "_")] = this[primaryKey];
-
-                blueprint.fields.each(field =>
-                {
-                    // Skip fields that are guarded.
-                    if (field.guarded) return;
-
-                    let value = this[field.name];
-
-                    json[field.name] = typeof value == 'undefined' ? null : value;
-                });
-
-                blueprint.emit('toJSON', json,blueprint,this);
-
-                return json;
-            }
+            toJSON: defaultToJSONMethod(this)
         };
 
         return _.assign({},methods,object);
@@ -229,19 +217,55 @@ class Model extends EventEmitter
     /**
      * Boot the model.
      * @injectable
-     * @params done Function
+     * @params next {Function}
      * @returns {boolean}
      */
-    boot(next,db)
+    boot(next)
     {
         if (! this._booted) {
-            db.boot(this);
+            this.app.models.driver.boot(this);
             this.emit('boot');
         }
 
         this._booted = true;
         next();
     }
+}
+
+
+/**
+ * The default toJSON() method for a model.
+ * @param blueprint Model
+ * @returns {Function}
+ */
+function defaultToJSONMethod(blueprint)
+{
+    /**
+     * @this is the database model.
+     */
+    return function()
+    {
+        let json = {
+            $title: this[blueprint.title],
+        };
+        let primaryKey = blueprint.primaryKey;
+
+        if (primaryKey) json[_.trimStart(primaryKey, "_")] = this[primaryKey];
+
+        blueprint.fields.each(field =>
+        {
+            // Skip fields that are guarded.
+            if (field.guarded) return;
+
+            let value = this[field.name];
+
+            json[field.name] = typeof value == 'undefined' ? null : value;
+        });
+
+        blueprint.emit('toJSON', json,blueprint,this);
+
+        return json;
+    };
 }
 
 module.exports = Model;

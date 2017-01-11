@@ -1,20 +1,26 @@
 "use strict";
 
-var EventEmitter = require('events');
 var Field        = require('./Field');
 var _            = require('lodash');
 
 
-class FieldCollection extends EventEmitter
+class FieldCollection
 {
-    constructor(model,driver)
+    constructor(app,model)
     {
-        super();
-
+        this._app = app;
         this._model = model;
-        this._driver = driver;
         this._fields = {};
         this._counter = 0;
+    }
+
+    /**
+     * Get the protected Application instance.
+     * @returns {Application}
+     */
+    get app()
+    {
+        return this._app;
     }
 
     /**
@@ -23,7 +29,25 @@ class FieldCollection extends EventEmitter
      */
     get types()
     {
-        return this._driver.types;
+        return this.driver.types;
+    }
+
+    /**
+     * Return the protected model instance.
+     * @returns {Model}
+     */
+    get model()
+    {
+        return this._model;
+    }
+
+    /**
+     * Get the protected Driver instance.
+     * @returns {Driver}
+     */
+    get driver()
+    {
+        return this.app.models.driver;
     }
 
     /**
@@ -33,24 +57,6 @@ class FieldCollection extends EventEmitter
     get fields()
     {
         return this._fields;
-    }
-
-    /**
-     * Get the protected driver instance.
-     * @returns {Driver}
-     */
-    get driver()
-    {
-        return this._driver;
-    }
-
-    /**
-     * Return an array of field names.
-     * @returns {Array}
-     */
-    get names()
-    {
-        return this.each(field => { return field.name });
     }
 
     /**
@@ -75,6 +81,29 @@ class FieldCollection extends EventEmitter
             }
             return field.name;
         })
+    }
+
+    /**
+     * Check if a field name is in the index.
+     * @param name {String}
+     * @returns {boolean}
+     */
+    has(name)
+    {
+        return this.fields.hasOwnProperty(name);
+    }
+
+    /**
+     * Get a field object.
+     * @param name {String}
+     * @throws Error
+     * @returns {Field}
+     */
+    get(name) {
+        if (! this.has(name)) {
+            throw new Error('field does not exist');
+        }
+        return this.fields[name];
     }
 
     /**
@@ -151,32 +180,48 @@ class FieldCollection extends EventEmitter
     }
 
     /**
-     * Create the schema.
+     * Create an object with the field names as the keys.
+     * @param callback {Function}
      * @returns {{}}
      */
-    toSchema()
+    map(callback)
     {
-        let out = this.driver.schema(this._blueprint, this);
-
-        this.emit('toSchema', out);
-
+        let out = {};
+        this.each(field => {
+            let value = callback(field);
+            if (value !== undefined) {
+                out[field.name] = value;
+            }
+        });
         return out;
     }
 
     /**
-     * List the field properties.
-     * @returns {{}}
+     * Return an array of fields ordered by priority.
+     * @param filter {Function}
+     * @returns {Array<Field>}
      */
-    toProperties()
+    toArray(filter)
     {
-        let out = {};
-        this.each(field => {
-            out[field.name] = field.toJSON();
-        });
-        this.emit('toProperties', out);
+        return this.each(field => {
+            if (typeof filter == 'function') {
+                return filter(field) ? field : null;
+            }
+            return field;
 
-        return out;
+        }).sort(sortByPriority)
     }
+}
+
+/**
+ * Sort the fields by priority.
+ * @param a {Field}
+ * @param b {Field}
+ * @returns {number}
+ */
+function sortByPriority(a,b)
+{
+    return a.priority == b.priority ? 0 : a.priority > b.priority ? 1 : -1;
 }
 
 module.exports = FieldCollection;

@@ -1,6 +1,7 @@
 "use strict";
 
 var colors = require('colors/safe');
+var stackParser = require('error-stack-parser');
 
 class ApplicationCallError extends Error
 {
@@ -12,7 +13,15 @@ class ApplicationCallError extends Error
         this.context = context;
         this.method = method;
 
+        let stack = stackParser.parse(this.thrown);
+
         this.message += "\n" + this.called;
+
+        for (let i=0; i<3; i++) {
+            let frame = stack[i];
+            this.message += `\n-> ${colors.red(frame.functionName)} ${colors.gray(frame.fileName)}:${colors.blue(frame.lineNumber)}:${colors.blue(frame.columnNumber)}`;
+        }
+
     }
 
     each(callback)

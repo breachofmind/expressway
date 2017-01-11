@@ -19,6 +19,12 @@ module.exports = function(app,debug)
             this.slugs = {};
             this.createService = true;
 
+            /**
+             * This is added by the ModelProvider.
+             * @type {null|Driver}
+             */
+            this._driver = null;
+
             this.on('add', (name,value) =>
             {
                 this.slugs[value.slug] = value;
@@ -29,6 +35,25 @@ module.exports = function(app,debug)
             {
                 debug('Model booted: %s', model.name);
             })
+        }
+
+        /**
+         * Get the protected driver instance.
+         * @returns {Driver|null}
+         */
+        get driver()
+        {
+            return this._driver;
+        }
+
+        /**
+         * Load the driver module.
+         * @param service {Function}
+         * @returns {Driver}
+         */
+        loadDriver(service)
+        {
+            return this._driver = app.load(service);
         }
 
         /**
