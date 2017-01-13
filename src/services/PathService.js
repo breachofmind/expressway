@@ -3,6 +3,8 @@
 var _    = require('lodash');
 var path = require('path');
 var fs   = require('fs');
+var glob = require('glob');
+var Promise = require('bluebird');
 
 var ObjectCollection = require('../ObjectCollection');
 
@@ -44,6 +46,22 @@ module.exports = function(app,debug)
         read()
         {
             return fs.readFileSync(this._string);
+        }
+
+        /**
+         * Glob the current path with a pattern.
+         * @param pattern string
+         * @param opts object
+         */
+        glob(pattern="*", opts={})
+        {
+            return new Promise((resolve,reject) =>
+            {
+                glob(this._string+"/"+pattern,opts, (err,results) => {
+                    if (err) return reject(err);
+                    resolve(results);
+                })
+            });
         }
 
         /**

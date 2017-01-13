@@ -128,6 +128,12 @@ class Model extends EventEmitter
         this.group = "system";
 
         /**
+         * The default image to display if a record has no preview.
+         * @type {string}
+         */
+        this.noImage = "/images/no-image.png";
+
+        /**
          * Model pre/post hooks.
          * @type {Array}
          * @private
@@ -249,15 +255,12 @@ class Model extends EventEmitter
      */
     toJSON()
     {
-        return {
-            name: this.name,
-            singular: this.singular,
-            plural: this.plural,
-            slug: this.slug,
-            title: this.title,
-            icon: this.icon,
-            fields: this.fields.toArray()
-        }
+        let out = {};
+        ['name','singular','plural','slug','title','icon','noImage','group'].forEach(property => {
+            out[property] = this[property];
+        });
+        out.fields = this.fields.toArray();
+        return out;
     }
 }
 
