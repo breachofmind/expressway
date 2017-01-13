@@ -2,7 +2,7 @@
   "name": "expressway",
   "version": "0.3.0",
   "description": "A modular MVC microframework for Node.js Express and your impatience",
-  "main": "index.js",
+  "main": "expressway.js",
   "scripts": {
     "test": "mocha test",
     "demo": "node ./demo/index.js start",
@@ -45,6 +45,7 @@
     "glob": "^7.0.5",
     "locale": "0.0.21",
     "lodash": "^4.15.0",
+    "lodash-inflection": "^1.5.0",
     "mongoose": "^4.7.2",
     "nodemailer": "^2.6.4",
     "nodemailer-stub-transport": "^1.1.0",

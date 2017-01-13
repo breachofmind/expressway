@@ -48,6 +48,7 @@ class Application extends EventEmitter
     {
         super();
 
+        this._clock       = utils.timer();
         this._booted      = false;
         this._config      = config;
         this._rootPath    = rootPath;
@@ -121,6 +122,7 @@ class Application extends EventEmitter
         // Create a base extension to add routes.
         this.extensions.add('root', config('root',DefaultRootExtension));
 
+        // The CLI Provider is a common package.
         this.use(require('./providers/CLIProvider'));
     }
 
@@ -384,28 +386,14 @@ class Application extends EventEmitter
      */
     call(...params)
     {
-        let context,method,args=[];
-
-        switch(params.length) {
-            case 3:
-                [context,method,args] = params;
-                break;
-            case 2:
-                if (typeof params[1] === 'string') {
-                    [context,method] = params;
-                } else if (Array.isArray(params[1])) {
-                    [context,args] = params;
-                }
-                break;
-            case 1:
-                context = params[0];
-                break;
-        }
+        let [context,method,args] = __getAppCallParameters(params);
 
         if (! context) throw new TypeError('context must be object with a method name or function');
 
         // This is a method on an object.
-        if (method) {
+        // example: app.call(object, 'methodName')
+        if (method)
+        {
             if (typeof context !== 'object')
                 throw new ApplicationCallTypeError(`context must be an object if method name given`,context,method);
             if (typeof context[method] !== 'function')
@@ -420,6 +408,7 @@ class Application extends EventEmitter
         }
 
         // After this point, the context must be a function.
+        // example: app.call(function(...))
         if (typeof context !== 'function') {
             throw new ApplicationCallTypeError(`context must be a function`,context,method);
         }
@@ -427,7 +416,7 @@ class Application extends EventEmitter
         try {
             // This is a class or constructor function.
             // This is difficult to detect, hence the function $constructor property.
-            if (context.prototype && context.$constructor !== false) {
+            if (__checkIfClassConstructor(context)) {
                 let services = this.inject(context.prototype.constructor, args);
                 return new context(...services);
             }
@@ -541,6 +530,7 @@ class Application extends EventEmitter
                     this.version,
                     url.get()
                 );
+                log.info('loaded in %s', this._clock.lap());
 
                 this.emit('listening');
 
@@ -548,6 +538,51 @@ class Application extends EventEmitter
             });
         });
     }
+}
+
+/**
+ * Function for returning the proper arguments to app.call().
+ * @param params {Array}
+ * @returns {[*,*,*]}
+ * @private
+ */
+function __getAppCallParameters(params)
+{
+    let context,method,args=[];
+
+    switch(params.length) {
+        case 3:
+            [context,method,args] = params;
+            break;
+        case 2:
+            if (typeof params[1] === 'string') {
+                [context,method] = params;
+            } else if (Array.isArray(params[1])) {
+                [context,args] = params;
+            }
+            break;
+        case 1:
+            context = params[0];
+            break;
+    }
+
+    return [context,method,args];
+}
+
+/**
+ * Checks if the given function is a class constructor.
+ * Note, only works with functions created with 'class'.
+ * @param fn {Function}
+ * @returns {boolean}
+ * @private
+ */
+function __checkIfClassConstructor(fn)
+{
+    if (typeof fn.$constructor !== 'undefined') {
+        return fn.$constructor;
+    }
+    // Test the reflection of the function.
+    return fn.$constructor = /^\s*class\s+/.test( fn.toString() );
 }
 
 module.exports = Application;

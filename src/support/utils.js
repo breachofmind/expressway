@@ -453,4 +453,19 @@ exports.castToArray = function(value, flatten=false)
 exports.noop = function()
 {
     return null;
-}
+};
+
+/**
+ * A little timer guy.
+ * @returns {*}
+ */
+exports.timer = function()
+{
+    let start = Date.now();
+    return {
+        lap() {
+            let end = Date.now();
+            return ((end-start)/1000).toFixed(3) + " sec";
+        }
+    }
+};

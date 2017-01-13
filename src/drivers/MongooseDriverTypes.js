@@ -101,8 +101,11 @@ module.exports = {
     },
 
     URL() {
-        // TODO, also add validators
-        return this.Text
+
+        return [
+            this.Text,
+            {typeName:"URL"}
+        ]
     },
 
     /**

@@ -1,5 +1,8 @@
 "use strict";
 
+var _ = require('lodash');
+_.mixin(require('lodash-inflection'));
+
 // Environment constants.
 global.ENV_LOCAL = 'local';
 global.ENV_DEV   = 'dev';

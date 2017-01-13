@@ -2156,6 +2156,10 @@ locale@0.0.21:
   version "0.0.21"
   resolved "https://registry.yarnpkg.com/locale/-/locale-0.0.21.tgz#2ce9e693b8ce67a63ca0eb14f519f18eeef28a8d"
 
+lodash-inflection@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/lodash-inflection/-/lodash-inflection-1.5.0.tgz#344e5a8030882d51af98e0d613bb0547c8b7ddc7"
+
 lodash._baseassign@^3.0.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/lodash._baseassign/-/lodash._baseassign-3.2.0.tgz#8c38a099500f215ad09e59f1722fd0c52bfe0a4e"

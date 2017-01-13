@@ -163,9 +163,9 @@ module.exports = function(app,config,log)
         methods(blueprint,model)
         {
             let methods = {
-                all() {
+                all(args) {
                     return model
-                        .find()
+                        .find(args)
                         .populate(blueprint.populate)
                         .sort(blueprint.range)
                         .exec();
@@ -174,10 +174,7 @@ module.exports = function(app,config,log)
                     return model.findOne(args).populate(blueprint.populate).exec();
                 },
                 find(args) {
-                    return model
-                        .find(args)
-                        .sort(model.range)
-                        .populate(blueprint.populate);
+                    return model.find(args);
                 },
                 findById(id) {
                     return model

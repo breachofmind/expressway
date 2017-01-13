@@ -74,7 +74,7 @@ yo expressway myApp
 - Create an entry file:
 
 ```javascript
-// index.js
+// expressway.js
 var expressway = require('expressway');
 var app = expressway({
     rootPath: __dirname,
@@ -124,7 +124,7 @@ app.root.routes = [
 // Start the server.
 app.start();
 ```
-- Run the file: `node index.js`
+- Run the file: `node expressway.js`
 - Build something interesting.
 
 ## Documentation

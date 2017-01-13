@@ -49,6 +49,18 @@ class Model extends EventEmitter
         this.model = null;
 
         /**
+         * Singular form of the model name.
+         * @type {String}
+         */
+        this.singular = _.singularize(this.name);
+
+        /**
+         * Plural form of the model name.
+         * @type {string}
+         */
+        this.plural = _.pluralize(this.name);
+
+        /**
          * The default primary key field name.
          * @type {string}
          */
@@ -95,7 +107,7 @@ class Model extends EventEmitter
          * For range-based pagination, the key field to sort on.
          * @type {string}
          */
-        this.key = "id";
+        this.key = this.primaryKey;
 
         /**
          * For range-based pagination, the sort direction.
@@ -154,6 +166,15 @@ class Model extends EventEmitter
     get hooks() { return this._hooks; }
 
     /**
+     * Get the sorting range.
+     * @returns {{}}
+     */
+    get range()
+    {
+        return {[this.key]: this.sort};
+    }
+
+    /**
      * Create a new hook.
      * @param fn Function
      * @returns {Model}
@@ -194,15 +215,6 @@ class Model extends EventEmitter
     }
 
     /**
-     * Get the sorting range.
-     * @returns {{}}
-     */
-    get range()
-    {
-        return {[this.key]: this.sort};
-    }
-
-    /**
      * Return an object for a filter query.
      * @param value string from ?p
      * @returns {{}}
@@ -230,6 +242,23 @@ class Model extends EventEmitter
         this._booted = true;
         next();
     }
+
+    /**
+     * Convert this object to a JSON object.
+     * @returns {{}}
+     */
+    toJSON()
+    {
+        return {
+            name: this.name,
+            singular: this.singular,
+            plural: this.plural,
+            slug: this.slug,
+            title: this.title,
+            icon: this.icon,
+            fields: this.fields.toArray()
+        }
+    }
 }
 
 
@@ -240,6 +269,8 @@ class Model extends EventEmitter
  */
 function defaultToJSONMethod(blueprint)
 {
+    let app = blueprint.app;
+
     /**
      * @this is the database model.
      */
@@ -262,6 +293,10 @@ function defaultToJSONMethod(blueprint)
             json[field.name] = typeof value == 'undefined' ? null : value;
         });
 
+        // App level emitter
+        app.emit('model.toJSON', json, blueprint, this);
+
+        // Model level emitter
         blueprint.emit('toJSON', json,blueprint,this);
 
         return json;

@@ -197,6 +197,21 @@ class FieldCollection
     }
 
     /**
+     * Mass-assign labels to field names.
+     * @param object {Object}
+     * @returns {FieldCollection}
+     */
+    labels(object)
+    {
+        _.each(object, (label,fieldName) => {
+            if (this.has(fieldName)) {
+                this.get(fieldName).label = label;
+            }
+        });
+        return this;
+    }
+
+    /**
      * Return an array of fields ordered by priority.
      * @param filter {Function}
      * @returns {Array<Field>}
