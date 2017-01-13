@@ -43,21 +43,20 @@ module.exports = function(app,debug,utils)
          */
         boot()
         {
-            let promises = this.list().map(item => {
-                let provider = item.object;
+            let providers = this.list().map(item => {return item.object});
 
+            // This needs to run serially.
+            return Promise.each(providers, (provider =>
+            {
                 return new Promise(resolve =>
                 {
-                    let provider = item.object;
                     if (! provider.isLoadable(app.env,app.context) || provider.booted) return resolve();
 
                     this.app.call(provider,'boot',[resolve]);
                     provider._booted = true;
                     this.emit('boot',provider);
                 })
-            });
-
-            return Promise.all(promises);
+            }));
         }
     }
 };
