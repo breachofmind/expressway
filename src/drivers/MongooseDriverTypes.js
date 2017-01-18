@@ -37,7 +37,13 @@ module.exports = {
             {typeName: "Email"}
         ];
     },
-
+    Color() {
+        return [
+            this.Text,
+            {default: "#efefef"},
+            {typeName: "Color"}
+        ];
+    },
 
     Boolean()
     {
@@ -66,6 +72,15 @@ module.exports = {
             type: Array,
             child: new Field(field.name, field.collection).use(this.Object)
         };
+    },
+    ComponentSlots(field)
+    {
+        return {
+            type: Array,
+            fillable:true,
+            typeName:"ComponentSlots",
+            child: new Field(field.name, field.collection).use(this.Mixed)
+        }
     },
 
     Object()
@@ -138,7 +153,8 @@ module.exports = {
             'required',
             'unique',
             'fillable',
-            this.Text
+            this.Text,
+            {typeName:"Slug"}
         ];
     }
 

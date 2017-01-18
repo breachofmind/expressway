@@ -151,12 +151,14 @@ exports.toRouteMap = function(routes)
  */
 exports.spreadAttributes = function(object)
 {
-    var out = Object.keys(object).map(function(attrName){
-        var value = object[attrName];
-        if (value && HTML_ATTR_RX.test(attrName) ) {
+    var out = _.map(object, (value,attrName) => {
+        if (value && HTML_ATTR_RX.test(attrName) )
+        {
+            if (Array.isArray(value)) value = value.join(" ");
             return `${attrName}="${value}"`;
         }
     });
+
     return _.compact(out).join(" ");
 };
 
@@ -399,12 +401,12 @@ exports.alphabetizeKeys = function(object)
  */
 exports.element = function(elementName,opts={})
 {
-    if (!opts.$text) opts.$text = "";
+    if (!opts.text) opts.text = "";
     var el = elementName.toLowerCase();
-    var attrs = exports.spreadAttributes(opts);
+    var attrs = exports.spreadAttributes(opts.attr);
     var str = `<${el}`;
     if (attrs.length) str+= " "+attrs;
-    str += (HTML_EMPTY_ELEMENTS.indexOf(el) > -1 ? `/>` : `>${opts.$text}</${el}>`);
+    str += (HTML_EMPTY_ELEMENTS.indexOf(el) > -1 ? `/>` : `>${opts.text}</${el}>`);
     return str;
 };
 

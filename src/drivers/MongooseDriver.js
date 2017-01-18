@@ -163,7 +163,7 @@ module.exports = function(app,config,log)
         methods(blueprint,model)
         {
             let methods = {
-                all(args) {
+                all(args={}) {
                     return model
                         .find(args)
                         .populate(blueprint.populate)

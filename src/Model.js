@@ -122,16 +122,10 @@ class Model extends EventEmitter
         this.icon = "action.class";
 
         /**
-         * The default group for a model.
-         * @type {string}
-         */
-        this.group = "system";
-
-        /**
          * The default image to display if a record has no preview.
          * @type {string}
          */
-        this.noImage = "/images/no-image.png";
+        this.preview = "/images/no-image.png";
 
         /**
          * Model pre/post hooks.
@@ -256,7 +250,7 @@ class Model extends EventEmitter
     toJSON()
     {
         let out = {};
-        ['name','singular','plural','slug','title','icon','noImage','group'].forEach(property => {
+        ['name','singular','plural','slug','title','icon','preview','group'].forEach(property => {
             out[property] = this[property];
         });
         out.fields = this.fields.toArray();

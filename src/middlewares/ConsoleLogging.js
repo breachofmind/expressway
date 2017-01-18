@@ -9,7 +9,7 @@ class ConsoleLogging extends expressway.Middleware
         return "Logs the incoming request to the console";
     }
 
-    constructor(app)
+    constructor(app,config)
     {
         super(app);
 
@@ -17,7 +17,7 @@ class ConsoleLogging extends expressway.Middleware
          * Print colors in the console?
          * @type {boolean}
          */
-        this.pretty = false;
+        this.pretty = config('pretty_logging', false);
     }
 
     dispatch(extension,log)
@@ -51,7 +51,7 @@ class ConsoleLogging extends expressway.Middleware
                         info.phrase,
                         colors.green(info.route) ,
                         info.url,
-                        info.user
+                        info.user || "-"
                     );
 
                 } else {

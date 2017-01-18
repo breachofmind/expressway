@@ -50,6 +50,14 @@ class View
     }
 
     /**
+     * Return the data object.
+     * @returns {{title: undefined}|*}
+     */
+    get data() {
+        return this._data;
+    }
+
+    /**
      * Get the current extension.
      * @returns {Extension}
      */
@@ -82,7 +90,7 @@ class View
      */
     script(name,src,attrs={})
     {
-        var el = utils.element('script', _.merge(attrs,{id:"_"+name, type:"text/javascript", src:src}) );
+        var el = utils.element('script', {attr: _.merge(attrs,{id:"_"+name, type:"text/javascript", src:src}) } );
         this._tags.scripts.push(el);
 
         return this;
@@ -97,7 +105,7 @@ class View
      */
     style(name,src,attrs={})
     {
-        var el = utils.element('link', _.merge(attrs,{id:"_"+name, type:"text/css", rel:"stylesheet", href:src}) );
+        var el = utils.element('link', {attr: _.merge(attrs,{id:"_"+name, type:"text/css", rel:"stylesheet", href:src})});
         this._tags.styles.push(el);
 
         return this;
@@ -112,7 +120,7 @@ class View
      */
     meta(name,content,attrs={})
     {
-        var el = utils.element('meta', _.merge(attrs,{name:name, content:content}) );
+        var el = utils.element('meta', {attr: _.merge(attrs,{name:name, content:content})} );
         this._tags.meta.push(el);
 
         return this;

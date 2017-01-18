@@ -75,7 +75,7 @@ class Field
     toJSON()
     {
         let out = {};
-        let skip = ['default', 'child', 'model','collection'];
+        let skip = ['child', 'model','collection'];
         _.each(this, (value,key) => {
             if (skip.indexOf(key) > -1 || typeof value == 'function') return;
             out[key] = value;
