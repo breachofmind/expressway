@@ -51,7 +51,7 @@ class CLIProvider extends Provider
             'borrowCommand'
         ];
 
-        app.service('cli', app.load('expressway/src/CLI'));
+        app.service('cli', app.load('expressway/src/services/CLI'));
     }
 
     /**

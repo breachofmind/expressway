@@ -17,19 +17,59 @@ class View
      */
     constructor(extension,request,response)
     {
+        /**
+         * The request object.
+         * @type {IncomingMessage}
+         * @private
+         */
         this._req = request;
+
+        /**
+         * The response object.
+         * @type {ServerResponse}
+         * @private
+         */
         this._res = response;
+
+        /**
+         * The extension that will be performing the render.
+         * @type {Extension}
+         * @private
+         */
         this._renderer = extension;
+
+        /**
+         * The file to be rendered.
+         * @type {null|String}
+         * @private
+         */
         this._file = null;
+
+        /**
+         * The data to merge with the template.
+         * @type {{}}
+         * @private
+         */
         this._data = {
             title: undefined
         };
+
+        /**
+         * Template tags to add to the template.
+         * @type {{scripts: Array, styles: Array, meta: Array}}
+         * @private
+         */
         this._tags = {
             scripts: [],
             styles: [],
             meta: []
         };
 
+        /**
+         * The protected Application instance.
+         * @type {Application}
+         * @private
+         */
         this._app = extension.app;
     }
 

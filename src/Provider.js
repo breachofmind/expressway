@@ -17,10 +17,39 @@ class Provider
      */
     constructor(app)
     {
+        /**
+         * The protected application instance.
+         * @type {Application}
+         * @private
+         */
         this._app = app;
+
+        /**
+         * The order that this provider will boot.
+         * @type {number}
+         * @private
+         */
         this._order = 10;
+
+        /**
+         * The environments this provider will boot in.
+         * @type {Array}
+         * @private
+         */
         this._environments = ENV_ALL;
+
+        /**
+         * The contexts this provider will boot in.
+         * @type {Array}
+         * @private
+         */
         this._contexts = CXT_ALL;
+
+        /**
+         * Is this provider booted?
+         * @type {boolean}
+         * @private
+         */
         this._booted = false;
     }
 
