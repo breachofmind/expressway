@@ -3,6 +3,7 @@
 var express = require('express');
 var utils   = require('./support/utils');
 var _       = require('lodash');
+var RouteCollection  = require('./RouteCollection');
 
 class Extension
 {
@@ -16,9 +17,17 @@ class Extension
 
         /**
          * Application instance.
-         * @type Application
+         * @type {Application}
          */
-        this.app = app;
+        this._app = app;
+
+        this.mounted = {};
+
+        /**
+         * Router instance.
+         * @type {Router}
+         */
+        this._routes = new RouteCollection(this);
 
         /**
          * The base uri for this extension.
@@ -27,28 +36,10 @@ class Extension
         this.base = "/";
 
         /**
-         * Extensions mounted to this extension.
-         * @type {Object}
-         */
-        this.mounted = {};
-
-        /**
          * If using Static middleware, defined static paths.
          * @type {{}}
          */
         this.staticPaths = {};
-
-        /**
-         * Array of global middleware.
-         * @type {Array}
-         */
-        this.middleware = [];
-
-        /**
-         * Array of route middleware.
-         * @type {Array}
-         */
-        this.routes = [];
 
         /**
          * Default settings.
@@ -74,6 +65,20 @@ class Extension
     get name()
     {
         return this.constructor.name;
+    }
+
+    /**
+     * Return the Application instance.
+     * @returns {Application}
+     */
+    get app()
+    {
+        return this._app;
+    }
+
+    get routes()
+    {
+        return this._routes;
     }
 
     /**
@@ -124,17 +129,10 @@ class Extension
      */
     boot(next)
     {
-        if (! this._booted) {
-            this.add(this.middleware);
-            this.add(this.routes);
-
-            if (this.base !== "/") {
-                this.app.root.mount(this);
-            }
-        }
-        this._booted = true;
-
-        next();
+        this.routes.boot().then(done => {
+            this._booted = true;
+            next();
+        });
     }
 
     /**
