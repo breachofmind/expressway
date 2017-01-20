@@ -1,8 +1,6 @@
 "use strict";
 
 var Middleware = require('expressway').Middleware;
-var webpack    = require('webpack');
-var livereload = require('livereload');
 
 class Development extends Middleware
 {
@@ -87,6 +85,7 @@ class Development extends Middleware
             return;
         };
 
+        var webpack              = require('webpack');
         var webpackMiddleware    = require('webpack-dev-middleware');
         var webpackHotMiddleware = require('webpack-hot-middleware');
 
@@ -120,6 +119,8 @@ class Development extends Middleware
     startLivereload(extension,app,log,debug)
     {
         if (this.livereloadRunning) return;
+
+        var livereload = require('livereload');
 
         // We don't want this to fire if we're in a CLI session.
         // But, we do want to see the middleware.
