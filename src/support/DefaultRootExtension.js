@@ -10,19 +10,15 @@ class DefaultRootExtension extends Extension
 
         app.use([
             require('expressway/src/middlewares'),
-            require('expressway/src/providers/CLIProvider'),
         ]);
 
-        this.middleware = [
+        this.routes.middleware([
             'Static',
             'Init',
             'ConsoleLogging',
             'BodyParser',
             'Ajax'
-        ];
-        this.routes = [
-            'NotFound'
-        ];
+        ]);
 
         this.staticPaths["/"] = paths.public();
 
