@@ -6,7 +6,6 @@
  */
 module.exports = function(app)
 {
-    // Example.
     return new class <%=name%>
     {
         constructor()

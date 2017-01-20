@@ -7,36 +7,34 @@ class <%=name%> extends Extension
     /**
      * Constructor.
      * @injectable
-     * @param app Application
+     * @param app {Application}
      */
     constructor(app)
     {
         super(app);
 
-        this.middleware = [
+        this.routes.middleware([
             'Init',
             'ConsoleLogging'
-        ];
+        ]);
 
-        this.routes = [
+        this.routes.add([
             {
                 "GET /" : "IndexController.index"
             },
-            'NotFound'
-        ];
+        ]);
+
+        this.routes.error(404, 'NotFound');
     }
 
     /**
      * Fired when the application boots.
-     * This is where you should create your routes.
      * @injectable
      * @returns void
      */
-    boot(app)
+    boot(next, app)
     {
-        // This will add anything listed
-        // in this.middleware and this.routes.
-        super.boot(app);
+        super.boot(next);
     }
 }
 

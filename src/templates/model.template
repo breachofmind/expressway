@@ -8,55 +8,41 @@ class <%=name%> extends Model
     /**
      * Constructor.
      * @injectable
-     * @param app Application
+     * @param app {Application}
      */
     constructor(app)
     {
         super(app);
 
-        this.title      = 'id';
+        this.title      = 'title';
         this.expose     = false;
-        this.guarded    = [];
-        this.appends    = [];
         this.populate   = [];
         this.managed    = false;
+        this.preview    = false;
     }
 
     /**
-     * Return the schema fields.
-     * @returns {Object}
+     * Create the database schema.
+     * @injectable
+     * @param fields {FieldCollection}
+     * @param types {Object}
      */
-    get schema()
+    schema(fields,types)
     {
-        let [ObjectId,config] = this.app.get('ObjectId','config');
-
-        return {
-            created_at:  { type: Date, default: Date.now },
-            modified_at: { type: Date, default: Date.now }
-        };
+        fields
+            .timestamps()
+            .add('title', types.Title);
     }
 
     /**
      * Return the schema methods.
      * @returns {Object}
      */
-    get methods()
+    methods(methods)
     {
-        let config = this.app.get('config');
+        //methods.speak = function() {}
 
-        let methods = {};
-
-        // This assures the base methods are not overwritten.
-        return _.assign({}, super.methods, methods);
-    }
-
-    /**
-     * Perform actions on the schema object before creating the model.
-     * @returns void
-     */
-    booting(schema)
-    {
-        // schema.pre(...)
+        return super.methods(methods);
     }
 }
 

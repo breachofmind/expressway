@@ -7,7 +7,7 @@ class <%=name%> extends Controller
     /**
      * Constructor.
      * @injectable
-     * @param app Application
+     * @param app {Application}
      */
     constructor(app)
     {
@@ -23,11 +23,7 @@ class <%=name%> extends Controller
      */
     index(request,response,next,view)
     {
-        view.title('Title')
-            .template('index')
-            .use(this.defaults);
-
-        return view;
+        return view.title('Title').template('index');
     }
 }
 

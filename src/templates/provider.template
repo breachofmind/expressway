@@ -7,7 +7,7 @@ class <%=name%> extends Provider
     /**
      * Constructor.
      * @injectable
-     * @param app Application
+     * @param app {Application}
      */
     constructor(app)
     {
@@ -18,11 +18,7 @@ class <%=name%> extends Provider
         this.contexts = CXT_ALL;
         this.environments = ENV_ALL;
 
-        // Register any services if other providers need them.
-        // app.service(name,value);
-
-        // Use app.load() to load service functions.
-        // app.service("service", app.load(paths.services('MyService')));
+        // Register services here...
     }
 
     /**
@@ -31,9 +27,11 @@ class <%=name%> extends Provider
      * @injectable
      * @returns void
      */
-    boot(app)
+    boot(next,app)
     {
         //
+
+        super.boot(next);
     }
 }
 
