@@ -18,18 +18,23 @@ class Static extends Middleware
      */
     dispatch(extension,log, debug)
     {
-        if (! Object.keys(extension.staticPaths).length) {
+        let staticPaths = extension.routes.statics;
+
+        if (! staticPaths.length) {
             log.warn(`${extension.name} does not have any static content paths set`);
+            return null;
         }
 
         let router = express.Router(extension.options || {});
 
-        _.each(extension.staticPaths, (dir,uri) =>
+        staticPaths.forEach(object =>
         {
-            let middleware = express.static(dir);
-            middleware.$name = "Static:"+ dir;
+            let {path,uri} = object;
+            let middleware = express.static(path);
+            middleware.$name = "Static:"+ path;
+
             router.use(uri,middleware);
-            debug("Static path created: %s -> %s", uri,dir);
+            debug("Static path created: %s -> %s", uri, path);
         });
 
         return router;

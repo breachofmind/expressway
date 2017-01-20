@@ -19,7 +19,6 @@ var fs      = require('fs');
 module.exports = function(app)
 {
     var fileMaxSize = 1000 * 1000 * 10; // 10MB
-    var logFileName = path.join(app.rootPath, "tmp") + "/server.log";
     var colorize    = true;
 
     var consoleLogLevels = {
@@ -34,11 +33,6 @@ module.exports = function(app)
         [CXT_WEB]  : 'warn'
     };
 
-    // Create the file if it doesn't exist.
-    // Disregard if working in a test environment.
-    if (app.context !== CXT_TEST && fs.existsSync(logFileName)) {
-        fs.writeFileSync(logFileName,"");
-    }
     var transports = [];
 
     transports.push(new winston.transports.Console({
@@ -46,14 +40,34 @@ module.exports = function(app)
         colorize: colorize
     }));
 
-    // Will log events up to the access level into a file.
-    if (app.context !== CXT_TEST) {
+    var logger = new winston.Logger({transports: transports});
+
+    /**
+     * Add the server log file after boot.
+     * This is the only time we'll know what tmp path we have.
+     * @param paths
+     */
+    function onBoot(paths)
+    {
+        let dir = paths.build.tmp();
+        dir.make();
+
         transports.push(new winston.transports.File({
             level: fileLogLevels[app.context],
-            filename: logFileName,
+            filename: dir.get('server.log'),
             maxsize: fileMaxSize
         }));
+
+        logger.configure({
+            transports: transports
+        });
+
     }
 
-    return new winston.Logger({transports: transports});
+    // Will log events up to the access level into a file.
+    if (app.context !== CXT_TEST) {
+        app.once('booted', app.callFn(onBoot));
+    }
+
+    return logger;
 };

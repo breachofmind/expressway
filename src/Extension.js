@@ -21,11 +21,15 @@ class Extension
          */
         this._app = app;
 
+        /**
+         * Extensions mounted to this extension.
+         * @type {{}}
+         */
         this.mounted = {};
 
         /**
          * Router instance.
-         * @type {Router}
+         * @type {RouteCollection}
          */
         this._routes = new RouteCollection(this);
 
@@ -34,12 +38,6 @@ class Extension
          * @type {string}
          */
         this.base = "/";
-
-        /**
-         * If using Static middleware, defined static paths.
-         * @type {{}}
-         */
-        this.staticPaths = {};
 
         /**
          * Default settings.
@@ -76,6 +74,10 @@ class Extension
         return this._app;
     }
 
+    /**
+     * Get the route collection.
+     * @returns {RouteCollection}
+     */
     get routes()
     {
         return this._routes;
@@ -101,24 +103,6 @@ class Extension
             extension.express.set('views', this.express.get('views'));
             extension.express.set('view engine', this.express.get('view engine'));
         }
-
-        return this;
-    }
-
-    /**
-     * Adds routes to the express application.
-     * @param base {String|Array}
-     * @param routes {String|Array} optional
-     * @returns {Extension}
-     */
-    add(base,routes)
-    {
-        if (arguments.length == 1) {
-            return this.add('/', base);
-        }
-        let middleware = this.app.dispatcher.resolve(routes,this);
-
-        this.express.use(base,middleware);
 
         return this;
     }

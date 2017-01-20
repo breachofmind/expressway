@@ -31,6 +31,13 @@ class RouteCollection
         this._routes = [];
 
         /**
+         * Static content path mappings.
+         * @type {{}}
+         * @private
+         */
+        this._statics = {};
+
+        /**
          * Error handling middleware.
          * @type {{404: string, 500: string}}
          * @private
@@ -183,6 +190,29 @@ class RouteCollection
             this.add(route, what.group, what.priority + 0.1);
         }
         return this;
+    }
+
+    /**
+     * Create a static content path mapping.
+     * @param uri string
+     * @param path string
+     * @returns {RouteCollection}
+     */
+    static(uri, path)
+    {
+        this._statics[uri] = path;
+        return this;
+    }
+
+    /**
+     * Return the static path array.
+     * @returns {Array}
+     */
+    get statics()
+    {
+        return _.map(this._statics, (path,uri) => {
+            return {uri: uri, path: path};
+        });
     }
 
     /**

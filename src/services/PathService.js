@@ -48,6 +48,14 @@ module.exports = function(app,debug)
             return fs.readFileSync(this._string);
         }
 
+        make()
+        {
+            if (! this.exists) {
+                return fs.mkdirSync(this._string);
+            }
+            return true;
+        }
+
         /**
          * Glob the current path with a pattern.
          * @param pattern string
@@ -127,6 +135,16 @@ module.exports = function(app,debug)
         }
 
         /**
+         * Return this object to a string with optional uri.
+         * @param uri string
+         * @returns {string}
+         */
+        get(uri="")
+        {
+            return this._string + uri;
+        }
+
+        /**
          * Get the value of this object.
          * @returns {String}
          */
@@ -153,6 +171,10 @@ module.exports = function(app,debug)
             super(app,'path');
 
             this._objects = {};
+
+            this.on('add', (name,value) => {
+                debug('PathService added: %s -> %s', name,value);
+            });
         }
 
         /**
@@ -185,8 +207,6 @@ module.exports = function(app,debug)
             this._objects[name] = (uri) => {
                 return this.object(name, uri);
             };
-
-            debug('PathService added: %s -> %s', name,setPath);
 
             return this;
         }
