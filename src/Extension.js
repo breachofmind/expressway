@@ -142,15 +142,15 @@ class Extension
      * @param args Array
      * @returns {Extension}
      */
-    use(fn,args=[])
+    use(fn,args)
     {
         if (Array.isArray(fn)) {
             fn.forEach(item => { this.use(item,args) });
-
             return this;
         }
-        args = [this.app,this].concat([args]);
-        this.app.call(typeof fn == 'string' ? require(fn) : fn, null, args);
+
+        args = _.compact([this.app,this].concat(args));
+        this.app.call((typeof fn == 'string' ? require(fn) : fn), null, args);
 
         return this;
     }

@@ -20,7 +20,7 @@ class DefaultRootExtension extends Extension
             'Ajax'
         ]);
 
-        this.staticPaths["/"] = paths.public();
+        this.routes.static("/", paths.public());
 
         this.express.set('views', paths.views());
         this.express.set('view engine', 'ejs');

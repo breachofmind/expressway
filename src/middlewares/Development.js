@@ -96,6 +96,8 @@ class Development extends Middleware
         });
         let hotMiddleware = webpackHotMiddleware(compiler, extension.hmrOptions||{});
 
+        log.info('HMR watching %s', extension.webpack.output.publicPath);
+
         // Return the middleware functions.
         return [
             function webpackDevMiddleware() {
