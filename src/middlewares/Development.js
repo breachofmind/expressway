@@ -1,6 +1,7 @@
 "use strict";
 
 var Middleware = require('expressway').Middleware;
+var _ = require('lodash');
 
 class Development extends Middleware
 {
@@ -41,16 +42,15 @@ class Development extends Middleware
 
 
     /**
-     * Have the livereload server watch a path.
-     * @param path
+     * Have the livereload server watch a path or array of paths.
+     * @param paths string|Array
      * @returns {Development}
      */
-    watch(path)
+    watch(paths)
     {
-        if (typeof path != 'string') {
-            throw new TypeError('path must be a string');
-        }
-        this.livereload.dirs.push(path);
+        [].concat(paths).forEach(path => {
+            this.livereload.dirs.push(path);
+        });
 
         return this;
     }
@@ -78,7 +78,7 @@ class Development extends Middleware
      * @param log Winston
      * @returns {[*,*]}
      */
-    startWebpackDev(extension,log)
+    startWebpackDev(extension,log,url)
     {
         if (! extension.webpack || typeof extension.webpack != 'object') {
             log.warn(`${extension.name}.webpack missing webpack config. Skipping...`);
@@ -89,14 +89,26 @@ class Development extends Middleware
         var webpackMiddleware    = require('webpack-dev-middleware');
         var webpackHotMiddleware = require('webpack-hot-middleware');
 
-        let compiler = webpack(extension.webpack);
-        let middleware = webpackMiddleware(compiler, {
-            publicPath: extension.webpack.output.publicPath,
-            noInfo: true,
-        });
-        let hotMiddleware = webpackHotMiddleware(compiler, extension.hmrOptions||{});
+        var middleware,hotMiddleware;
+        var publicPath = extension.webpack.output.publicPath;
 
-        log.info('HMR watching %s', extension.webpack.output.publicPath);
+        try {
+            let compiler = webpack(extension.webpack.configuration);
+            middleware = webpackMiddleware(compiler, {
+                publicPath: publicPath,
+                noInfo: !extension.webpack.showErrors,
+            });
+            hotMiddleware = webpackHotMiddleware(compiler, {
+                //path: extension.webpack.output.publicPath
+            });
+
+        } catch(err) {
+            log.warn('Error loading webpack: %s', extension.name);
+            return;
+        }
+
+
+        log.info('HMR watching %s', publicPath);
 
         // Return the middleware functions.
         return [
@@ -135,11 +147,11 @@ class Development extends Middleware
                 log.error(err.message);
             }
 
-            log.info('Livereload server running at http://localhost:35729');
-
             this.livereload.dirs.forEach(dir => {
                 debug('Livereload watching path %s', dir);
             });
+
+            log.info('Livereload server running at http://localhost:35729');
 
             app.on('view.render', function(view) {
                 view.script('livereload', 'http://localhost:35729/livereload.js');

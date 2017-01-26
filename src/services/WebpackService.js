@@ -15,12 +15,14 @@ module.exports = function(app,extension,paths,url)
             this.resourcePathName = "resources";
 
             this.config = {};
-            this.entries = {};
+            this.entries = {
+                vendor: []
+            };
             this.output = {
                 path: extension.routes.statics[0].path,
                 publicPath: url.get(extension.routes.statics[0].uri),
-                filename: '[name].bundle.js',
-                chunkFilename: "[id].js"
+                filename: '[name].js',
+                chunkFilename: 'chunk.[id].js'
             };
             this.resolve = {
                 alias: {}
@@ -29,11 +31,10 @@ module.exports = function(app,extension,paths,url)
             this.loaders = {};
             this.plugins = [];
 
+            this.hmr        = app.env === ENV_PROD ? false : this.output.publicPath;
+            this.uglify     = app.env === ENV_PROD;
             this.extractCSS = "[name].css";
-            this.hmr = app.env === ENV_LOCAL;
-            this.showErrors = app.env === ENV_LOCAL;
-
-            this.readPackage(extension.package);
+            this.showErrors = false;
         }
 
         /**
@@ -56,7 +57,8 @@ module.exports = function(app,extension,paths,url)
         readPackage(npmPackage)
         {
             if (! npmPackage) return;
-
+            if (! npmPackage.dependencies) npmPackage.dependencies = {};
+            if (! npmPackage.devDependencies) npmPackage.devDependencies = {};
             var has = function(pkg) {
                 return npmPackage.dependencies.hasOwnProperty(pkg)
                     || npmPackage.devDependencies.hasOwnProperty(pkg);
@@ -64,8 +66,11 @@ module.exports = function(app,extension,paths,url)
 
             if (has('vue'))
             {
+                let config = {
+                    loaders: {js:'babel-loader'}
+                };
                 this.resolve.alias['vue$'] = 'vue/dist/vue.common.js';
-                this.loader('vue', {loaders: ['vue-loader']})
+                this.loader('vue', {loaders: ['vue-loader']}, {vue: config})
             }
 
             if (has('babel-loader'))
@@ -99,19 +104,18 @@ module.exports = function(app,extension,paths,url)
          * @param opts {Array}
          * @returns {WebpackService}
          */
-        entry(file,opts)
+        entry(file,opts=[])
         {
             let object = paths.build[this.resourcePathName](['js',file]);
-            let middleware = this.hmr
-                ? [
-                    'webpack/hot/dev-server',
-                    'webpack-hot-middleware/client?path='+url.get('__webpack_hmr'),
-                ]
-                : [];
+            let name = path.basename(object.basename,".js");
+            this.entries[name] = opts.concat(object.toString());
 
-            if (! opts) opts = object.toString();
-            this.entries[path.basename(object.basename,".js")] = middleware.concat(opts);
+            return this;
+        }
 
+        common(packages)
+        {
+            this.entries["vendor"] = this.entries["vendor"].concat(packages);
             return this;
         }
 
@@ -134,13 +138,44 @@ module.exports = function(app,extension,paths,url)
         }
 
         /**
+         * Load files into the view object.
+         * @param view View
+         */
+        loadBundles(view)
+        {
+            let files = this.files;
+            files.js.forEach((file,index) => { view.script("jsBundle_"+index, file) });
+            files.css.forEach((file,index) => { view.style("cssBundle_"+index, file) });
+        }
+
+        /**
+         * Get the file output bundles.
+         * @returns {{}}
+         */
+        get files()
+        {
+            let out = {js: [], css: []};
+
+            out.js = out.js.concat(_.map(this.entries, (value,name) => {
+                return this.output.publicPath + rename(this.output.filename, name);
+            }));
+            if (this.extractCSS) {
+                out.css = _.compact(_.map(this.entries, (value,name) => {
+                    if (name === 'vendor') return;
+                    return this.output.publicPath + rename(this.extractCSS, name);
+                }));
+            }
+            return out;
+        }
+
+        /**
          * Get the plugins based on the configuration settings.
          * @returns {Array}
          * @private
          */
         _getPlugins()
         {
-            let plugins = this.plugins;
+            let plugins = [];
 
             if (app.env == ENV_PROD) {
                 plugins.push(new webpack.DefinePlugin({
@@ -150,14 +185,59 @@ module.exports = function(app,extension,paths,url)
             if (! this.showErrors) {
                 plugins.push(new webpack.NoErrorsPlugin());
             }
+            if (this.entries.vendor.length) {
+                plugins.push(new webpack.optimize.CommonsChunkPlugin({
+                    name: "vendor",
+                    filename: "vendor.js"
+                }));
+            }
             if (this.hmr) {
                 plugins.push(new webpack.optimize.OccurenceOrderPlugin());
                 plugins.push(new webpack.HotModuleReplacementPlugin());
             }
+            if (this.uglify) {
+                plugins.push(new webpack.optimize.UglifyJsPlugin(typeof this.uglify == 'object' ? this.uglify : {}));
+            }
             if (this.extractCSS) {
                 plugins.push(new ExtractTextPlugin(this.extractCSS));
             }
-            return plugins;
+
+            return this.plugins.concat(plugins);
+        }
+
+        /**
+         * Get the entry objects.
+         * @returns {{}}
+         * @private
+         */
+        _getEntries()
+        {
+            let out = {};
+            _.each(this.entries, (arr,name) => {
+                let middleware = arr;
+                if (this.hmr && name !== 'vendor') {
+                    middleware = [
+                        'webpack/hot/dev-server',
+                        `webpack-hot-middleware/client?name=${name}&path=${this.hmr}__webpack_hmr`,
+                    ].concat(arr);
+                }
+                out[name] = middleware;
+            });
+            return out;
+        }
+
+        /**
+         * Get the module loaders object.
+         * @returns {{loaders: (*|Array)}}
+         * @private
+         */
+        _getLoaders()
+        {
+            return {
+                loaders: _.map(this.loaders, (value,key) => {
+                    return value;
+                })
+            }
         }
 
         /**
@@ -167,44 +247,13 @@ module.exports = function(app,extension,paths,url)
         toJSON()
         {
             return _.assign({}, this.config, {
-                entry: this.entries,
+                entry: this._getEntries(),
                 output: this.output,
                 devtool: this.devtool,
                 resolve: this.resolve,
-                module: {
-                    loaders: _.map(this.loaders, (value,key) => { return value })
-                },
+                module: this._getLoaders(),
                 plugins: this._getPlugins()
             })
-        }
-
-        /**
-         * Load files into the view object.
-         * @param view View
-         */
-        loadBundles(view)
-        {
-            let files = this.files;
-            if (files.js) {
-                files.js.forEach((file,index) => { view.script("jsBundle_"+index, file) });
-            }
-            if (files.css) {
-                files.css.forEach((file,index) => { view.style("cssBundle_"+index, file) });
-            }
-        }
-
-        get files()
-        {
-            let out = {};
-            out.js = _.map(this.entries, (value,name) => {
-                return this.output.publicPath + rename(this.output.filename, name);
-            });
-            if (this.extractCSS) {
-                out.css = _.map(this.entries, (value,name) => {
-                    return this.output.publicPath + rename(this.extractCSS, name);
-                });
-            }
-            return out;
         }
 
         /**
@@ -218,6 +267,12 @@ module.exports = function(app,extension,paths,url)
     }
 };
 
+/**
+ * For renaming the input file
+ * @param input
+ * @param name
+ * @returns {string}
+ */
 function rename(input,name)
 {
     return input.replace("[name]",name);
