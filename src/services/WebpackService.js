@@ -12,29 +12,21 @@ module.exports = function(app,extension,paths,url)
     {
         constructor()
         {
-            this.resourcePathName = "resources";
-
-            this.config = {};
-            this.entries = {
-                vendor: []
-            };
-            this.output = {
-                path: extension.routes.statics[0].path,
-                publicPath: url.get(extension.routes.statics[0].uri),
-                filename: '[name].js',
-                chunkFilename: 'chunk.[id].js'
-            };
-            this.resolve = {
-                alias: {}
-            };
-            this.devtool = "cheap-module-sourcemap";
-            this.loaders = {};
-            this.plugins = [];
-
-            this.hmr        = app.env === ENV_PROD ? false : this.output.publicPath;
-            this.uglify     = app.env === ENV_PROD;
-            this.extractCSS = "[name].css";
-            this.showErrors = false;
+            this.resourcePath  = paths.resources();
+            this.config        = {};
+            this.entries       = {vendor: []};
+            this.path          = extension.routes.statics[0].path;
+            this.publicPath    = extension.routes.statics[0].uri;
+            this.filename      = "[name].js";
+            this.chunkFilename = "chunk.[id].js";
+            this.resolve       = {alias: {}};
+            this.devtool       = "cheap-module-sourcemap";
+            this.loaders       = {};
+            this.plugins       = [];
+            this.hmr           = app.env === ENV_PROD ? false : this.publicPath;
+            this.uglify        = app.env === ENV_PROD;
+            this.extractCSS    = "[name].css";
+            this.showErrors    = false;
         }
 
         /**
@@ -95,27 +87,34 @@ module.exports = function(app,extension,paths,url)
 
                 this.loader('scss', opts, {sassLoader:config});
             }
+
             return this;
         }
 
         /**
          * Create an entry file.
-         * @param file string
+         * @param filename string
          * @param opts {Array}
          * @returns {WebpackService}
          */
-        entry(file,opts=[])
+        entry(filename,opts=[])
         {
-            let object = paths.build[this.resourcePathName](['js',file]);
-            let name = path.basename(object.basename,".js");
-            this.entries[name] = opts.concat(object.toString());
+            let file = `${this.resourcePath}/js/${filename}`;
+            let name = path.basename(filename,'.js');
+            this.entries[name] = opts.concat(file);
 
             return this;
         }
 
+        /**
+         * Add common packages to the vendor bundle.
+         * @param packages string|array
+         * @returns {WebpackService}
+         */
         common(packages)
         {
             this.entries["vendor"] = this.entries["vendor"].concat(packages);
+
             return this;
         }
 
@@ -154,18 +153,15 @@ module.exports = function(app,extension,paths,url)
          */
         get files()
         {
-            let out = {js: [], css: []};
-
-            out.js = out.js.concat(_.map(this.entries, (value,name) => {
-                return this.output.publicPath + rename(this.output.filename, name);
-            }));
-            if (this.extractCSS) {
-                out.css = _.compact(_.map(this.entries, (value,name) => {
-                    if (name === 'vendor') return;
-                    return this.output.publicPath + rename(this.extractCSS, name);
-                }));
-            }
-            return out;
+            return {
+                js: _.map(this.entries, (value,name) => {
+                    return this.publicPath + rename(this.filename, name);
+                }),
+                css: _.compact(_.map(this.entries, (value,name) => {
+                    if (! this.extractCSS || name === 'vendor') return;
+                    return this.publicPath + rename(this.extractCSS, name);
+                }))
+            };
         }
 
         /**
@@ -263,6 +259,16 @@ module.exports = function(app,extension,paths,url)
         get configuration()
         {
             return this.toJSON();
+        }
+
+        get output()
+        {
+            return {
+                path: this.path,
+                publicPath: this.publicPath,
+                filename: this.filename,
+                chunkFilename: this.chunkFilename
+            }
         }
     }
 };

@@ -90,25 +90,22 @@ class Development extends Middleware
         var webpackHotMiddleware = require('webpack-hot-middleware');
 
         var middleware,hotMiddleware;
-        var publicPath = extension.webpack.output.publicPath;
 
         try {
             let compiler = webpack(extension.webpack.configuration);
             middleware = webpackMiddleware(compiler, {
-                publicPath: publicPath,
+                publicPath: extension.webpack.publicPath,
                 noInfo: !extension.webpack.showErrors,
             });
-            hotMiddleware = webpackHotMiddleware(compiler, {
-                //path: extension.webpack.output.publicPath
-            });
+
+            hotMiddleware = webpackHotMiddleware(compiler);
 
         } catch(err) {
-            log.warn('Error loading webpack: %s', extension.name);
+            log.warn('Development Error loading webpack: %s', extension.name);
             return;
         }
 
-
-        log.info('HMR watching %s', publicPath);
+        log.info('Development HMR watching %s', extension.webpack.publicPath);
 
         // Return the middleware functions.
         return [
@@ -132,33 +129,30 @@ class Development extends Middleware
      */
     startLivereload(extension,app,log,debug)
     {
-        if (this.livereloadRunning) return;
+        if (this.livereloadRunning || app.context !== CXT_WEB) return;
 
         var livereload = require('livereload');
 
         // We don't want this to fire if we're in a CLI session.
         // But, we do want to see the middleware.
-        if (app.context == CXT_WEB)
-        {
-            try {
-                let server = livereload.createServer(this.livereload.options);
-                server.watch(this.livereload.dirs);
-            } catch (err) {
-                log.error(err.message);
-            }
-
-            this.livereload.dirs.forEach(dir => {
-                debug('Livereload watching path %s', dir);
-            });
-
-            log.info('Livereload server running at http://localhost:35729');
-
-            app.on('view.render', function(view) {
-                view.script('livereload', 'http://localhost:35729/livereload.js');
-            });
-
-            this.livereloadRunning = true;
+        try {
+            let server = livereload.createServer(this.livereload.options);
+            server.watch(this.livereload.dirs);
+        } catch (err) {
+            log.error(err.message);
         }
+
+        this.livereload.dirs.forEach(dir => {
+            debug('Livereload watching path %s', dir);
+        });
+
+        log.info('Livereload server running at http://localhost:35729');
+
+        app.on('view.render', function(view) {
+            view.script('livereload', 'http://localhost:35729/livereload.js');
+        });
+
+        this.livereloadRunning = true;
     }
 }
 

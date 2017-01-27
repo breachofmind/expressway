@@ -19,7 +19,7 @@ class ApplicationCallError extends Error
 
         for (let i=0; i<5; i++) {
             let frame = stack[i];
-            this.message += `\n-> ${colors.red(frame.functionName)} ${colors.gray(frame.fileName)}:${colors.blue(frame.lineNumber)}:${colors.blue(frame.columnNumber)}`;
+            this.message += `\n   ${colors.gray("L")} ${colors.gray(frame.functionName)} ${frame.fileName}:${colors.blue(frame.lineNumber)}:${colors.blue(frame.columnNumber)}`;
         }
 
     }

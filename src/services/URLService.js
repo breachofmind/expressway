@@ -67,12 +67,18 @@ module.exports = function(app,config)
 
         /**
          * Add properties or methods to this object.
-         * @param object
+         * @param name string
+         * @param path string
          * @returns {URLService}
          */
-        extend(object)
+        extend(name,path)
         {
-            _.assign(this,object);
+            if (this.hasOwnProperty(name)) {
+                throw new Error(`url.${name} method exists`);
+            }
+            this[name] = (uri) => {
+                return this.get([path,uri]);
+            };
 
             return this;
         }
