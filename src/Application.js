@@ -7,22 +7,14 @@ var utils        = require('./support/utils');
 var _            = require('lodash');
 
 var ObjectCollection = require('./ObjectCollection');
-var Extension = require('./Extension');
-var Provider = require('./Provider');
-var Controller = require('./Controller');
-var Middleware = require('./Middleware');
-var Model = require('./Model');
-var Promise = require('bluebird');
+var Extension        = require('./Extension');
+var Provider         = require('./Provider');
+var Controller       = require('./Controller');
+var Middleware       = require('./Middleware');
+var Model            = require('./Model');
+var Promise          = require('bluebird');
 
-const CLASS_COLLECTIONS = {
-    providers: Provider,
-    controllers: Controller,
-    middleware: Middleware,
-    extensions: Extension,
-    models: Model,
-}
-
-var DefaultRootExtension = require('./support/DefaultRootExtension');
+const COLLECTIONS = ['providers','controllers','middleware','extensions','models'];
 
 /**
  * An Application instance is a container for all services, providers, and express extensions.
@@ -58,7 +50,9 @@ class Application extends EventEmitter
         this._services    = new ObjectCollection(this, 'service');
         this._aliases     = new ObjectCollection(this, 'alias');
 
-        this._createBaseServices();
+        this.service('app',this);
+
+        this.call(createBaseServices);
 
         this._providers   = this.load('./services/ProviderService');
         this._models      = this.load('./services/ModelService');
@@ -67,63 +61,7 @@ class Application extends EventEmitter
         this._middleware  = this.load('./services/MiddlewareService');
         this._dispatcher  = this.load('./services/Dispatcher');
 
-        this.call(this,'_init');
-    }
-
-    /**
-     * Create some basic services, such as app, config and debug.
-     * @returns void
-     * @private
-     */
-    _createBaseServices()
-    {
-        let config = utils.objectAccessor(this.config);
-
-        this.service('app',    this);
-        this.service('utils',  utils);
-        this.service('config', config);
-
-        // Logger and debug function are configurable.
-        this.service('log', this.config.logger
-            ? this.load(this.config.logger)
-            : this.load('./services/LogService'));
-
-        this.service('debug', this.config.debugger
-            ? this.load(this.config.debugger)
-            : this.get('log').debug);
-
-        let URLService = this.load('./services/URLService');
-        let urlBase = _.trimEnd(config('proxy', `${config('url')}:${config('port')}`), "/");
-
-        this.service('paths',  this.load('./services/PathService'));
-        this.service('url',    new URLService(urlBase));
-        this.service('URLService', URLService);
-        this.service('locale', this.load('./services/LocaleService'));
-
-        this.emit('setup');
-    }
-
-    /**
-     * Initial application setup.
-     * @injectable
-     * @param config {Function}
-     * @param paths {PathService}
-     * @returns void
-     * @private
-     */
-    _init(config,paths)
-    {
-        paths.add('root', this.rootPath);
-        _.each(config('paths', []), (value,key) => {
-            if (value.startsWith(".")) value = value.splice(0,1,this.rootPath);
-            paths.add(key,value);
-        });
-
-        // Create a base extension to add routes.
-        this.extensions.add('root', config('root',DefaultRootExtension));
-
-        // The CLI Provider is a common package.
-        this.use(require('./providers/CLIProvider'));
+        this.call(applicationInit);
     }
 
 
@@ -339,9 +277,9 @@ class Application extends EventEmitter
         try {
             let value = this.load(fn);
 
-            _.each(CLASS_COLLECTIONS, (Class,property) => {
-                if (value && value instanceof Class) {
-                    this[property].add(value.name, value);
+            COLLECTIONS.forEach(propertyName => {
+                if (value && value instanceof (this[propertyName].class)) {
+                    this[propertyName].add(value.name, value);
                 }
             });
         } catch (err) {
@@ -386,7 +324,7 @@ class Application extends EventEmitter
      */
     call(...params)
     {
-        let [context,method,args] = __getAppCallParameters(params);
+        let [context,method,args] = getAppCallParameters(params);
 
         if (! context) throw new TypeError('context must be object with a method name or function');
 
@@ -416,7 +354,7 @@ class Application extends EventEmitter
         try {
             // This is a class or constructor function.
             // This is difficult to detect, hence the function $constructor property.
-            if (__checkIfClassConstructor(context)) {
+            if (checkIfClassConstructor(context)) {
                 let services = this.inject(context.prototype.constructor, args);
                 return new context(...services);
             }
@@ -516,7 +454,7 @@ class Application extends EventEmitter
      * Uses the base extension.
      * @returns void
      */
-    start(listening=null)
+    start()
     {
         this.boot().then(() =>
         {
@@ -532,9 +470,7 @@ class Application extends EventEmitter
                 );
                 log.info('loaded in %s', this._clock.lap());
 
-                this.emit('listening');
-
-                if (typeof listening == 'function') this.call(listening);
+                this.emit('started');
             });
         });
     }
@@ -546,7 +482,7 @@ class Application extends EventEmitter
  * @returns {[*,*,*]}
  * @private
  */
-function __getAppCallParameters(params)
+function getAppCallParameters(params)
 {
     let context,method,args=[];
 
@@ -576,13 +512,70 @@ function __getAppCallParameters(params)
  * @returns {boolean}
  * @private
  */
-function __checkIfClassConstructor(fn)
+function checkIfClassConstructor(fn)
 {
     if (typeof fn.$constructor !== 'undefined') {
         return fn.$constructor;
     }
     // Test the reflection of the function.
     return fn.$constructor = /^\s*class\s+/.test( fn.toString() );
+}
+
+/**
+ * Create some basic services, such as app, config and debug.
+ * @param app {Application}
+ * @returns void
+ * @private
+ */
+function createBaseServices(app)
+{
+    let config = utils.objectAccessor(app.config);
+
+    app.service('utils',  utils);
+    app.service('config', config);
+
+    // Logger and debug function are configurable.
+    app.service('log', app.config.logger
+        ? app.load(app.config.logger)
+        : app.load('./services/LogService'));
+
+    app.service('debug', app.config.debugger
+        ? app.load(app.config.debugger)
+        : app.get('log').debug);
+
+    let URLService = app.load('./services/URLService');
+    let urlBase = _.trimEnd(config('proxy', `${config('url')}:${config('port')}`), "/");
+
+    app.service('paths',  app.load('./services/PathService'));
+    app.service('url',    new URLService(urlBase));
+    app.service('URLService', URLService);
+    app.service('locale', app.load('./services/LocaleService'));
+
+    app.emit('setup');
+}
+
+/**
+ * Initial application setup.
+ * @injectable
+ * @param app {Application}
+ * @param config {Function}
+ * @param paths {PathService}
+ * @returns void
+ * @private
+ */
+function applicationInit(app,config,paths)
+{
+    paths.add('root', app.rootPath);
+    _.each(config('paths', []), (value,key) => {
+        if (value.startsWith(".")) value = value.splice(0,1,app.rootPath);
+        paths.add(key,value);
+    });
+
+    // Create a base extension to add routes.
+    app.extensions.add('root', config('root', require('./support/DefaultRootExtension')));
+
+    // The CLI Provider is a common package.
+    app.use(require('./providers/CLIProvider'));
 }
 
 module.exports = Application;

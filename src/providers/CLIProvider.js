@@ -48,24 +48,29 @@ class CLIProvider extends Provider
             'listEventsCommand',
             'listControllersCommand',
             'listMiddlewaresCommand',
-            'borrowCommand'
+            'borrowCommand',
+            'startCommand'
         ];
 
         app.service('cli', app.load('expressway/src/services/CLI'));
+
+        this.commands.forEach(commandName => {
+            app.call(this, commandName);
+        });
     }
 
     /**
-     * Give the CLI class some default actions.
-     * @param next Function
-     * @param app Application
-     * @param cli CLI
+     * Start the server.
+     * @param app
+     * @param cli
      */
-    boot(next,app,cli)
+    startCommand(app,cli)
     {
-        this.commands.forEach(commandName => {
-            app.call(this, commandName,[app,cli]);
-        });
-        next();
+        cli.command("start", "Start the server").action((env,opts) =>
+        {
+            app.context = CXT_WEB;
+            app.start();
+        })
     }
 
     /**
@@ -136,7 +141,7 @@ class CLIProvider extends Provider
             DELETE: colors.red,
         };
 
-        cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
+        function display()
         {
             app.extensions.stacks().forEach(extension =>
             {
@@ -192,6 +197,11 @@ class CLIProvider extends Provider
             });
 
             process.exit();
+        }
+
+        cli.command('routes', "List all routes and middleware in the application").action((env,opts) =>
+        {
+            app.boot().then(display);
         });
     }
 
@@ -202,7 +212,7 @@ class CLIProvider extends Provider
      */
     listServicesCommand(app,cli)
     {
-        cli.command('services', "List all services in the application").action((env,opts) =>
+        function display()
         {
             var columns = cli.columns(app.services.list(), {
                 title: "Services list",
@@ -233,6 +243,11 @@ class CLIProvider extends Provider
             });
 
             cli.output([columns], true);
+        }
+
+        cli.command('services', "List all services in the application").action((env,opts) =>
+        {
+            app.boot().then(display);
         });
     }
 
@@ -242,7 +257,6 @@ class CLIProvider extends Provider
      */
     listProvidersCommand(app,cli)
     {
-
         cli.command('providers [options]', "List all providers in the application loaded with the given environment and context")
             .option('-e, --environment [name]', "Providers loaded for given environment: local|dev|prod")
             .option('-c, --context [name]', "Providers loaded for given context: cli|web|test")
@@ -251,37 +265,42 @@ class CLIProvider extends Provider
                 if (! opts.environment) opts.environment = app.env;
                 if (! opts.context) opts.context = CXT_WEB;
 
-                var columns = cli.columns(app.providers.list(), {
-                    title:"Providers list",
-                    map(item,index) {
-                        let provider = item.object;
-                        return {
-                            order: provider.order,
-                            name: provider.name,
-                            loaded: provider.isLoadable(opts.environment, opts.context),
-                            envs: provider.environments,
-                            contexts: provider.contexts,
+                function display()
+                {
+                    var columns = cli.columns(app.providers.list(), {
+                        title:"Providers list",
+                        map(item,index) {
+                            let provider = item.object;
+                            return {
+                                order: provider.order,
+                                name: provider.name,
+                                loaded: provider.isLoadable(opts.environment, opts.context),
+                                envs: provider.environments,
+                                contexts: provider.contexts,
+                            }
+                        },
+                        colors: {
+                            order: cli.Console.Index,
+                            name: cli.Console.Title,
+                            loaded: cli.Console.Boolean,
+                            contexts(contexts) {
+                                return contexts.map(context => { return colors.gray(context) });
+                            }
                         }
-                    },
-                    colors: {
-                        order: cli.Console.Index,
-                        name: cli.Console.Title,
-                        loaded: cli.Console.Boolean,
-                        contexts(contexts) {
-                            return contexts.map(context => { return colors.gray(context) });
-                        }
-                    }
 
-                });
+                    });
 
-                cli.output([
-                    cli.Console.Break,
-                    cli.Console.Line,
-                    "Environment: " + colors.green(opts.environment.toString()),
-                    "Context: " + colors.green(opts.context.toString()),
-                    cli.Console.Line,
-                    columns
-                ],true);
+                    cli.output([
+                        cli.Console.Break,
+                        cli.Console.Line,
+                        "Environment: " + colors.green(opts.environment.toString()),
+                        "Context: " + colors.green(opts.context.toString()),
+                        cli.Console.Line,
+                        columns
+                    ],true);
+                }
+
+                app.boot().then(display);
             });
     }
 
@@ -292,7 +311,7 @@ class CLIProvider extends Provider
      */
     listPathsCommand(app,cli,paths)
     {
-        cli.command('paths', "List all set paths in the Path service").action((env,opts) =>
+        function display()
         {
             var columns = cli.columns(paths.list(), {
                 title: "Path List",
@@ -316,6 +335,11 @@ class CLIProvider extends Provider
             });
 
             cli.output([columns],true);
+        }
+
+        cli.command('paths', "List all set paths in the Path service").action((env,opts) =>
+        {
+            app.boot().then(display);
         });
     }
 
@@ -325,7 +349,7 @@ class CLIProvider extends Provider
      */
     listEventsCommand(app,cli)
     {
-        cli.command('events', "List all events and listener count").action((env,opts) =>
+        function display()
         {
             var columns = cli.columns(app.eventNames(), {
                 title: "Event listeners",
@@ -343,6 +367,11 @@ class CLIProvider extends Provider
             });
 
             cli.output([columns], true);
+        }
+
+        cli.command('events', "List all events and listener count").action((env,opts) =>
+        {
+            app.boot().then(display);
         })
     }
 
@@ -352,7 +381,7 @@ class CLIProvider extends Provider
      */
     listControllersCommand(app,cli)
     {
-        cli.command('controllers', "List all controllers").action((env,opts) =>
+        function display()
         {
             var columns = cli.columns(app.controllers.list(), {
                 title: "Controller list",
@@ -370,6 +399,11 @@ class CLIProvider extends Provider
             });
 
             cli.output([columns], true);
+        }
+
+        cli.command('controllers', "List all controllers").action((env,opts) =>
+        {
+            app.boot().then(display);
         });
     }
 
@@ -379,7 +413,7 @@ class CLIProvider extends Provider
      */
     listMiddlewaresCommand(app,cli)
     {
-        cli.command('middlewares', "List all middlewares").action((env,opts) =>
+        function display()
         {
             var columns = cli.columns(app.middleware.list(), {
                 title: "Middleware list",
@@ -401,6 +435,11 @@ class CLIProvider extends Provider
             });
 
             cli.output([columns], true);
+        }
+
+        cli.command('middlewares', "List all middlewares").action((env,opts) =>
+        {
+            app.boot().then(display);
         });
     }
 }
