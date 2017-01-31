@@ -66,11 +66,14 @@ class CLIProvider extends Provider
      */
     startCommand(app,cli)
     {
-        cli.command("start", "Start the server").action((env,opts) =>
-        {
-            app.context = CXT_WEB;
-            app.start();
-        })
+        cli.command("start [options]", "Start the server")
+            .option('-p, --production', "Start in production mode")
+            .action((env,opts) =>
+            {
+                if (opts.production) app.env = ENV_PROD;
+                app.context = CXT_WEB;
+                app.start();
+            })
     }
 
     /**

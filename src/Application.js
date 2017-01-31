@@ -113,6 +113,15 @@ class Application extends EventEmitter
     }
 
     /**
+     * Override the environment.
+     * @param env {String}
+     */
+    set env(env)
+    {
+        this._environment = env;
+    }
+
+    /**
      * Get the config object.
      * @returns {Object}
      */
@@ -571,11 +580,11 @@ function applicationInit(app,config,paths)
         paths.add(key,value);
     });
 
-    // Create a base extension to add routes.
-    app.extensions.add('root', config('root', require('./support/DefaultRootExtension')));
-
     // The CLI Provider is a common package.
     app.use(require('./providers/CLIProvider'));
+
+    // Create a base extension to add routes.
+    app.extensions.add('root', config('root', require('./support/DefaultRootExtension')));
 }
 
 module.exports = Application;

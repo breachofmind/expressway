@@ -5,6 +5,27 @@ var Promise = require('bluebird');
 var Extension = require('./Extension');
 
 /**
+ * Create a searchable index for adding routes before or after other routes.
+ * @returns {Router}
+ * @private
+ */
+function createRouteIndex()
+{
+    this._routes.sort((a,b) => {
+        if (a.group == b.group) {
+            return a.priority == b.priority ? 0 : a.priority > b.priority ? 1 : -1;
+        }
+        return a.group > b.group ? 1 : -1;
+    });
+
+    this._index = new Map();
+    this.each((route,index) => {
+        this._index.set(route.name, index);
+    });
+    return this;
+}
+
+/**
  * A collection of staged routes, which boot into express when the application boots.
  * @author Mike Adamczyk <mike@bom.us>
  */
@@ -111,27 +132,6 @@ class RouteCollection
     }
 
     /**
-     * Create a searchable index for adding routes before or after other routes.
-     * @returns {Router}
-     * @private
-     */
-    _createRouteIndex()
-    {
-        this._routes.sort((a,b) => {
-            if (a.group == b.group) {
-                return a.priority == b.priority ? 0 : a.priority > b.priority ? 1 : -1;
-            }
-            return a.group > b.group ? 1 : -1;
-        });
-
-        this._index = new Map();
-        this.each((route,index) => {
-            this._index.set(route.name, index);
-        });
-        return this;
-    }
-
-    /**
      * Add a global middleware route.
      * @param routes
      * @param group
@@ -156,7 +156,23 @@ class RouteCollection
             let index = priority == null ? this.length(group) : priority;
             this._routes.push({name:route, group:group, priority:index});
         });
-        this._createRouteIndex();
+        createRouteIndex.call(this);
+        return this;
+    }
+
+    /**
+     * Use a configuration object.
+     * @param config Object
+     * @returns {RouteCollection}
+     */
+    use(config)
+    {
+        if (! config) return this;
+
+        if (config.middleware) this.middleware(config.middleware);
+        if (config.paths) this.add(config.paths);
+        if (config.error) this.error(404, config.error);
+
         return this;
     }
 

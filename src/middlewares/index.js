@@ -3,7 +3,6 @@ module.exports = [
     require('./BodyParser'),
     require('./ConsoleLogging'),
     require('./CSRF'),
-    require('./Development'),
     require('./Flash'),
     require('./Init'),
     require('./Localization'),
