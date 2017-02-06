@@ -34,6 +34,8 @@ class ModelProvider extends Provider
         app.service('driver', app.models.driver);
         app.service('db', app.models.driver.db);
         app.service('seeder', app.load(require('../services/SeederService')));
+
+        app.call(this,'commands');
     }
 
     /**
@@ -44,8 +46,6 @@ class ModelProvider extends Provider
      */
     boot(next,app,driver)
     {
-        app.call(this,'commands');
-
         driver.connect().then(next);
     }
 
@@ -72,12 +72,16 @@ class ModelProvider extends Provider
                 }
 
                 let start = Date.now();
-                seeder.run(opts).then(function(result) {
-                    let end = Date.now();
-                    let elasped = ((end - start) / 1000).toFixed(3);
-                    log.info('done seeding in %s sec',elasped);
-                    process.exit();
+
+                app.boot().then(() => {
+                    seeder.run(opts).then(function(result) {
+                        let end = Date.now();
+                        let elasped = ((end - start) / 1000).toFixed(3);
+                        log.info('done seeding in %s sec',elasped);
+                        process.exit();
+                    });
                 });
+
             });
 
 

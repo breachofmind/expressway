@@ -100,6 +100,11 @@ module.exports = function(app,debug,log,paths,csvToJson)
             ['active','list','dump','parse','path'].forEach(key => {
                 if (opts.hasOwnProperty(key)) this[key] = opts[key];
             });
+            if (opts.add) {
+                _.each(opts.add, (value,key) => {
+                    this.add(key, value);
+                });
+            }
             return this;
         }
 
