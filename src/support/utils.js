@@ -4,6 +4,7 @@ var glob = require('glob');
 var path = require('path');
 var fs = require('fs');
 var _ = require('lodash');
+var os = require('os');
 
 const FN_ARGS = /\s*[^\(]*\(\s*([^\)]*)\)/m;
 const FN_ARG_SPLIT = /,/;
@@ -249,6 +250,33 @@ exports.parseRouteRegexp = function(rx)
     return {path: "/"+str, flags:flags}
 };
 
+/**
+ * Get localhost addresses
+ */
+exports.getEthAddresses = function()
+{
+    var ifaces = os.networkInterfaces();
+    var addresses = [];
+    Object.keys(ifaces).forEach(ifname => {
+        var alias = 0;
+        ifaces[ifname].forEach(iface => {
+            if ('IPv4' !== iface.family || iface.internal !== false) {
+                // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
+                return;
+            }
+            var addr = {name: ifname, alias:null, address:iface.address};
+
+            if (alias >= 1) {
+                // this single interface has multiple ipv4 addresses
+                addr.alias = alias;
+            }
+            addresses.push(addr);
+
+            ++alias;
+        });
+    });
+    return addresses;
+};
 
 /**
  * Given an express app, return an array of routes.

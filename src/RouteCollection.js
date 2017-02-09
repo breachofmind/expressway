@@ -261,7 +261,7 @@ class RouteCollection
 
         // Remove routes if set already.
         if (express._router) {
-            console.log(express._router.map);
+            //console.log(express._router.map);
         }
 
         return Promise.all(promises).then(routes =>
