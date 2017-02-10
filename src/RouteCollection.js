@@ -172,6 +172,11 @@ class RouteCollection
         if (config.middleware) this.middleware(config.middleware);
         if (config.paths) this.add(config.paths);
         if (config.error) this.error(404, config.error);
+        if (config.static) {
+            _.each(config.static, (dir,uri) => {
+                this.static(uri,dir);
+            })
+        }
 
         return this;
     }

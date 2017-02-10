@@ -252,6 +252,7 @@ exports.parseRouteRegexp = function(rx)
 
 /**
  * Get localhost addresses
+ * @returns {Array}
  */
 exports.getEthAddresses = function()
 {

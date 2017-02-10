@@ -441,19 +441,19 @@ class Application extends EventEmitter
 
         return new Promise((resolve,reject) =>
         {
-            this.models.boot().then(result =>
-            {
-                this.providers.boot().then(result =>
-                {
-                    this.extensions.boot().then(result =>
-                    {
-                        this._booted = true;
+            this.models.boot().then(() => {
+                return this.providers.boot();
 
-                        this.emit('booted');
+            }).then(() => {
+                return this.extensions.boot();
 
-                        return resolve();
-                    })
-                })
+            }).then(() => {
+                this._booted = true;
+                this.emit('booted');
+                return resolve();
+
+            }).catch(err => {
+                return reject(err);
             });
         });
     }
