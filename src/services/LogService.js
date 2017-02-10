@@ -23,7 +23,7 @@ module.exports = function(app)
 
     var consoleLogLevels = {
         [CXT_TEST] : 'warn',
-        [CXT_CLI] : 'info',
+        [CXT_CLI] :  app.config.debug ? 'debug' : 'info',
         [CXT_WEB]  : app.config.debug ? 'debug' : 'info'
     };
 
