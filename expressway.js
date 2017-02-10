@@ -115,4 +115,20 @@ expressway.Provider   = require('./src/Provider');
 expressway.Model      = require('./src/Model');
 expressway.Driver     = require('./src/Driver');
 
+/**
+ * Run the cli.
+ * @param app {Application}
+ * @param fn {Function}
+ */
+expressway.cli = function(app, fn) {
+
+    global.EXPRESSWAY_CONTEXT = CXT_CLI;
+
+    var cli = app.get('cli');
+
+    if (typeof fn == 'function') fn(cli);
+
+    return cli.run();
+};
+
 module.exports = expressway;

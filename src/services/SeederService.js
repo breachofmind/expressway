@@ -85,6 +85,7 @@ module.exports = function(app,debug,log,paths,csvToJson)
             this.active = true;
             this.parse = null;
             this.seeds = [];
+            this._index = {};
 
             this.set(opts);
         }
@@ -123,8 +124,21 @@ module.exports = function(app,debug,log,paths,csvToJson)
             }
             let seed = new Seed(model,source,this);
             this.seeds.push(seed);
+            this._index[seed.name] = this.seeds.indexOf(seed);
 
             return seed;
+        }
+
+        /**
+         * Get a seed by name or index.
+         * @param seed string|number
+         * @returns {Seed}
+         */
+        get(seed) {
+            if (typeof seed == 'number') {
+                return this.seeds[seed];
+            }
+            return this.seeds[this._index[seed]];
         }
 
         /**
