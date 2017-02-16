@@ -26,8 +26,6 @@
   },
   "homepage": "https://github.com/breachofmind/expressway#readme",
   "dependencies": {
-    "babel-core": "^6.20.0",
-    "babel-loader": "^6.2.9",
     "bluebird": "^3.4.1",
     "body-parser": "^1.15.0",
     "colors": "^1.1.2",
@@ -42,7 +40,6 @@
     "error-stack-parser": "^2.0.0",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
-    "extract-text-webpack-plugin": "^1.0.1",
     "glob": "^7.0.5",
     "locale": "0.0.21",
     "lodash": "^4.15.0",
@@ -50,25 +47,12 @@
     "mongoose": "^4.7.2",
     "nodemailer": "^2.6.4",
     "nodemailer-stub-transport": "^1.1.0",
-    "sequelize": "^3.29.0",
     "session-file-store": "^1.0.0",
-    "webpack": "^1.14.0",
-    "webpack-dev-middleware": "^1.8.4",
-    "webpack-hot-middleware": "^2.13.2",
     "winston": "^2.2.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-http": "^3.0.0",
-    "cheerio": "^0.22.0",
-    "gulp": "^3.9.1",
-    "gulp-autoprefixer": "^3.1.1",
-    "gulp-concat": "^2.6.0",
-    "gulp-livereload": "^3.8.1",
-    "gulp-sass": "^2.3.2",
-    "gulp-sourcemaps": "^2.2.0",
-    "livereload": "^0.6.0",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "cheerio": "^0.22.0"
   }
 }
