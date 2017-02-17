@@ -1,6 +1,6 @@
 "use strict";
 
-var Provider = require('expressway').Provider;
+var Provider = require('../Provider');
 var Promise  = require('bluebird');
 var crypto   = require('crypto');
 var fs       = require('fs');

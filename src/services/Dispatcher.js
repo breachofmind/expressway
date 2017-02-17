@@ -1,6 +1,6 @@
 "use strict";
 
-var expressway = require('expressway');
+var expressway = require('../../expressway');
 var express    = require('express');
 var _          = require('lodash');
 

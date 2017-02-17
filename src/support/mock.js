@@ -1,6 +1,6 @@
 "use strict";
 
-var expressway = require('expressway');
+var expressway = require('../../expressway');
 var path = require('path');
 
 exports.request = {};

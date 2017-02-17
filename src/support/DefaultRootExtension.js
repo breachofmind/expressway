@@ -9,7 +9,7 @@ class DefaultRootExtension extends Extension
         super(app);
 
         app.use([
-            require('expressway/src/middlewares'),
+            require('../middlewares'),
         ]);
 
         this.routes.middleware([

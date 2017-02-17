@@ -1,6 +1,6 @@
 "use strict";
 
-var Middleware = require('expressway').Middleware;
+var Middleware = require('../Middleware');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 var _ = require('lodash');

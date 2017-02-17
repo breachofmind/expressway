@@ -1,6 +1,6 @@
 "use strict";
 
-var expressway  = require('expressway');
+var expressway  = require('../../expressway');
 var Provider    = expressway.Provider;
 var path        = require('path');
 var _string     = require('lodash/string');
@@ -52,7 +52,7 @@ class CLIProvider extends Provider
             'startCommand'
         ];
 
-        app.service('cli', app.load('expressway/src/services/CLI'));
+        app.service('cli', app.load(require('../services/CLI')));
 
         this.commands.forEach(commandName => {
             app.call(this, commandName);

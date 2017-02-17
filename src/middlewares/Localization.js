@@ -1,8 +1,8 @@
 "use strict";
 
-var Middleware  = require('expressway').Middleware;
-var Locale      = require('locale');
-var http        = require('http');
+var Middleware = require('../Middleware');
+var Locale     = require('locale');
+var http       = require('http');
 
 class Localization extends Middleware
 {

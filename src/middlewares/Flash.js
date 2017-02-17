@@ -1,6 +1,6 @@
 "use strict";
 
-var Middleware = require('expressway').Middleware;
+var Middleware = require('../Middleware');
 var connectFlash = require('connect-flash');
 
 class Flash extends Middleware

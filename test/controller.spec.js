@@ -1,5 +1,5 @@
 var path = require('path');
-var expressway = require('expressway');
+var expressway = require('../expressway');
 var Controller = expressway.Controller;
 
 var config = {

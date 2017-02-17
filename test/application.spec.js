@@ -1,5 +1,5 @@
 var path = require('path');
-var expressway = require('expressway');
+var expressway = require('../expressway');
 var Application = require('../src/Application');
 var Extension = require('../src/Extension');
 var ObjectCollection = require('../src/ObjectCollection');

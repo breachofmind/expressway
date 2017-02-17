@@ -1,4 +1,4 @@
-var Field = require('expressway/src/Field');
+var Field = require('../Field');
 var SchemaTypes = require('mongoose').Schema.Types;
 
 module.exports = {

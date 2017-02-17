@@ -14,7 +14,7 @@ mongoose.Promise = Promise;
 
 module.exports = function(app,config,log)
 {
-    var Driver      = require('expressway').Driver;
+    var Driver      = require('../Driver');
     var driverTypes = require('./MongooseDriverTypes');
 
     /**

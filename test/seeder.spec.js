@@ -1,5 +1,5 @@
 var path = require('path');
-var expressway = require('expressway');
+var expressway = require('../expressway');
 var mock = require('../src/support/mock');
 var app = mock.app;
 var ObjectCollection = require('../src/ObjectCollection');
@@ -8,7 +8,7 @@ var Promise = require('bluebird');
 class People extends expressway.Model {}
 
 app.use([
-    require('expressway/src/providers/ModelProvider'),
+    require('../src/providers/ModelProvider'),
     People
 ]);
 

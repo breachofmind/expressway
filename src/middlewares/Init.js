@@ -1,6 +1,6 @@
 "use strict";
 
-var Middleware = require('expressway').Middleware;
+var Middleware = require('../Middleware');
 var View = require('../View');
 
 class Init extends Middleware

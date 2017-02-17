@@ -1,6 +1,6 @@
 "use strict";
 
-var Provider  = require('expressway').Provider;
+var Provider  = require('../Provider');
 var Converter = require("csvtojson").Converter;
 var Promise   = require('bluebird');
 var utils     = require('../support/utils');

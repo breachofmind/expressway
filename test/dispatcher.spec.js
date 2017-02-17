@@ -1,5 +1,5 @@
 var path = require('path');
-var expressway = require('expressway');
+var expressway = require('../expressway');
 var Dispatcher = require('../src/services/Dispatcher');
 var mock = require('../src/support/mock');
 var app = mock.app;

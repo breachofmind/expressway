@@ -1,4 +1,4 @@
-var Field = require('expressway/src/Field');
+var Field = require('../Field');
 var Sequelize = require('sequelize');
 
 module.exports = {

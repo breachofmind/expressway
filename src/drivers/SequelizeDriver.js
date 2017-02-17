@@ -1,26 +1,16 @@
 "use strict";
 
-var Driver = require('expressway').Driver;
-var mongoose = require('mongoose');
 var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
 var Promise = require('bluebird');
 var _ = require('lodash');
 
-mongoose.Promise = Promise;
-
-
 module.exports = function(app,config,log)
 {
+    var Driver      = require('../Driver');
+    var driverTypes = require('./SequelizeDriverTypes');
+
     return new class SequelizeDriver extends Driver
     {
-        constructor()
-        {
-            super();
-
-            this.types = require('./SequelizeDriverTypes');
-        }
-
         /**
          * Get the driver name.
          * @returns {String}
@@ -28,6 +18,11 @@ module.exports = function(app,config,log)
         get name()
         {
             return this.constructor.name;
+        }
+
+        get types()
+        {
+            return driverTypes;
         }
 
         /**

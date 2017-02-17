@@ -1,9 +1,9 @@
 "use strict";
 
-var expressway = require('expressway');
+var Middleware = require('../Middleware');
 var colors = require('colors/safe');
 
-class ConsoleLogging extends expressway.Middleware
+class ConsoleLogging extends Middleware
 {
     get description() {
         return "Logs the incoming request to the console";

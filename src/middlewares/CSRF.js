@@ -1,6 +1,6 @@
 "use strict";
 
-var Middleware = require('expressway').Middleware;
+var Middleware = require('../Middleware');
 var csrf = require('csurf');
 
 class CSRF extends Middleware

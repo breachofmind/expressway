@@ -1,6 +1,6 @@
 "use strict";
 
-var expressway = require('expressway');
+var expressway = require('../../expressway');
 var Promise    = require('bluebird');
 var path       = require('path');
 var fs         = require('fs');
