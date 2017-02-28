@@ -90,6 +90,15 @@ class View
     }
 
     /**
+     * Get the base url.
+     * @returns {string}
+     */
+    get base()
+    {
+        return this._renderer.base;
+    }
+
+    /**
      * Return the data object.
      * @returns {{title: undefined}|*}
      */

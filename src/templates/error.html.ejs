@@ -1,0 +1,96 @@
+<html>
+
+<head>
+    <title><%= request.res.phrase() %></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.3.0/css/foundation-flex.min.css" />
+
+    <% if (debug) { %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/plugins/line-numbers/prism-line-numbers.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/themes/prism-dark.min.css" />
+    <% } %>
+</head>
+<style>
+    code {
+        padding:0;
+        border:0;
+    }
+    .callout {
+        border-radius:0.5em;
+    }
+    .code-filename {
+        background: #7a6651;
+        color:white;
+        padding:6px 10px;
+        margin-bottom:-13px;
+        border-radius:.5em .5em 0 0;
+    }
+    .stack-line-number {
+        font-weight:700;
+    }
+    .is-upper {
+        text-transform: uppercase;
+    }
+</style>
+
+<body>
+
+<header class="row l-header">
+    <div class="column">
+        <h2 class="is-upper"><%= request.res.statusCode %> - <%= request.res.phrase() %></h2>
+        <div class="callout warning">
+            <h4><%= error.name %></h4>
+            <p><%= message %></p>
+            <% if (! debug) { %>
+            <p>If this problem persists, please contact the <a href="mailto:<%= admin %>">site administrator.</a></p>
+            <% } %>
+        </div>
+    </div>
+</header>
+
+<% if (debug) { %>
+<section class="row l-code">
+    <div class="column">
+        <p class="code-filename">
+            <%= instigator.fileName %> - <%= instigator.functionName %>
+            <strong><%= instigator.lineNumber %>:<%= instigator.columnNumber %></strong>
+        </p>
+    <pre class="line-numbers" data-start="<%= startLine %>">
+	<code class="language-js"><%= code %></code>
+	</pre>
+    </div>
+</section>
+
+
+<section class="row l-stack-trace">
+    <div class="column">
+        <table>
+            <thead>
+            <tr>
+                <th>File</th>
+                <th>Function</th>
+                <th>Line</th>
+            </tr>
+            </thead>
+            <tbody>
+            <% for (var i=0; i<stack.length; i++) { %>
+            <tr>
+                <td class="stack-file-name"><a href="file://<%= stack[i].fileName %>"><%= stack[i].fileName %></a></td>
+                <td class="stack-func-name"><%= stack[i].functionName %></td>
+                <td class="stack-line-number"><%= stack[i].lineNumber %>:<%= stack[i].columnNumber %></td>
+            </tr>
+            <% } %>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/components/prism-javascript.min.js"></script>
+<% } %>
+
+</body>
+
+</html>

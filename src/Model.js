@@ -128,6 +128,12 @@ class Model extends EventEmitter
         this.preview = "/images/no-image.png";
 
         /**
+         * The default url format to use on the frontend for this object.
+         * @type {string}
+         */
+        this.link = `/${this.slug}/{id}`;
+
+        /**
          * Model pre/post hooks.
          * @type {Array}
          * @private
@@ -208,7 +214,8 @@ class Model extends EventEmitter
     methods(object)
     {
         let methods = {
-            toJSON: defaultToJSONMethod(this)
+            toJSON: defaultToJSONMethod(this),
+            getUrl: getObjectUrlFn(this)
         };
 
         return _.assign({},methods,object);
@@ -250,7 +257,7 @@ class Model extends EventEmitter
     toJSON()
     {
         let out = {};
-        ['name','singular','plural','slug','title','icon','preview','group'].forEach(property => {
+        ['name','singular','plural','slug','title','icon','preview','group','link'].forEach(property => {
             out[property] = this[property];
         });
         out.fields = this.fields.toArray();
@@ -274,8 +281,11 @@ function defaultToJSONMethod(blueprint)
     return function()
     {
         let json = {
-            $title: this[blueprint.title],
+            $title: this[blueprint.title]
         };
+
+        json.$link = resolveUrlLink(blueprint,this);
+
         let primaryKey = blueprint.primaryKey;
 
         if (primaryKey) json[_.trimStart(primaryKey, "_")] = this[primaryKey];
@@ -299,5 +309,42 @@ function defaultToJSONMethod(blueprint)
         return json;
     };
 }
+
+/**
+ * Resolves a url format to a usable string.
+ * Example: /post/{slug} will replace the slug property accordingly.
+ * @param blueprint
+ * @param model
+ * @returns {String|null}
+ */
+function resolveUrlLink(blueprint,model)
+{
+    let rx = /\{([^}]+)\}/g;
+    let format = blueprint.link;
+    let match;
+    if (! format) {
+        return null;
+    }
+    while(match = rx.exec(format)) {
+        if (match) {
+            format = format.replace(match[0], model[match[1]]);
+        }
+    }
+    return format;
+}
+
+/**
+ * Returns a function that can return a link to an object.
+ * Resolves the "link" property into a usable URL string.
+ * @param blueprint
+ * @returns {Function}
+ */
+function getObjectUrlFn(blueprint)
+{
+    return function() {
+        return resolveUrlLink(blueprint,this);
+    }
+}
+
 
 module.exports = Model;

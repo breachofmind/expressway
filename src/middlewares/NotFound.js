@@ -13,8 +13,10 @@ class NotFound extends Middleware
     }
     method(request,response,next,view)
     {
+        if (request.xhr) {
+            return 404;
+        }
         response.status(404);
-
         return view.template('error/404');
     }
 }

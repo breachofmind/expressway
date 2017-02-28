@@ -65,7 +65,7 @@ class RouteCollection
          */
         this._errors = {
             "404" : "NotFound",
-            "500" : "NotFound"
+            "500" : "ErrorHandler"
         };
 
         /**
@@ -271,14 +271,20 @@ class RouteCollection
 
         return Promise.all(promises).then(routes =>
         {
-            if (this.extension.base !== "/") {
-                this.app.root.mount(this.extension);
+            // If this is the root extension,
+            // mount the other extensions at this point.
+            if (this.extension == this.app.root) {
+                this.app.extensions.each(extension => {
+                    if (extension == this.extension) return;
+                    this.extension.mount(extension);
+                });
             }
             let middleware = this.app.dispatcher.resolve(routes,this.extension);
 
             express.use("/",middleware);
 
             express.use(this.app.dispatcher.resolve(this._errors["404"], this.extension));
+            express.use(this.app.dispatcher.resolve(this._errors["500"], this.extension));
 
             return middleware;
         });

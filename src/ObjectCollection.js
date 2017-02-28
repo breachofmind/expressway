@@ -84,24 +84,21 @@ class ObjectCollection extends EventEmitter
     {
         let name,value;
 
-        switch(args.length) {
-            case 2:
-                [name,value] = args;
-                break;
-            case 1:
-                if (Array.isArray(args[0])) {
-                    args[0].forEach(item => { this.add(item) });
-                    return this;
-                } else if (typeof args[0] == 'function') {
-                    [name,value] = [args[0].name,args[0]];
-                } else if (typeof args[0] == 'object') {
-                    name = args[0].name;
-                    value = args[0].object;
-                }
-                break;
-            case 0:
-                throw new TypeError('no arguments given');
-                break;
+        if (! args.length) {
+            throw new TypeError('no arguments given');
+        } else if (Array.isArray(args[0])) {
+            args[0].forEach(item => { this.add(item) });
+            return this;
+        } else if (args.length == 2) {
+            [name,value] = args;
+            if (typeof name !== 'string') {
+                throw new TypeError('first argument must be a string');
+            }
+        } else if (typeof args[0] == 'function') {
+            [name,value] = [args[0].name,args[0]];
+        } else if (typeof args[0] == 'object') {
+            name = args[0].name;
+            value = args[0].object;
         }
 
         if (this.has(name)) {

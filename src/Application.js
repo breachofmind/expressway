@@ -342,9 +342,9 @@ class Application extends EventEmitter
         if (method)
         {
             if (typeof context !== 'object')
-                throw new ApplicationCallTypeError(`context must be an object if method name given`,context,method);
+                throw new ApplicationCallError(new TypeError(`context must be an object if method name given`),context,method);
             if (typeof context[method] !== 'function')
-                throw new ApplicationCallTypeError(`context method must be a function`,context,method);
+                throw new ApplicationCallError(new TypeError(`context method must be a function`),context,method);
 
             try {
                 // Return the context method function injected with services.
@@ -357,7 +357,7 @@ class Application extends EventEmitter
         // After this point, the context must be a function.
         // example: app.call(function(...))
         if (typeof context !== 'function') {
-            throw new ApplicationCallTypeError(`context must be a function`,context,method);
+            throw new ApplicationCallError(new TypeError(`context must be a function`),context,method);
         }
 
         try {
@@ -372,7 +372,7 @@ class Application extends EventEmitter
             return context.apply(context, this.inject(context, args));
 
         } catch(err) {
-            throw new ApplicationCallError(err, context,method);
+            throw new ApplicationCallError(err,context,method);
         }
     }
 

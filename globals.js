@@ -18,6 +18,6 @@ global.CXT_ALL   = [CXT_CLI,CXT_WEB,CXT_TEST];
 if (! global.EXPRESSWAY_CONTEXT) global.EXPRESSWAY_CONTEXT = CXT_WEB;
 
 require('./src/exceptions/ApplicationCallError');
-require('./src/exceptions/ApplicationCallTypeError');
 require('./src/exceptions/ObjectExistsException');
+require('./src/exceptions/NotFoundException');
 require('./src/support/prototypes');
