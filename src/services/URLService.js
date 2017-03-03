@@ -55,14 +55,15 @@ module.exports = function(app,config)
         /**
          * Get the url.
          * @param uri {String|Array}
+         * @param relative {Boolean}
          * @returns {string}
          */
-        get(uri="") {
+        get(uri="",relative=false) {
             if (Array.isArray(uri)) {
                 uri = _.compact(uri).join("/");
             }
             uri = _.trim(uri, "/");
-            return `${this.base}/${uri}`;
+            return relative ? `/${uri}` : `${this.base}/${uri}`;
         }
 
         /**
@@ -76,8 +77,8 @@ module.exports = function(app,config)
             if (this.hasOwnProperty(name)) {
                 throw new Error(`url.${name} method exists`);
             }
-            this[name] = (uri) => {
-                return this.get([path,uri]);
+            this[name] = (uri,relative) => {
+                return this.get([path,uri],relative);
             };
 
             return this;

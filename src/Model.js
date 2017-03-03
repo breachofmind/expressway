@@ -125,7 +125,7 @@ class Model extends EventEmitter
          * The default image to display if a record has no preview.
          * @type {string}
          */
-        this.preview = "/images/no-image.png";
+        this.preview = "/public/images/no-image.png";
 
         /**
          * The default url format to use on the frontend for this object.
