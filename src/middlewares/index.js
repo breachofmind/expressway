@@ -7,6 +7,7 @@ module.exports = [
     require('./Init'),
     require('./Localization'),
     require('./NotFound'),
+    require('./MultipartForm'),
     require('./Session'),
     require('./Static'),
 ];

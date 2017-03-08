@@ -4,6 +4,7 @@ var Provider = require('../Provider');
 var Promise  = require('bluebird');
 var crypto   = require('crypto');
 var fs       = require('fs');
+var mime     = require('mime-types');
 
 /**
  * Provides helper functions.
@@ -59,6 +60,7 @@ class HelperProvider extends Provider
 
         app.service(md5);
         app.service(md5file);
+        app.service('mime', mime);
     }
 }
 
