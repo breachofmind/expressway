@@ -25,10 +25,10 @@ module.exports = function(app,debug)
 
         /**
          * Return middleware functions for the given controller and method.
-         * @param name string
-         * @param method string
-         * @param extension Extension
-         * @throws TypeError
+         * @param name {String}
+         * @param method {String}
+         * @param extension {Extension}
+         * @throws {TypeError}
          * @returns {Array}
          */
         dispatch(name,method,extension)
@@ -37,6 +37,38 @@ module.exports = function(app,debug)
                 return new TypeError(`controller method is required: ${name}`)
             }
             return this.get(name).dispatch(method,extension);
+        }
+
+        /**
+         * Add a method to a previously created controller object.
+         * Useful if taking advantage of that controller's global middleware stack.
+         * @param controllerName {String}
+         * @param methodName {String}
+         * @param fn {Function}
+         * @param middleware {Array}
+         * @throws {Error|TypeError}
+         * @returns {ControllerService}
+         */
+        addMethod(controllerName,methodName,fn,middleware=null)
+        {
+            var controller = this.get(controllerName);
+
+            if (controller.hasOwnProperty(methodName)) {
+                throw new Error('controller method exists: ${methodName}');
+            } else if (typeof fn !== 'function') {
+                throw new TypeError('argument must be a middleware function');
+            }
+
+            // Attach the method to the controller.
+            controller[methodName] = fn;
+
+            if (middleware) {
+                controller.middleware(methodName,middleware);
+            }
+
+            debug('ControllerService method %s.%s assigned', controllerName,methodName);
+
+            return this;
         }
     }
 };

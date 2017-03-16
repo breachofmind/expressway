@@ -27,7 +27,7 @@ class MultipartForm extends Middleware
          */
         function postUpload(request,response,next)
         {
-            if (request.files && request.files.length) {
+            if (Array.isArray(request.files)) {
                 request.files = request.files.map(fileObject => {
                     return new FileUploadObject(fileObject,paths.uploads());
                 })

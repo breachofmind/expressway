@@ -15,9 +15,8 @@ class HelperProvider extends Provider
     /**
      * Constructor.
      * @param app Application
-     * @param config Function
      */
-    constructor(app,config)
+    constructor(app)
     {
         super(app);
 
@@ -31,6 +30,7 @@ class HelperProvider extends Provider
         function md5(string)
         {
             let md5sum = crypto.createHash('md5').update(string);
+
             return md5sum.digest('hex').toString();
         }
 
@@ -52,10 +52,13 @@ class HelperProvider extends Provider
                 stream.on('data', function(d) {
                     md5sum.update(d);
                 });
+                stream.on('error',function(err) {
+                    reject(err);
+                });
                 stream.on('end', function() {
                     resolve(md5sum.digest('hex').toString());
                 });
-            })
+            });
         }
 
         app.service(md5);
